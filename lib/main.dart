@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:xurmo/presentation/dashbboard/main_page.dart';
 import 'package:xurmo/presentation/home/home_page.dart';
 
 void main() {
@@ -11,9 +12,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(),
-      home: const HomePage(),
+      home: const MainPage(),
     );
   }
 }
