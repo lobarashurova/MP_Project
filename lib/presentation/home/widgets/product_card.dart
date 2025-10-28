@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
@@ -39,7 +41,7 @@ class ProductCard extends StatelessWidget {
               children: [
                 Center(
                   child: Icon(
-                    Icons.shopping_bag_outlined,
+                    CupertinoIcons.bell_fill,
                     size: 48,
                     color: AppColors.primary,
                   ),
@@ -61,7 +63,7 @@ class ProductCard extends StatelessWidget {
                       ],
                     ),
                     child: Icon(
-                      Icons.favorite_border,
+                      CupertinoIcons.heart,
                       size: 16,
                       color: AppColors.iconPrimary,
                     ),
@@ -77,11 +79,7 @@ class ProductCard extends StatelessWidget {
               children: [
                 Text(
                   product.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.productName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -89,17 +87,14 @@ class ProductCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.star,
+                      CupertinoIcons.star_fill,
                       size: 14,
                       color: AppColors.warning,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       product.rating.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
+                      style: AppTextStyles.ratingSmall,
                     ),
                   ],
                 ),
@@ -109,11 +104,7 @@ class ProductCard extends StatelessWidget {
                   children: [
                     Text(
                       '\$${product.price.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                      style: AppTextStyles.productPrice,
                     ),
                     Container(
                       padding: const EdgeInsets.all(4),
@@ -122,7 +113,7 @@ class ProductCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(
-                        Icons.add,
+                        CupertinoIcons.add,
                         size: 16,
                         color: AppColors.surface,
                       ),
