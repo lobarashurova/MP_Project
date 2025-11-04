@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/presentation/dashbboard/main_page.dart';
-import 'package:xurmo/presentation/home/home_page.dart';
 
 void main() {
   runApp(const MyApp());

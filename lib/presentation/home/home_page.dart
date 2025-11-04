@@ -7,7 +7,7 @@ import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -195,7 +195,7 @@ class _HomePageState extends State<HomePage> {
 class FoodCard extends StatelessWidget {
   final ProductModel product;
 
-  const FoodCard({Key? key, required this.product}) : super(key: key);
+  const FoodCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
