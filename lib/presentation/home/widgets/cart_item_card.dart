@@ -2,9 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
-import 'package:xurmo/data/models/product_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
-
 
 class CartItemCard extends StatelessWidget {
   final CartItem cartItem;
@@ -33,19 +31,43 @@ class CartItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Product image
+          // ✅ Product image or placeholder
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              cartItem.product.imageUrl,
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-            ),
+            child: cartItem.product.imageUrl.isNotEmpty
+                ? Image.network(
+                    cartItem.product.imageUrl,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 70,
+                        height: 70,
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.grey,
+                          size: 32,
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    width: 70,
+                    height: 70,
+                    color: Colors.grey[200],
+                    child: const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: Colors.grey,
+                      size: 32,
+                    ),
+                  ),
           ),
+
           const SizedBox(width: 12),
 
-          // Product name and price
+          // ✅ Product name and price
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +89,7 @@ class CartItemCard extends StatelessWidget {
             ),
           ),
 
-          // Quantity controls
+          // ✅ Quantity controls
           Container(
             decoration: BoxDecoration(
               color: AppColors.background,

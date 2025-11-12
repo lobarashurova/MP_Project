@@ -5,8 +5,6 @@ import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart'; // Make sure this path matches your project
 
-
-
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
 
@@ -16,6 +14,15 @@ class BasketPage extends StatefulWidget {
 
 class _BasketPageState extends State<BasketPage> {
   @override
+  void initState() {
+    super.initState();
+    // Listen to changes in the cart to update UI
+    Cart.instance.notifier.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
 
@@ -23,9 +30,8 @@ class _BasketPageState extends State<BasketPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
-        title: const Text('Basket'),
+        title: const Text('Your Basket'),
         centerTitle: true,
-        elevation: 2,
       ),
       body: items.isEmpty
           ? Center(
@@ -51,26 +57,22 @@ class _BasketPageState extends State<BasketPage> {
               children: [
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
-                      final item = items[index];
-                      return CartItemCard(cartItem: item);
+                      final cartItem = items[index];
+                      return CartItemCard(cartItem: cartItem);
                     },
                   ),
                 ),
-
-                // Total Price Section
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadow.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, -3),
+                        color: AppColors.shadow,
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
                       ),
                     ],
                   ),
@@ -83,36 +85,42 @@ class _BasketPageState extends State<BasketPage> {
                       ),
                       Text(
                         '\$${Cart.instance.totalPrice.toStringAsFixed(2)}',
-                        style: AppTextStyles.heading2.copyWith(color: AppColors.primary),
+                        style: AppTextStyles.heading2.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
                 ),
-
-                // Checkout Button
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Action on checkout
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Proceeding to checkout...')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Checkout',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      onPressed: () {
+                        // You can add checkout logic here
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Proceeding to checkout...')),
+                        );
+                      },
+                      child: Text(
+                        'Checkout',
+                        style: AppTextStyles.heading3
+                            .copyWith(color: AppColors.surface),
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
             ),
     );
