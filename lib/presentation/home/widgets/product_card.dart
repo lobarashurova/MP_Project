@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/presentation/basket/cart.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
@@ -18,7 +20,7 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: AppColors.shadow.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -27,55 +29,41 @@ class ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Image
           Container(
             height: 120,
+            width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.08),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
+              image: product.imageUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(product.imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Icon(
-                    CupertinoIcons.bell_fill,
-                    size: 48,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+            child: product.imageUrl.isEmpty
+                ? Center(
                     child: Icon(
-                      CupertinoIcons.heart,
-                      size: 16,
-                      color: AppColors.iconPrimary,
+                      CupertinoIcons.cube_box_fill,
+                      size: 48,
+                      color: AppColors.primary.withOpacity(0.7),
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  )
+                : null,
           ),
+
+          // Product details
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Name
                 Text(
                   product.name,
                   style: AppTextStyles.productName,
@@ -83,21 +71,26 @@ class ProductCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.star_fill,
-                      size: 14,
-                      color: AppColors.warning,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      product.rating.toString(),
-                      style: AppTextStyles.ratingSmall,
-                    ),
-                  ],
-                ),
+
+                // Rating
+                if (product.rating != null)
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.star_fill,
+                        size: 14,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        product.rating!.toStringAsFixed(1),
+                        style: AppTextStyles.ratingSmall,
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 8),
+
+                // Price + Add button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -105,16 +98,32 @@ class ProductCard extends StatelessWidget {
                       '\$${product.price.toStringAsFixed(2)}',
                       style: AppTextStyles.productPrice,
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        CupertinoIcons.add,
-                        size: 16,
-                        color: AppColors.surface,
+                    GestureDetector(
+                      onTap: () {
+                        Cart.instance.add(product);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${product.name} added to basket!',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: AppColors.primary,
+                            duration: const Duration(milliseconds: 700),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          CupertinoIcons.add,
+                          size: 16,
+                          color: AppColors.surface,
+                        ),
                       ),
                     ),
                   ],
