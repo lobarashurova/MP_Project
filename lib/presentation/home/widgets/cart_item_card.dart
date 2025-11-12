@@ -15,18 +15,15 @@ class CartItemCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.primary.withOpacity(0.14),
+    
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.primary.withOpacity(0.5),
           width: 1,
         ),
         boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
+
         ],
       ),
       child: Row(
