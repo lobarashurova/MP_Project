@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
-import 'package:xurmo/presentation/home/widgets/cart_item_card.dart'; // Make sure this path matches your project
+import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
+
+const double DELIVERY_FEE = 2.99;
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -16,7 +18,6 @@ class _BasketPageState extends State<BasketPage> {
   @override
   void initState() {
     super.initState();
-    // Listen to changes in the cart to update UI
     Cart.instance.notifier.addListener(() {
       setState(() {});
     });
@@ -25,6 +26,7 @@ class _BasketPageState extends State<BasketPage> {
   @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
+    final subtotal = Cart.instance.totalPrice - DELIVERY_FEE;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -76,18 +78,52 @@ class _BasketPageState extends State<BasketPage> {
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                     children: [
-                      Text(
-                        'Total:',
-                        style: AppTextStyles.heading2,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Subtotal:',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                          Text(
+                            '\$${subtotal.toStringAsFixed(2)}',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                        ],
                       ),
-                      Text(
-                        '\$${Cart.instance.totalPrice.toStringAsFixed(2)}',
-                        style: AppTextStyles.heading2.copyWith(
-                          color: AppColors.primary,
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Delivery Fee:',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                          Text(
+                            '\$${DELIVERY_FEE.toStringAsFixed(2)}',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(color: AppColors.textSecondary),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total:',
+                            style: AppTextStyles.heading2,
+                          ),
+                          Text(
+                            '\$${Cart.instance.totalPrice.toStringAsFixed(2)}',
+                            style: AppTextStyles.heading2.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -95,29 +131,33 @@ class _BasketPageState extends State<BasketPage> {
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Proceeding to order...')),
+                            );
+                          },
+                          child: Text(
+                            'Order Now',
+                            style: AppTextStyles.heading3
+                                .copyWith(color: AppColors.surface),
+                          ),
                         ),
                       ),
-                      onPressed: () {
-                        // You can add checkout logic here
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Proceeding to checkout...')),
-                        );
-                      },
-                      child: Text(
-                        'Checkout',
-                        style: AppTextStyles.heading3
-                            .copyWith(color: AppColors.surface),
-                      ),
-                    ),
+                  
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
