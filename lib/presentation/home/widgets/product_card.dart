@@ -73,21 +73,20 @@ class ProductCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 // Rating
-                if (product.rating != null)
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.star_fill,
-                        size: 14,
-                        color: AppColors.warning,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        product.rating!.toStringAsFixed(1),
-                        style: AppTextStyles.ratingSmall,
-                      ),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.star_fill,
+                      size: 14,
+                      color: AppColors.warning,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      product.rating.toStringAsFixed(1),
+                      style: AppTextStyles.ratingSmall,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
 
                 // Price + Add button
