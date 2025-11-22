@@ -12,124 +12,139 @@ class CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.14),
-    
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.5),
-          width: 1,
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          // ✅ Product image or placeholder
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: cartItem.product.imageUrl.isNotEmpty
-                ? Image.network(
-                    cartItem.product.imageUrl,
-                    width: 70,
-                    height: 70,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 70,
-                        height: 70,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Colors.grey,
-                          size: 32,
+          // Top row with product info and delete button
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product name and popular badge
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      cartItem.product.name,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    // Popular badge
+                    Text(
+                      'Popular',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Delete button
+              GestureDetector(
+                onTap: () => Cart.instance.remove(cartItem.product),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    CupertinoIcons.trash,
+                    color: AppColors.textSecondary,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Bottom row with price and quantity controls
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Price
+              Text(
+                '\$${cartItem.product.price.toStringAsFixed(2)}',
+                style: AppTextStyles.productPrice.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              
+              // Quantity controls
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    // Minus button
+                    GestureDetector(
+                      onTap: () => Cart.instance.decreaseQuantity(cartItem.product),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
                         ),
-                      );
-                    },
-                  )
-                : Container(
-                    width: 70,
-                    height: 70,
-                    color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.grey,
-                      size: 32,
+                        child: Icon(
+                          CupertinoIcons.minus,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
-                  ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // ✅ Product name and price
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  cartItem.product.name,
-                  style: AppTextStyles.productName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '\$${cartItem.product.price.toStringAsFixed(2)}',
-                  style: AppTextStyles.productPrice.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ✅ Quantity controls
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.primary, width: 1),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Cart.instance.decreaseQuantity(cartItem.product);
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 4),
-                    child: Icon(
-                      CupertinoIcons.minus_circle,
-                      color: Colors.redAccent,
-                      size: 22,
+                    
+                    // Quantity
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        cartItem.quantity.toString(),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    cartItem.quantity.toString(),
-                    style: AppTextStyles.bodyLarge,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Cart.instance.increaseQuantity(cartItem.product);
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 4),
-                    child: Icon(
-                      CupertinoIcons.add_circled_solid,
-                      color: Colors.green,
-                      size: 22,
+                    
+                    // Plus button
+                    GestureDetector(
+                      onTap: () => Cart.instance.increaseQuantity(cartItem.product),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          CupertinoIcons.plus,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
