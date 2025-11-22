@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:xurmo/presentation/favorites/favorites_page.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../home/home_page.dart';
 import '../categories/categories_page.dart';
 import '../basket/basket_page.dart';
 import '../profile/profile_page.dart';
-
+import '../favorites/favorites_page.dart';
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -20,6 +21,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const CategoriesPage(),
+    const FavoritesPage(),
     const BasketPage(),
     const ProfilePage(),
   ];
@@ -58,16 +60,22 @@ class _MainPageState extends State<MainPage> {
                   index: 1,
                 ),
                 _buildNavItem(
+                  icon: CupertinoIcons.heart,
+                  activeIcon: CupertinoIcons.heart_fill,
+                  label: 'Favorites',
+                  index: 2,
+                ),
+                _buildNavItem(
                   icon: CupertinoIcons.cart,
                   activeIcon: CupertinoIcons.cart_fill,
                   label: 'Basket',
-                  index: 2,
+                  index: 3,
                 ),
                 _buildNavItem(
                   icon: CupertinoIcons.person,
                   activeIcon: CupertinoIcons.person_fill,
                   label: 'Profile',
-                  index: 3,
+                  index: 4,
                 ),
               ],
             ),

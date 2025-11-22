@@ -19,6 +19,12 @@ class Cart {
 
   List<CartItem> get items => List.unmodifiable(_items);
 
+  // Total number of items (not quantity)
+  int get totalItems => _items.length;
+
+  // Total quantity of all items
+  int get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
+
   void add(ProductModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
     if (index >= 0) {
@@ -55,5 +61,14 @@ class Cart {
   double get totalPrice {
     return _items.fold(
         0, (sum, item) => sum + item.product.price * item.quantity);
+  }
+
+  // Helper methods for listener compatibility
+  void addListener(VoidCallback listener) {
+    notifier.addListener(listener);
+  }
+
+  void removeListener(VoidCallback listener) {
+    notifier.removeListener(listener);
   }
 }
