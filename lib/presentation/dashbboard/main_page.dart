@@ -7,7 +7,6 @@ import '../home/home_page.dart';
 import '../categories/categories_page.dart';
 import '../basket/basket_page.dart';
 import '../profile/profile_page.dart';
-import '../favorites/favorites_page.dart';
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
