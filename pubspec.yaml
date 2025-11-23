@@ -19,11 +19,14 @@ dependencies:
   shared_preferences: ^2.5.3
   path_provider: ^2.1.5
   sqflite: ^2.4.2
+  scrollable_positioned_list: ^0.3.8
+  dio: ^5.7.0
+  provider: ^6.1.2
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  scrollable_positioned_list: ^0.3.8
 
   flutter_lints: ^5.0.0
 
