@@ -63,6 +63,27 @@ class Cart {
         0, (sum, item) => sum + item.product.price * item.quantity);
   }
 
+  // Get quantity of a specific product in cart
+  int getQuantity(String productId) {
+    try {
+      final item = _items.firstWhere(
+        (item) => item.product.id == productId,
+      );
+      return item.quantity;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Check if cart is empty
+  bool get isEmpty => _items.isEmpty;
+
+  // Clear all items from cart
+  void clear() {
+    _items.clear();
+    notifier.value++;
+  }
+
   // Helper methods for listener compatibility
   void addListener(VoidCallback listener) {
     notifier.addListener(listener);

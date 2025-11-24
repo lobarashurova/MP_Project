@@ -51,13 +51,20 @@ class _BasketPageState extends State<BasketPage> {
                   Icon(
                     CupertinoIcons.cart,
                     size: 80,
-                    color: AppColors.primary,
+                    color: AppColors.primary.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Your basket is empty',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add items from the home page',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textHint,
                     ),
                   ),
                 ],
