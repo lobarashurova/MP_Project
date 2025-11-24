@@ -1,3 +1,5 @@
+import 'product_model.dart';
+
 class MealModel {
   final String id;
   final String name;
@@ -50,6 +52,31 @@ class MealModel {
       'strMealThumb': imageUrl,
       'strInstructions': instructions,
     };
+  }
+
+  // Convert MealModel to ProductModel for cart
+  // Using a default price based on ingredients count
+  ProductModel toProductModel() {
+    // Calculate price based on ingredients (more ingredients = higher price)
+    // Base price: $8.99, add $0.50 per ingredient (min $8.99, max around $18.99)
+    final basePrice = 8.99;
+    final ingredientPrice = ingredients.length * 0.5;
+    final price = (basePrice + ingredientPrice).clamp(8.99, 18.99);
+    
+    // Calculate rating based on ingredients (more ingredients = slightly higher rating)
+    final rating = (4.0 + (ingredients.length * 0.05)).clamp(4.0, 5.0);
+
+    return ProductModel(
+      id: id,
+      name: name,
+      category: category,
+      price: price,
+      imageUrl: imageUrl,
+      rating: rating,
+      description: instructions.isNotEmpty 
+          ? instructions.substring(0, instructions.length > 100 ? 100 : instructions.length)
+          : 'Delicious $name',
+    );
   }
 }
 

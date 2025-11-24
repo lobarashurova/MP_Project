@@ -73,8 +73,8 @@ class _BasketPageState extends State<BasketPage> {
                       children: [
                         // Delivery Info Banner
                         Container(
-                          margin: const EdgeInsets.all(16),
-                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(16),
@@ -175,7 +175,7 @@ class _BasketPageState extends State<BasketPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: items.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.only(top: 4, bottom: 4),
                           itemBuilder: (context, index) {
                             final cartItem = items[index];
                             return CartItemCard(cartItem: cartItem);

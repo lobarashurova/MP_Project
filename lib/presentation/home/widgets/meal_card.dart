@@ -3,14 +3,80 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
+import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/presentation/basket/cart.dart';
 
-class MealCard extends StatelessWidget {
+class MealCard extends StatefulWidget {
   final MealModel meal;
 
   const MealCard({
     super.key,
     required this.meal,
   });
+
+  @override
+  State<MealCard> createState() => _MealCardState();
+}
+
+class _MealCardState extends State<MealCard> {
+  late ProductModel _product;
+  int _quantity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _product = widget.meal.toProductModel();
+    _updateQuantity();
+    Cart.instance.notifier.addListener(_updateQuantity);
+  }
+
+  @override
+  void dispose() {
+    Cart.instance.notifier.removeListener(_updateQuantity);
+    super.dispose();
+  }
+
+  void _updateQuantity() {
+    try {
+      final cartItem = Cart.instance.items.firstWhere(
+        (item) => item.product.id == _product.id,
+      );
+      if (mounted) {
+        setState(() {
+          _quantity = cartItem.quantity;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _quantity = 0;
+        });
+      }
+    }
+  }
+
+  void _addToCart() {
+    Cart.instance.add(_product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${widget.meal.name} added to basket!',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(milliseconds: 700),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _increaseQuantity() {
+    Cart.instance.increaseQuantity(_product);
+  }
+
+  void _decreaseQuantity() {
+    Cart.instance.decreaseQuantity(_product);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +100,7 @@ class MealCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: Image.network(
-                  meal.imageUrl,
+                  widget.meal.imageUrl,
                   height: 140,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -75,7 +141,7 @@ class MealCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  meal.name,
+                  widget.meal.name,
                   style: AppTextStyles.productName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -90,7 +156,7 @@ class MealCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        meal.category,
+                        widget.meal.category,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -100,7 +166,7 @@ class MealCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        meal.area,
+                        widget.meal.area,
                         style: AppTextStyles.bodySmall,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -117,9 +183,94 @@ class MealCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${meal.ingredients.length} ingredients',
+                      '${widget.meal.ingredients.length} ingredients',
                       style: AppTextStyles.bodySmall,
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Price and Add to Cart section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '\$${_product.price.toStringAsFixed(2)}',
+                      style: AppTextStyles.productPrice,
+                    ),
+                    // Show plus button or quantity controls
+                    if (_quantity == 0)
+                      GestureDetector(
+                        onTap: _addToCart,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            CupertinoIcons.add,
+                            size: 16,
+                            color: AppColors.surface,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Minus button
+                            GestureDetector(
+                              onTap: _decreaseQuantity,
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.minus,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            // Quantity count
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                _quantity.toString(),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            // Plus button
+                            GestureDetector(
+                              onTap: _increaseQuantity,
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.plus,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ],
