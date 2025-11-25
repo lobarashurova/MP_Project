@@ -72,13 +72,11 @@ class _BasketPageState extends State<BasketPage> {
             )
           : Column(
               children: [
-                // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Column(
                       children: [
-                        // Delivery Info Banner
                         Container(
                           margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -95,7 +93,6 @@ class _BasketPageState extends State<BasketPage> {
                           ),
                           child: Row(
                             children: [
-                              // Delivery Time
                               Expanded(
                                 child: Row(
                                   children: [
@@ -134,7 +131,6 @@ class _BasketPageState extends State<BasketPage> {
                                   ],
                                 ),
                               ),
-                              // Free item promo
                               Expanded(
                                 child: Row(
                                   children: [
@@ -177,7 +173,6 @@ class _BasketPageState extends State<BasketPage> {
                           ),
                         ),
 
-                        // Items List
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -193,7 +188,6 @@ class _BasketPageState extends State<BasketPage> {
                   ),
                 ),
 
-                // Fixed Bottom Summary
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -209,7 +203,6 @@ class _BasketPageState extends State<BasketPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Subtotal
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -230,7 +223,6 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                         const SizedBox(height: 8),
                         
-                        // Delivery Fee
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -258,7 +250,6 @@ class _BasketPageState extends State<BasketPage> {
                           ),
                         ),
                         
-                        // Total
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -280,7 +271,6 @@ class _BasketPageState extends State<BasketPage> {
                         
                         const SizedBox(height: 16),
                         
-                        // Order Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
