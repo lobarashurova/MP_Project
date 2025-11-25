@@ -127,9 +127,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              // Add to cart logic here
-            },
+            onPressed: () {},
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),

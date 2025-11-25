@@ -199,7 +199,6 @@ class _MealCardState extends State<MealCard> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Price and Add to Cart section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -207,7 +206,6 @@ class _MealCardState extends State<MealCard> {
                         '\$${_product.price.toStringAsFixed(2)}',
                         style: AppTextStyles.productPrice,
                       ),
-                      // Show plus button or quantity controls
                       if (_quantity == 0)
                         GestureDetector(
                           onTap: _addToCart,
@@ -234,7 +232,6 @@ class _MealCardState extends State<MealCard> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Minus button
                               GestureDetector(
                                 onTap: _decreaseQuantity,
                                 child: Container(
@@ -251,7 +248,6 @@ class _MealCardState extends State<MealCard> {
                                   ),
                                 ),
                               ),
-                              // Quantity count
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 10),
                                 child: Text(
@@ -261,7 +257,6 @@ class _MealCardState extends State<MealCard> {
                                   ),
                                 ),
                               ),
-                              // Plus button
                               GestureDetector(
                                 onTap: _increaseQuantity,
                                 child: Container(
