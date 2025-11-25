@@ -24,7 +24,6 @@ class CartItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Product info section - more compact
           Expanded(
             child: Row(
               children: [
@@ -57,7 +56,6 @@ class CartItemCard extends StatelessWidget {
             ),
           ),
           
-          // Quantity controls - more compact
           Container(
             decoration: BoxDecoration(
               color: AppColors.background,
@@ -66,7 +64,6 @@ class CartItemCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Minus button
                 GestureDetector(
                   onTap: () => Cart.instance.decreaseQuantity(cartItem.product),
                   child: Container(
@@ -84,7 +81,6 @@ class CartItemCard extends StatelessWidget {
                   ),
                 ),
                 
-                // Quantity
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
@@ -96,7 +92,6 @@ class CartItemCard extends StatelessWidget {
                   ),
                 ),
                 
-                // Plus button
                 GestureDetector(
                   onTap: () => Cart.instance.increaseQuantity(cartItem.product),
                   child: Container(
