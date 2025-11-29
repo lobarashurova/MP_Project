@@ -285,7 +285,7 @@ class _BasketPageState extends State<BasketPage> {
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Proceeding to order...'),
+                                  content: Text('Proceeding to orders...'),
                                 ),
                               );
                             },

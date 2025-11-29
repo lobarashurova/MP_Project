@@ -1,8 +1,8 @@
-import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/data/models/meal_model.dart';
 import 'package:flutter/foundation.dart';
 
 class CartItem {
-  final ProductModel product;
+  final MealModel product;
   int quantity;
 
   CartItem({required this.product, this.quantity = 1});
@@ -25,7 +25,7 @@ class Cart {
   // Total quantity of all items
   int get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
 
-  void add(ProductModel product) {
+  void add(MealModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
     if (index >= 0) {
       _items[index].quantity++;
@@ -35,12 +35,12 @@ class Cart {
     notifier.value++; // triggers UI updates
   }
 
-  void remove(ProductModel product) {
+  void remove(MealModel product) {
     _items.removeWhere((item) => item.product.id == product.id);
     notifier.value++;
   }
 
-  void increaseQuantity(ProductModel product) {
+  void increaseQuantity(MealModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
     if (index >= 0) {
       _items[index].quantity++;
@@ -48,7 +48,7 @@ class Cart {
     }
   }
 
-  void decreaseQuantity(ProductModel product) {
+  void decreaseQuantity(MealModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
     if (index >= 0 && _items[index].quantity > 1) {
       _items[index].quantity--;
