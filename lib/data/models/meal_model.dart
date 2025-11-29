@@ -1,46 +1,107 @@
-import 'product_model.dart';
+import 'package:hive/hive.dart';
 
+part 'meal_model.g.dart';
+
+@HiveType(typeId: 0)
 class MealModel {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String name;
+
+  @HiveField(2)
   final String category;
-  final String area;
+
+  @HiveField(3)
+  final double price;
+
+  @HiveField(4)
   final String imageUrl;
-  final String instructions;
-  final List<Ingredient> ingredients;
+
+  @HiveField(5)
+  final double rating;
+
+  @HiveField(6)
+  final String description;
+
+  @HiveField(7)
+  final List<String> ingredients;
+
+  @HiveField(8)
+  final String area;
 
   MealModel({
     required this.id,
     required this.name,
     required this.category,
-    required this.area,
+    required this.price,
     required this.imageUrl,
-    required this.instructions,
-    required this.ingredients,
+    required this.rating,
+    required this.description,
+    this.ingredients = const [],
+    this.area = '',
   });
 
   factory MealModel.fromJson(Map<String, dynamic> json) {
-    List<Ingredient> ingredients = [];
+    return MealModel(
+      id: json['idMeal'] as String? ?? '',
+      name: json['strMeal'] as String? ?? '',
+      category: json['strCategory'] as String? ?? 'Uncategorized',
+      price: _calculatePrice(_parseIngredients(json).length),
+      imageUrl: json['strMealThumb'] as String? ?? '',
+      rating: (json['strRating'] as num?)?.toDouble() ?? 0.0,
+      description: json['strInstructions'] as String? ?? '',
+      area: json['strArea'] as String? ?? '',
+      ingredients: _parseIngredients(json),
+    );
+  }
+
+  static List<String> _parseIngredients(Map<String, dynamic> json) {
+    final ingredients = <String>[];
     for (int i = 1; i <= 20; i++) {
-      final ingredient = json['strIngredient$i'];
-      final measure = json['strMeasure$i'];
-      if (ingredient != null && ingredient.toString().trim().isNotEmpty) {
-        ingredients.add(Ingredient(
-          name: ingredient,
-          measure: measure ?? '',
-        ));
+      final ingredient = json['strIngredient$i'] as String?;
+      if (ingredient != null && ingredient.isNotEmpty) {
+        ingredients.add(ingredient);
       }
     }
+    return ingredients;
+  }
 
+  MealModel copyWith({
+    String? id,
+    String? name,
+    String? category,
+    double? price,
+    String? imageUrl,
+    double? rating,
+    String? description,
+    List<String>? ingredients,
+    String? area,
+  }) {
     return MealModel(
-      id: json['idMeal'] ?? '',
-      name: json['strMeal'] ?? '',
-      category: json['strCategory'] ?? '',
-      area: json['strArea'] ?? '',
-      imageUrl: json['strMealThumb'] ?? '',
-      instructions: json['strInstructions'] ?? '',
-      ingredients: ingredients,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      rating: rating ?? this.rating,
+      description: description ?? this.description,
+      ingredients: ingredients ?? this.ingredients,
+      area: area ?? this.area,
     );
+  }
+
+  static double _calculatePrice(int ingredientCount) {
+    // Base price: 20k
+    // Add 4k per ingredient
+    // Max price: 100k
+    const basePrice = 20.0;
+    const pricePerIngredient = 4.0;
+    const maxPrice = 100.0;
+
+    final calculatedPrice = basePrice + (ingredientCount * pricePerIngredient);
+    return calculatedPrice.clamp(basePrice, maxPrice);
   }
 
   Map<String, dynamic> toJson() {
@@ -48,44 +109,11 @@ class MealModel {
       'idMeal': id,
       'strMeal': name,
       'strCategory': category,
-      'strArea': area,
+      'strPrice': price,
       'strMealThumb': imageUrl,
-      'strInstructions': instructions,
+      'strRating': rating,
+      'strInstructions': description,
+      'strArea': area,
     };
   }
-
-  // Convert MealModel to ProductModel for cart
-  // Using a default price based on ingredients count
-  ProductModel toProductModel() {
-    // Calculate price based on ingredients (more ingredients = higher price)
-    // Base price: $8.99, add $0.50 per ingredient (min $8.99, max around $18.99)
-    final basePrice = 8.99;
-    final ingredientPrice = ingredients.length * 0.5;
-    final price = (basePrice + ingredientPrice).clamp(8.99, 18.99);
-    
-    // Calculate rating based on ingredients (more ingredients = slightly higher rating)
-    final rating = (4.0 + (ingredients.length * 0.05)).clamp(4.0, 5.0);
-
-    return ProductModel(
-      id: id,
-      name: name,
-      category: category,
-      price: price,
-      imageUrl: imageUrl,
-      rating: rating,
-      description: instructions.isNotEmpty 
-          ? instructions.substring(0, instructions.length > 100 ? 100 : instructions.length)
-          : 'Delicious $name',
-    );
-  }
-}
-
-class Ingredient {
-  final String name;
-  final String measure;
-
-  Ingredient({
-    required this.name,
-    required this.measure,
-  });
 }

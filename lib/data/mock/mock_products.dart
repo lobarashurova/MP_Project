@@ -1,9 +1,9 @@
-import '../models/product_model.dart';
+import '../models/meal_model.dart';
 
 class MockProducts {
-  static final List<ProductModel> products = [
+  static final List<MealModel> products = [
     // ----------------- MAIN DISHES -----------------
-    ProductModel(
+    MealModel(
       id: '1',
       name: 'Plov (Uzbek Pilaf)',
       category: 'Main Dishes',
@@ -12,7 +12,7 @@ class MockProducts {
       rating: 4.9,
       description: 'Traditional Uzbek rice dish with lamb, carrots, and aromatic spices',
     ),
-    ProductModel(
+    MealModel(
       id: '2',
       name: 'Lagman',
       category: 'Main Dishes',
@@ -21,7 +21,7 @@ class MockProducts {
       rating: 4.7,
       description: 'Hand-pulled noodles with meat and vegetables in savory broth',
     ),
-    ProductModel(
+    MealModel(
       id: '3',
       name: 'Shashlik',
       category: 'Main Dishes',
@@ -30,7 +30,7 @@ class MockProducts {
       rating: 4.8,
       description: 'Grilled marinated meat skewers served with onions',
     ),
-    ProductModel(
+    MealModel(
       id: '4',
       name: 'Dimlama',
       category: 'Main Dishes',
@@ -39,7 +39,7 @@ class MockProducts {
       rating: 4.7,
       description: 'Slow-cooked stew of meat and layered vegetables',
     ),
-    ProductModel(
+    MealModel(
       id: '5',
       name: 'Kazan Kabob',
       category: 'Main Dishes',
@@ -48,7 +48,7 @@ class MockProducts {
       rating: 4.8,
       description: 'Crispy fried meat and potatoes cooked in a cauldron',
     ),
-    ProductModel(
+    MealModel(
       id: '6',
       name: 'Norin',
       category: 'Main Dishes',
@@ -59,7 +59,7 @@ class MockProducts {
     ),
 
     // ----------------- APPETIZERS -----------------
-    ProductModel(
+    MealModel(
       id: '7',
       name: 'Manti',
       category: 'Appetizers',
@@ -68,7 +68,7 @@ class MockProducts {
       rating: 4.8,
       description: 'Steamed dumplings filled with spiced meat and onions',
     ),
-    ProductModel(
+    MealModel(
       id: '8',
       name: 'Samsa',
       category: 'Appetizers',
@@ -77,7 +77,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Flaky pastry stuffed with lamb and onion mixture',
     ),
-    ProductModel(
+    MealModel(
       id: '9',
       name: 'Chuchvara',
       category: 'Appetizers',
@@ -86,7 +86,7 @@ class MockProducts {
       rating: 4.7,
       description: 'Small dumplings served with broth or sour cream',
     ),
-    ProductModel(
+    MealModel(
       id: '10',
       name: 'Kazi',
       category: 'Appetizers',
@@ -97,7 +97,7 @@ class MockProducts {
     ),
 
     // ----------------- SOUPS -----------------
-    ProductModel(
+    MealModel(
       id: '11',
       name: 'Shurpa',
       category: 'Soups',
@@ -106,7 +106,7 @@ class MockProducts {
       rating: 4.5,
       description: 'Aromatic lamb soup with fresh vegetables',
     ),
-    ProductModel(
+    MealModel(
       id: '12',
       name: 'Mastava',
       category: 'Soups',
@@ -115,7 +115,7 @@ class MockProducts {
       rating: 4.4,
       description: 'Rice soup with meat, vegetables, and herbs',
     ),
-    ProductModel(
+    MealModel(
       id: '13',
       name: 'Ugro Supi',
       category: 'Soups',
@@ -126,7 +126,7 @@ class MockProducts {
     ),
 
     // ----------------- SALADS -----------------
-    ProductModel(
+    MealModel(
       id: '14',
       name: 'Achichuk Salad',
       category: 'Salads',
@@ -135,7 +135,7 @@ class MockProducts {
       rating: 4.3,
       description: 'Fresh tomato and onion salad with herbs',
     ),
-    ProductModel(
+    MealModel(
       id: '15',
       name: 'Baqlajon Salati',
       category: 'Salads',
@@ -144,7 +144,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Grilled eggplant salad with tomatoes and garlic',
     ),
-    ProductModel(
+    MealModel(
       id: '16',
       name: 'Tashkent Salad',
       category: 'Salads',
@@ -155,7 +155,7 @@ class MockProducts {
     ),
 
     // ----------------- BREADS -----------------
-    ProductModel(
+    MealModel(
       id: '17',
       name: 'Non (Flatbread)',
       category: 'Breads',
@@ -164,7 +164,7 @@ class MockProducts {
       rating: 4.9,
       description: 'Traditional round flatbread baked in tandoor',
     ),
-    ProductModel(
+    MealModel(
       id: '18',
       name: 'Katlama',
       category: 'Breads',
@@ -175,7 +175,7 @@ class MockProducts {
     ),
 
     // ----------------- DESSERTS -----------------
-    ProductModel(
+    MealModel(
       id: '19',
       name: 'Chak-Chak',
       category: 'Desserts',
@@ -184,7 +184,7 @@ class MockProducts {
       rating: 4.7,
       description: 'Honey-soaked fried dough pieces',
     ),
-    ProductModel(
+    MealModel(
       id: '20',
       name: 'Halva',
       category: 'Desserts',
@@ -193,7 +193,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Sweet sesame paste dessert',
     ),
-    ProductModel(
+    MealModel(
       id: '21',
       name: 'Nisholda',
       category: 'Desserts',
@@ -202,7 +202,7 @@ class MockProducts {
       rating: 4.5,
       description: 'Foamy whipped sugar dessert with herbs',
     ),
-    ProductModel(
+    MealModel(
       id: '22',
       name: 'Sumalak',
       category: 'Desserts',
@@ -213,7 +213,7 @@ class MockProducts {
     ),
 
     // ----------------- DRINKS -----------------
-    ProductModel(
+    MealModel(
       id: '23',
       name: 'Kefir',
       category: 'Drinks',
@@ -222,7 +222,7 @@ class MockProducts {
       rating: 4.4,
       description: 'Fermented milk drink served chilled',
     ),
-    ProductModel(
+    MealModel(
       id: '24',
       name: 'Ayran',
       category: 'Drinks',
@@ -231,7 +231,7 @@ class MockProducts {
       rating: 4.5,
       description: 'Refreshing yogurt-based drink with salt',
     ),
-    ProductModel(
+    MealModel(
       id: '25',
       name: 'Uzbek Tea',
       category: 'Drinks',
@@ -240,7 +240,7 @@ class MockProducts {
       rating: 5.0,
       description: 'Green tea served in a traditional piala cup',
     ),
-    ProductModel(
+    MealModel(
       id: '26',
       name: 'Kompot',
       category: 'Drinks',
@@ -249,7 +249,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Sweet drink made from dried fruits',
     ),
-    ProductModel(
+    MealModel(
       id: '27',
       name: 'Coca Cola',
       category: 'Drinks',
@@ -258,7 +258,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Popular soda',
     ),
-    ProductModel(
+    MealModel(
       id: '28',
       name: 'Fanta',
       category: 'Drinks',
@@ -267,7 +267,7 @@ class MockProducts {
       rating: 4.6,
       description: 'Popular soda',
     ),
-    ProductModel(
+    MealModel(
       id: '29',
       name: 'Sprite',
       category: 'Drinks',
@@ -286,7 +286,7 @@ class MockProducts {
     return categorySet.toList();
   }
 
-  static List<ProductModel> getProductsByCategory(String category) {
+  static List<MealModel> getProductsByCategory(String category) {
     return products.where((product) => product.category == category).toList();
   }
 }

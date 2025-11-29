@@ -1,20 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:xurmo/data/models/meal_model.dart';
-import 'package:xurmo/data/repositories/meal_repository.dart';
+import 'package:xurmo/data/repositories/product_repository.dart';
 
 class HomeProvider extends ChangeNotifier {
-  final MealRepository _repository;
+  final ProductRepository _repository;
 
-  HomeProvider({MealRepository? repository})
-      : _repository = repository ?? MealRepository();
+  HomeProvider({ProductRepository? repository})
+      : _repository = repository ?? ProductRepository();
 
-  List<MealModel> _meals = [];
+  List<MealModel> _products = [];
   bool _isLoading = false;
   String? _error;
   String _selectedCategory = 'All';
   String _visibleCategory = 'All';
 
-  List<MealModel> get meals => _meals;
+  List<MealModel> get products => _products;
+  List<MealModel> get meals => _products;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get selectedCategory => _selectedCategory;
@@ -22,17 +23,17 @@ class HomeProvider extends ChangeNotifier {
 
   List<String> get categories {
     final Set<String> categorySet = {'All'};
-    for (var meal in _meals) {
-      categorySet.add(meal.category);
+    for (var p in _products) {
+      categorySet.add(p.category);
     }
     return categorySet.toList();
   }
 
-  List<MealModel> getMealsByCategory(String category) {
+  List<MealModel> getProductsByCategory(String category) {
     if (category == 'All') {
-      return _meals;
+      return _products;
     }
-    return _meals.where((meal) => meal.category == category).toList();
+    return _products.where((p) => p.category == category).toList();
   }
 
   Map<String, int> getCategoryStartIndices() {
@@ -43,8 +44,8 @@ class HomeProvider extends ChangeNotifier {
     indices['All'] = currentIndex;
 
     for (final category in categories.where((c) => c != 'All')) {
-      final categoryMeals = getMealsByCategory(category);
-      final rows = (categoryMeals.length / 2).ceil();
+      final categoryProducts = getProductsByCategory(category);
+      final rows = (categoryProducts.length / 2).ceil();
       indices[category] = currentIndex;
       currentIndex += rows;
     }
@@ -62,13 +63,13 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadMeals({int count = 20}) async {
+  Future<void> loadProducts() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _meals = await _repository.fetchRandomMeals(count);
+      _products = await _repository.fetchProducts();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -78,9 +79,17 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> refreshMeals({int count = 20}) async {
-    _meals = [];
-    _error = null;
-    await loadMeals(count: count);
+  Future<void> loadMeals() async {
+    await loadProducts();
+  }
+
+  Future<void> refreshProducts() async {
+    try {
+      _products = await _repository.fetchProducts(forceRefresh: true);
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 }

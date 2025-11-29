@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
-import 'package:xurmo/data/models/product_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/product_detail_page.dart';
 
@@ -20,27 +19,27 @@ class MealCard extends StatefulWidget {
 }
 
 class _MealCardState extends State<MealCard> {
-  late ProductModel _product;
+  late MealModel _product;
   int _quantity = 0;
 
   @override
   void initState() {
     super.initState();
-    _product = widget.meal.toProductModel();
+    _product = widget.meal;
     _updateQuantity();
-    Cart.instance.notifier.addListener(_updateQuantity);
+    Cart.instance.addListener(_updateQuantity);
   }
 
   @override
   void dispose() {
-    Cart.instance.notifier.removeListener(_updateQuantity);
+    Cart.instance.removeListener(_updateQuantity);
     super.dispose();
   }
 
   void _updateQuantity() {
     try {
       final cartItem = Cart.instance.items.firstWhere(
-        (item) => item.product.id == _product.id,
+            (item) => item.product.id == _product.id,
       );
       if (mounted) {
         setState(() {
@@ -133,7 +132,7 @@ class _MealCardState extends State<MealCard> {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withOpacity(0.9),
+                      color: AppColors.surface.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -162,7 +161,7 @@ class _MealCardState extends State<MealCard> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -203,7 +202,7 @@ class _MealCardState extends State<MealCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${_product.price.toStringAsFixed(2)}',
+                        '${_product.price.toStringAsFixed(0)}',
                         style: AppTextStyles.productPrice,
                       ),
                       if (_quantity == 0)
