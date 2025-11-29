@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../models/product_model.dart';
+import '../models/meal_model.dart';
 
 class FavoritesManager extends ChangeNotifier {
   static final FavoritesManager _instance = FavoritesManager._internal();
@@ -9,10 +9,10 @@ class FavoritesManager extends ChangeNotifier {
   FavoritesManager._internal();
 
   final Set<String> _favoriteIds = {};
-  final Map<String, ProductModel> _favoriteProducts = {};
+  final Map<String, MealModel> _favoriteProducts = {};
 
   // Get all favorite products
-  List<ProductModel> get favorites => _favoriteProducts.values.toList();
+  List<MealModel> get favorites => _favoriteProducts.values.toList();
 
   // Get favorite count
   int get favoriteCount => _favoriteProducts.length;
@@ -23,7 +23,7 @@ class FavoritesManager extends ChangeNotifier {
   }
 
   // Toggle favorite status
-  void toggleFavorite(ProductModel product) {
+  void toggleFavorite(MealModel product) {
     if (_favoriteIds.contains(product.id)) {
       _favoriteIds.remove(product.id);
       _favoriteProducts.remove(product.id);
@@ -35,7 +35,7 @@ class FavoritesManager extends ChangeNotifier {
   }
 
   // Add to favorites
-  void addFavorite(ProductModel product) {
+  void addFavorite(MealModel product) {
     if (!_favoriteIds.contains(product.id)) {
       _favoriteIds.add(product.id);
       _favoriteProducts[product.id] = product;

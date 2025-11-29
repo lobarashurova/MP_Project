@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../data/manager/favorites_manager.dart';
-import '../../data/models/product_model.dart';
+import '../../data/models/meal_model.dart';
 import '../basket/cart.dart';
 
 class FavoritesPage extends StatefulWidget {
@@ -95,7 +95,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  Widget _buildFavoritesList(List<ProductModel> favorites) {
+  Widget _buildFavoritesList(List<MealModel> favorites) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -111,7 +111,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  Widget _buildFavoriteCard(ProductModel product) {
+  Widget _buildFavoriteCard(MealModel product) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
