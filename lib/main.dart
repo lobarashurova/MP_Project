@@ -25,7 +25,7 @@ void main() async {
 
   await Hive.openBox<MealModel>('productsBox');
   await Hive.openBox<MealModel>('favoritesBox');
-  await Hive.openBox<MealModel>('cartBox');
+  await Hive.openBox('shopping_cart');
   await Hive.openBox('ordersBox');
 
   runApp(const MyApp());
