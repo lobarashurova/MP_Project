@@ -4,6 +4,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:xurmo/data/models/meal_model.dart';
+import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
+import 'package:xurmo/presentation/auth/pages/login_page.dart';
+import 'package:xurmo/presentation/auth/pages/signup_page.dart';
+import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/dashbboard/main_page.dart';
 import 'package:xurmo/firebase_options.dart';
@@ -34,7 +38,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
       child: MaterialApp(
         title: 'Xurmo App',
@@ -43,7 +49,24 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.orange,
           useMaterial3: true,
         ),
-        home: const MainPage(),
+        home: Consumer<AuthProvider>(
+          builder: (context, authProvider, _) {
+            if (authProvider.isAuthenticated) {
+              Future.microtask(() {
+                context.read<FavoritesProvider>().loadFavorites();
+                context.read<HomeProvider>().loadMeals();
+              });
+              return const MainPage();
+            } else {
+              return const LoginPage();
+            }
+          },
+        ),
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/signup': (context) => const SignupPage(),
+          '/home': (context) => const MainPage(),
+        },
       ),
     );
   }

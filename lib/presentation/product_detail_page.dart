@@ -3,6 +3,8 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
+//TODO: make the prices in sums
+
 class ProductDetailPage extends StatefulWidget {
   final MealModel meal;
   const ProductDetailPage({super.key, required this.meal});

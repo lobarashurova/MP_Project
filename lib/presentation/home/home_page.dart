@@ -10,6 +10,8 @@ import 'package:xurmo/presentation/home/widgets/meal_card.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card_shimmer.dart';
 import 'package:xurmo/presentation/home/widgets/search_bar_widget.dart';
 
+import '../favorites/provider/favorites_provider.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -33,6 +35,7 @@ class _HomePageState extends State<HomePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().loadMeals();
+      context.read<FavoritesProvider>().loadFavorites();
     });
   }
 
