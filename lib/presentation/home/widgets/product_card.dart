@@ -2,11 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
-import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
 class ProductCard extends StatelessWidget {
-  final ProductModel product;
+  final MealModel product;
 
   const ProductCard({super.key, required this.product});
 

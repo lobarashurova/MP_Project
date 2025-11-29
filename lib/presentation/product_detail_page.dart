@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/data/models/meal_model.dart';
-import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/presentation/basket/cart.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final MealModel meal;
@@ -12,12 +12,27 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  late ProductModel _product;
+  late MealModel _product;
 
   @override
   void initState() {
     super.initState();
-    _product = widget.meal.toProductModel();
+    _product = widget.meal;
+  }
+
+  void _addToCart() {
+    Cart.instance.add(_product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${_product.name} added to basket!',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(milliseconds: 700),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -66,13 +81,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '\$${_product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '${_product.price.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _product.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -84,7 +132,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'A delicious ${widget.meal.category} dish from the ${widget.meal.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.',
+                    _product.description.isNotEmpty
+                        ? _product.description
+                        : 'A delicious ${widget.meal.category} dish from the ${widget.meal.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.',
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.5,
@@ -100,12 +150,75 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
+                  _product.ingredients.isEmpty
+                      ? const Text(
+                    'No ingredients information available',
+                    style: TextStyle(color: Colors.black54),
+                  )
+                      : Wrap(
                     spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: widget.meal.ingredients
-                        .map((ingredient) => Chip(label: Text(ingredient.name)))
+                    runSpacing: 8.0,
+                    children: _product.ingredients
+                        .map(
+                          (ingredient) => Chip(
+                        label: Text(ingredient),
+                        backgroundColor:
+                        AppColors.primary.withValues(alpha: 0.1),
+                        labelStyle: const TextStyle(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
                         .toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Category',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.meal.category,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Region',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.meal.area,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -116,18 +229,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-            color: AppColors.surface,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-              )
-            ]),
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow.withValues(alpha: 0.1),
+              spreadRadius: 1,
+              blurRadius: 10,
+            )
+          ],
+        ),
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: _addToCart,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
