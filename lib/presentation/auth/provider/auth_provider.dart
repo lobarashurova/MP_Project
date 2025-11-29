@@ -27,7 +27,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _auth.signOut();
+      await FirebaseAuth.instance.signOut();
       _user = null;
     } catch (e) {
       throw Exception('Failed to logout: $e');
