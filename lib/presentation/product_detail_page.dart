@@ -100,7 +100,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -135,7 +135,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 8),
                   Text(
                     _product.description.isNotEmpty
-                        ? _product.description
+                        ? 'A delicious ${_product.category} dish from the ${_product.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.'
                         : 'A delicious ${widget.meal.category} dish from the ${widget.meal.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.',
                     style: const TextStyle(
                       fontSize: 16,
@@ -154,25 +154,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 8),
                   _product.ingredients.isEmpty
                       ? const Text(
-                    'No ingredients information available',
-                    style: TextStyle(color: Colors.black54),
-                  )
+                          'No ingredients information available',
+                          style: TextStyle(color: Colors.black54),
+                        )
                       : Wrap(
-                    spacing: 8.0,
-                    runSpacing: 8.0,
-                    children: _product.ingredients
-                        .map(
-                          (ingredient) => Chip(
-                        label: Text(ingredient),
-                        backgroundColor:
-                        AppColors.primary.withValues(alpha: 0.1),
-                        labelStyle: const TextStyle(
-                          color: AppColors.primary,
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: _product.ingredients
+                              .map(
+                                (ingredient) => Chip(
+                                  label: Text(ingredient),
+                                  backgroundColor:
+                                      AppColors.primary.withOpacity(0.1),
+                                  labelStyle: const TextStyle(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
-                      ),
-                    )
-                        .toList(),
-                  ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -234,7 +234,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withValues(alpha: 0.1),
+              color: AppColors.shadow.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 10,
             )
