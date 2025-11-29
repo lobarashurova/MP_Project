@@ -8,8 +8,6 @@ import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/product_detail_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 
-//TODO: make the prices in sums
-
 class MealCard extends StatefulWidget {
   final MealModel meal;
 
@@ -31,12 +29,12 @@ class _MealCardState extends State<MealCard> {
     super.initState();
     _product = widget.meal;
     _updateQuantity();
-    Cart.instance.addListener(_updateQuantity);
+    Cart.instance.notifier.addListener(_updateQuantity);
   }
 
   @override
   void dispose() {
-    Cart.instance.removeListener(_updateQuantity);
+    Cart.instance.notifier.removeListener(_updateQuantity);
     super.dispose();
   }
 
@@ -254,7 +252,7 @@ class _MealCardState extends State<MealCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${_product.price.toStringAsFixed(0)}',
+                            '${_product.price.toStringAsFixed(0)}k',
                             style: AppTextStyles.productPrice,
                           ),
                           if (_quantity == 0)
