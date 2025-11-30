@@ -19,7 +19,6 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const CategoriesPage(),
     const FavoritesPage(),
     const BasketPage(),
     const ProfilePage(),
@@ -53,28 +52,22 @@ class _MainPageState extends State<MainPage> {
                   index: 0,
                 ),
                 _buildNavItem(
-                  icon: CupertinoIcons.square_grid_2x2,
-                  activeIcon: CupertinoIcons.square_grid_2x2_fill,
-                  label: 'Categories',
-                  index: 1,
-                ),
-                _buildNavItem(
                   icon: CupertinoIcons.heart,
                   activeIcon: CupertinoIcons.heart_fill,
                   label: 'Favorites',
-                  index: 2,
+                  index: 1,
                 ),
                 _buildNavItem(
                   icon: CupertinoIcons.cart,
                   activeIcon: CupertinoIcons.cart_fill,
                   label: 'Basket',
-                  index: 3,
+                  index: 2,
                 ),
                 _buildNavItem(
                   icon: CupertinoIcons.person,
                   activeIcon: CupertinoIcons.person_fill,
                   label: 'Profile',
-                  index: 4,
+                  index: 3,
                 ),
               ],
             ),
