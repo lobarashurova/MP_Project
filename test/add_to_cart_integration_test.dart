@@ -23,10 +23,6 @@ void main() {
     Cart.instance.clear();
   });
 
-  tearDownAll(() async {
-    await Hive.close();
-  });
-
   final testMeal1 = MealModel(
     id: '52772',
     name: 'Teriyaki Chicken Casserole',
@@ -67,10 +63,20 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: const BasketPage(),
       ));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
-      expect(find.text('45'), findsWidgets);
+
+      final totalFinder = find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Text &&
+            widget.data != null &&
+            widget.data!.contains('45') &&
+            widget.style?.fontSize == 20.0,
+        description: 'Text containing \'45\' with a font size of 20.0',
+      );
+
+      expect(totalFinder, findsOneWidget);
     });
 
     testWidgets('should display multiple items in basket', (WidgetTester tester) async {
@@ -80,10 +86,21 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: const BasketPage(),
       ));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('Beef Stroganoff'), findsOneWidget);
+      
+      final totalFinder = find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Text &&
+            widget.data != null &&
+            widget.data!.contains('80') &&
+            widget.style?.fontSize == 20.0,
+        description: 'Text containing \'80\' with a font size of 20.0',
+      );
+      
+      expect(totalFinder, findsOneWidget);
     });
 
     testWidgets('should display Order Now button', (WidgetTester tester) async {
@@ -92,7 +109,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: const BasketPage(),
       ));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
 
       expect(find.widgetWithText(ElevatedButton, 'Order Now'), findsOneWidget);
     });

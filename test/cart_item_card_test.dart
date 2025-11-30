@@ -22,10 +22,6 @@ void main() {
     Cart.instance.clear();
   });
 
-  tearDownAll(() async {
-    await Hive.close();
-  });
-
   final testMeal = MealModel(
     id: '101',
     name: 'Test Meal',
