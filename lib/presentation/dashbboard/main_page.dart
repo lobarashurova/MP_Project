@@ -4,7 +4,6 @@ import 'package:xurmo/presentation/favorites/favorites_page.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../home/home_page.dart';
-import '../categories/categories_page.dart';
 import '../basket/basket_page.dart';
 import '../profile/profile_page.dart';
 class MainPage extends StatefulWidget {

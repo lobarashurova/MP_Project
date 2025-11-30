@@ -49,19 +49,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.orange,
           useMaterial3: true,
         ),
-        home: Consumer<AuthProvider>(
-          builder: (context, authProvider, _) {
-            if (authProvider.isAuthenticated) {
-              Future.microtask(() {
-                context.read<FavoritesProvider>().loadFavorites();
-                context.read<HomeProvider>().loadMeals();
-              });
-              return const MainPage();
-            } else {
-              return const LoginPage();
-            }
-          },
-        ),
+        home: const MainPage(),
         routes: {
           '/login': (context) => const LoginPage(),
           '/signup': (context) => const SignupPage(),

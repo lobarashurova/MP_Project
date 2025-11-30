@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/manager/favorites_manager.dart';
@@ -9,6 +10,7 @@ import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/profile/personal_info_page.dart';
 import 'package:xurmo/presentation/orders/order_page.dart';
 import 'package:xurmo/presentation/profile/about_page.dart';
+import 'package:xurmo/presentation/auth/provider/auth_provider.dart' as auth;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -55,26 +57,34 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildStatsSection(),
-              const SizedBox(height: 24),
-              _buildAccountSection(),
-              const SizedBox(height: 16),
-              _buildSettingsSection(),
-              const SizedBox(height: 24),
-              _buildLogoutButton(),
-              const SizedBox(height: 24),
-            ],
+    return Consumer<auth.AuthProvider>(
+      builder: (context, authProvider, _) {
+        if (!authProvider.isAuthenticated) {
+          return _buildLoginView(context);
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  _buildStatsSection(),
+                  const SizedBox(height: 24),
+                  _buildAccountSection(),
+                  const SizedBox(height: 16),
+                  _buildSettingsSection(),
+                  const SizedBox(height: 24),
+                  _buildLogoutButton(),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -304,11 +314,252 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () async {
               Navigator.pop(context);
               await FirebaseAuth.instance.signOut();
-              if (mounted) Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
             },
             child: Text('Logout', style: TextStyle(color: AppColors.error)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoginView(BuildContext context) {
+    final _emailController = TextEditingController();
+    final _passwordController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
+    bool _isLoading = false;
+    bool _obscurePassword = true;
+    String? _errorMessage;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    const Text(
+                      'Welcome Back',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.iconPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Sign in to your account to continue',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    if (_errorMessage != null) const SizedBox(height: 16),
+                    const Text(
+                      'Email',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.iconPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your email',
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Email is required';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Password',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.iconPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your password',
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.lock_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Password is required';
+                        }
+                        if (value!.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(color: AppColors.primary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                if (!_formKey.currentState!.validate()) return;
+
+                                setState(() {
+                                  _isLoading = true;
+                                  _errorMessage = null;
+                                });
+
+                                try {
+                                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                    email: _emailController.text.trim(),
+                                    password: _passwordController.text,
+                                  );
+                                  _loadOrderCount();
+                                } on FirebaseAuthException catch (e) {
+                                  setState(() {
+                                    _errorMessage = e.message ?? 'An error occurred';
+                                  });
+                                } catch (e) {
+                                  setState(() {
+                                    _errorMessage = 'An unexpected error occurred';
+                                  });
+                                } finally {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.divider,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.divider,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account? ",
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed('/signup');
+                          },
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

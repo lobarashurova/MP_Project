@@ -54,7 +54,6 @@ class Cart {
       await _box.put('cart_items', data);
       notifier.value++;
     } catch (e) {
-      // In case of error, do nothing to avoid crash
     }
   }
 

@@ -46,14 +46,12 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      // Create user with email and password
       final userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      // Save user data to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)

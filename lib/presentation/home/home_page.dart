@@ -40,13 +40,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _scrollCategoryBarTo(int index) {
-    const chipWidth = 80.0;
-    const spacing = 12.0;
-    const totalChip = chipWidth + spacing;
+    if (!_categoryScrollController.hasClients) return;
 
-    final targetOffset = index * totalChip;
+    const chipWidth = 120.0;
+    const spacing = 12.0;
+    const horizontalPadding = 16.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final targetOffset = (index * (chipWidth + spacing)) - (screenWidth / 2) + (chipWidth / 2) + horizontalPadding;
+
     _categoryScrollController.animateTo(
-      targetOffset,
+      targetOffset.clamp(0.0, _categoryScrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );

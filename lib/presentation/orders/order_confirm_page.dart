@@ -35,7 +35,7 @@ class OrderConfirmationPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false),
+                    onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -48,7 +48,7 @@ class OrderConfirmationPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false),
+                    onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(color: AppColors.primary),
