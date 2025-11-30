@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
-
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../presentation/favorites/provider/favorites_provider.dart';
+import '../../data/manager/favorites_manager.dart';
 import '../basket/cart.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -17,6 +15,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final FavoritesManager _favoritesManager = FavoritesManager();
 
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   late Future<DocumentSnapshot> _userDataFuture;
@@ -27,18 +26,20 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _favoritesManager.addListener(_onDataChanged);
     Cart.instance.notifier.addListener(_onDataChanged);
 
     if (_currentUser != null) {
       _userDataFuture = FirebaseFirestore.instance
           .collection('users')
-          .doc(_currentUser!.uid)
+          .doc(_currentUser.uid)
           .get();
     }
   }
 
   @override
   void dispose() {
+    _favoritesManager.removeListener(_onDataChanged);
     Cart.instance.notifier.removeListener(_onDataChanged);
     super.dispose();
   }
@@ -49,7 +50,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _handleLogout() async {
     try {
+      // if (context.mounted) {
+      //   await context.read<AuthProvider>().logout();
+      // }
+
+      //Direct Firebase Signout (Fallback if Provider isn't set up)
       await FirebaseAuth.instance.signOut();
+
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       }
@@ -128,6 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: FutureBuilder<DocumentSnapshot>(
               future: _userDataFuture,
               builder: (context, snapshot) {
+                // Default values
                 String displayName = 'User';
                 String email = _currentUser?.email ?? 'No email';
 
@@ -159,6 +167,29 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Edit profile feature coming soon!',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: AppColors.primary,
+                            duration: const Duration(milliseconds: 700),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Edit Profile',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -170,8 +201,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatsSection() {
-    final favoritesCount = context.watch<FavoritesProvider>().favoriteCount;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -179,7 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Expanded(
             child: _buildStatCard(
               icon: CupertinoIcons.heart_fill,
-              value: favoritesCount.toString(),
+              value: _favoritesManager.favoriteCount.toString(),
               label: 'Favorites',
               color: AppColors.error,
             ),
@@ -324,7 +353,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _buildMenuItem(
           icon: CupertinoIcons.money_dollar,
           title: 'Currency',
-          trailing: 'sum',
+          trailing: 'USD',
           onTap: () => _showComingSoon('Currency'),
         ),
       ],
