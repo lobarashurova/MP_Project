@@ -5,7 +5,7 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
-import 'package:xurmo/presentation/product_detail_page.dart';
+import 'package:xurmo/presentation/home/product_detail_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 
 class MealCard extends StatefulWidget {
