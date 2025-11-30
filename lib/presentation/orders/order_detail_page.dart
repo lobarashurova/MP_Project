@@ -5,11 +5,13 @@ import '../../core/constants/app_colors.dart';
 class OrderDetailsPage extends StatelessWidget {
   final String orderId;
   final Map<String, dynamic> order;
+  final int orderNumber;
 
   const OrderDetailsPage({
     super.key,
     required this.orderId,
     required this.order,
+    required this.orderNumber,
   });
 
   @override
@@ -41,6 +43,7 @@ class OrderDetailsPage extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Order Details'),
         backgroundColor: Colors.white,
@@ -54,6 +57,7 @@ class OrderDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Card(
+                color: Colors.white, // Add this line
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -72,7 +76,7 @@ class OrderDetailsPage extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        orderId,
+                        '#$orderNumber',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -108,8 +112,7 @@ class OrderDetailsPage extends StatelessWidget {
               ),
 
               SizedBox(height: 20),
-
-              //delivery info
+//delivery info
               Text(
                 'Delivery Information',
                 style: TextStyle(
@@ -119,6 +122,7 @@ class OrderDetailsPage extends StatelessWidget {
               ),
               SizedBox(height: 12),
               Card(
+                color: Colors.white, // Add this line
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -172,9 +176,9 @@ class OrderDetailsPage extends StatelessWidget {
               ...items.map((item) => OrderItemCard(item: item)).toList(),
 
               SizedBox(height: 20),
-
-              //price summary
+//price summary
               Card(
+                color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -232,13 +236,11 @@ class OrderDetailsPage extends StatelessWidget {
 
               SizedBox(height: 20),
 
-              // Help Button (optional)
               if (status != 'delivered' && status != 'cancelled')
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // Show help dialog
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
@@ -253,8 +255,8 @@ class OrderDetailsPage extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: Icon(Icons.help_outline),
-                    label: Text('Need Help?'),
+                    icon: Icon(Icons.help_outline, color: AppColors.primary), // Add color
+                    label: Text('Need Help?', style: TextStyle(color: AppColors.primary)), // Add color
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: AppColors.primary),
@@ -276,7 +278,6 @@ class OrderItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
 
   const OrderItemCard({super.key, required this.item});
-
   @override
   Widget build(BuildContext context) {
     final name = item['name'] ?? 'Unknown';
@@ -285,6 +286,7 @@ class OrderItemCard extends StatelessWidget {
     final image = item['image'] ?? '';
 
     return Card(
+      color: Colors.white, // Add this line
       margin: EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(

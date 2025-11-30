@@ -82,7 +82,7 @@ class AboutPage extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('© 2024 Xurmo. All rights reserved.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text('© 2025 Xurmo. All rights reserved.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 ],
               ),
             ),

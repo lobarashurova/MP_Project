@@ -86,8 +86,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Checkout'),
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.iconPrimary,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: cart.items.isEmpty

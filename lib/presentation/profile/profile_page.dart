@@ -267,7 +267,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: ElevatedButton(
           onPressed: _showLogoutDialog,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

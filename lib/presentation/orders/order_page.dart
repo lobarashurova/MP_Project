@@ -19,6 +19,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
     if (userId == null) {
       return Scaffold(
+        backgroundColor: Colors.white, // Add this
         appBar: AppBar(
           title: Text('My Orders'),
           backgroundColor: Colors.white,
@@ -32,6 +33,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('My Orders'),
         backgroundColor: Colors.white,
@@ -42,9 +44,9 @@ class _OrdersPageState extends State<OrdersPage> {
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: userId)
+            //.orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          // Show loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
@@ -77,9 +79,11 @@ class _OrdersPageState extends State<OrdersPage> {
             itemBuilder: (context, index) {
               final order = orders[index].data() as Map<String, dynamic>;
               final orderId = orders[index].id;
+              final orderNumber = orders.length - index; // Sequential order number (newest = highest)
 
               return OrderCard(
                 orderId: orderId,
+                orderNumber: orderNumber, // Pass the order number
                 order: order,
               );
             },
@@ -92,11 +96,13 @@ class _OrdersPageState extends State<OrdersPage> {
 
 class OrderCard extends StatelessWidget {
   final String orderId;
+  final int orderNumber; // Add this
   final Map<String, dynamic> order;
 
   const OrderCard({
     super.key,
     required this.orderId,
+    required this.orderNumber,
     required this.order,
   });
 
@@ -125,8 +131,8 @@ class OrderCard extends StatelessWidget {
       default:
         statusColor = Colors.orange;
     }
-
     return Card(
+      color: Colors.white,
       margin: EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -134,13 +140,13 @@ class OrderCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Go to Order Details Page
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => OrderDetailsPage(
                 orderId: orderId,
                 order: order,
+                orderNumber: orderNumber,
               ),
             ),
           );
@@ -151,12 +157,11 @@ class OrderCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Order ID and Date
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Order #${orderId.substring(0, 8)}',
+                    'Order #$orderNumber',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
