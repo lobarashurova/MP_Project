@@ -33,8 +33,6 @@ class _HomeHeaderState extends State<HomeHeader> {
           final data = doc.data();
           setState(() {
             // _userName = data?['name'] ?? 'User';
-
-            // Optional: If you want to show only the first name
             _userName = (data?['name'] ?? 'User').split(' ')[0];
           });
         }

@@ -8,7 +8,6 @@ class CartItem {
 
   CartItem({required this.product, this.quantity = 1});
 
-  // CHANGE 1: Save product as JSON (Map) to be safe
   Map<String, dynamic> toMap() {
     return {
       'product': product.toJson(),
@@ -16,9 +15,7 @@ class CartItem {
     };
   }
 
-  // CHANGE 2: Load product from JSON
   factory CartItem.fromMap(Map<dynamic, dynamic> map) {
-    // Handle the nested map correctly
     final productMap = Map<String, dynamic>.from(map['product'] as Map);
     return CartItem(
       product: MealModel.fromJson(productMap),
@@ -37,7 +34,6 @@ class Cart {
   final List<CartItem> _items = [];
   final ValueNotifier<int> notifier = ValueNotifier<int>(0);
 
-  // Get the box we opened in main.dart
   Box get _box => Hive.box('shopping_cart');
 
   List<CartItem> get items => List.unmodifiable(_items);
@@ -78,12 +74,10 @@ class Cart {
       }
     } catch (e) {
       debugPrint("Error loading cart: $e");
-      // If data is corrupted (e.g. from old code version), clear it to prevent crash
       _box.delete('cart_items');
     }
   }
 
-  // --- CART OPERATIONS ---
 
   void add(MealModel product) {
     final index = _items.indexWhere((item) => item.product.id == product.id);
