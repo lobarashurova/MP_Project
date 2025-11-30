@@ -42,7 +42,6 @@ class _OrdersPageState extends State<OrdersPage> {
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: userId)
-            .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           // Show loading

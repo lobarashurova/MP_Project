@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../data/manager/favorites_manager.dart';
-import '../basket/cart.dart';
+import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/data/manager/favorites_manager.dart';
+import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/presentation/profile/personal_info_page.dart';
+import 'package:xurmo/presentation/orders/order_page.dart';
+import 'package:xurmo/presentation/profile/about_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,25 +19,18 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final FavoritesManager _favoritesManager = FavoritesManager();
-
   final User? _currentUser = FirebaseAuth.instance.currentUser;
-  late Future<DocumentSnapshot> _userDataFuture;
 
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
+  int _orderCount = 0;
 
   @override
   void initState() {
     super.initState();
     _favoritesManager.addListener(_onDataChanged);
     Cart.instance.notifier.addListener(_onDataChanged);
-
-    if (_currentUser != null) {
-      _userDataFuture = FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser.uid)
-          .get();
-    }
+    _loadOrderCount();
   }
 
   @override
@@ -48,27 +44,13 @@ class _ProfilePageState extends State<ProfilePage> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _handleLogout() async {
-    try {
-      // if (context.mounted) {
-      //   await context.read<AuthProvider>().logout();
-      // }
-
-      //Direct Firebase Signout (Fallback if Provider isn't set up)
-      await FirebaseAuth.instance.signOut();
-
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Logout failed: $e', style: const TextStyle(color: Colors.white)),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+  Future<void> _loadOrderCount() async {
+    if (_currentUser == null) return;
+    final orders = await FirebaseFirestore.instance
+        .collection('orders')
+        .where('userId', isEqualTo: _currentUser.uid)
+        .get();
+    setState(() => _orderCount = orders.docs.length);
   }
 
   @override
@@ -86,8 +68,6 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildAccountSection(),
               const SizedBox(height: 16),
               _buildSettingsSection(),
-              const SizedBox(height: 16),
-              _buildSupportSection(),
               const SizedBox(height: 24),
               _buildLogoutButton(),
               const SizedBox(height: 24),
@@ -119,76 +99,40 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary,
-                width: 2,
-              ),
+              border: Border.all(color: AppColors.primary, width: 2),
             ),
-            child: Icon(
-              CupertinoIcons.person_fill,
-              size: 40,
-              color: AppColors.primary,
-            ),
+            child: Icon(CupertinoIcons.person_fill, size: 40, color: AppColors.primary),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: FutureBuilder<DocumentSnapshot>(
-              future: _userDataFuture,
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUser?.uid)
+                  .get(),
               builder: (context, snapshot) {
-                // Default values
-                String displayName = 'User';
+                String name = 'User';
                 String email = _currentUser?.email ?? 'No email';
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Align(
-                    alignment: Alignment.centerLeft,
-                    child: CupertinoActivityIndicator(),
-                  );
-                }
 
                 if (snapshot.hasData && snapshot.data!.exists) {
                   final data = snapshot.data!.data() as Map<String, dynamic>;
-                  displayName = data['name'] ?? 'User';
+                  name = data['name'] ?? 'User';
                 }
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      displayName,
-                      style: AppTextStyles.heading2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(name, style: AppTextStyles.heading2),
                     const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(email, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                     const SizedBox(height: 8),
                     GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text(
-                              'Edit profile feature coming soon!',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: AppColors.primary,
-                            duration: const Duration(milliseconds: 700),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Edit Profile',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => const PersonalInformationPage(),
+                      )),
+                      child: Text('Edit Profile', style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary, fontWeight: FontWeight.w600,
+                      )),
                     ),
                   ],
                 );
@@ -205,199 +149,58 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(
-            child: _buildStatCard(
-              icon: CupertinoIcons.heart_fill,
-              value: _favoritesManager.favoriteCount.toString(),
-              label: 'Favorites',
-              color: AppColors.error,
-            ),
-          ),
+          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, _favoritesManager.favoriteCount.toString(), 'Favorites', AppColors.error)),
           const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              icon: CupertinoIcons.cart_fill,
-              value: Cart.instance.totalItems.toString(),
-              label: 'In Cart',
-              color: AppColors.primary,
-            ),
-          ),
+          Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), 'In Cart', AppColors.primary)),
           const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              icon: CupertinoIcons.cube_box_fill,
-              value: '12',
-              label: 'Orders',
-              color: AppColors.success,
-            ),
-          ),
+          Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), 'Orders', AppColors.success)),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
+  Widget _buildStatCard(IconData icon, String value, String label, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 28,
-            color: color,
-          ),
+          Icon(icon, size: 28, color: color),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTextStyles.heading2.copyWith(
-              color: color,
-            ),
-          ),
+          Text(value, style: AppTextStyles.heading2.copyWith(color: color)),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
+          Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
         ],
       ),
     );
   }
 
   Widget _buildAccountSection() {
-    return _buildSection(
-      title: 'Account',
-      children: [
-        _buildMenuItem(
-          icon: CupertinoIcons.person,
-          title: 'Personal Information',
-          onTap: () => _showComingSoon('Personal Information'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.location,
-          title: 'Addresses',
-          onTap: () => _showComingSoon('Addresses'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.creditcard,
-          title: 'Payment Methods',
-          onTap: () => _showComingSoon('Payment Methods'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.clock,
-          title: 'Order History',
-          onTap: () => _showComingSoon('Order History'),
-        ),
-      ],
-    );
+    return _buildSection('Account', [
+      _buildMenuItem(CupertinoIcons.person, 'Personal Information', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInformationPage()))),
+      _buildMenuItem(CupertinoIcons.time, 'Order History', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _loadOrderCount())),
+    ]);
   }
 
   Widget _buildSettingsSection() {
-    return _buildSection(
-      title: 'Settings',
-      children: [
-        _buildSwitchItem(
-          icon: CupertinoIcons.bell,
-          title: 'Notifications',
-          value: _notificationsEnabled,
-          onChanged: (value) {
-            setState(() {
-              _notificationsEnabled = value;
-            });
-          },
-        ),
-        _buildSwitchItem(
-          icon: CupertinoIcons.moon,
-          title: 'Dark Mode',
-          value: _darkModeEnabled,
-          onChanged: (value) {
-            setState(() {
-              _darkModeEnabled = value;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text(
-                  'Dark mode coming soon!',
-                  style: TextStyle(color: Colors.white),
-                ),
-                backgroundColor: AppColors.primary,
-                duration: const Duration(milliseconds: 700),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.globe,
-          title: 'Language',
-          trailing: 'English',
-          onTap: () => _showComingSoon('Language'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.money_dollar,
-          title: 'Currency',
-          trailing: 'USD',
-          onTap: () => _showComingSoon('Currency'),
-        ),
-      ],
-    );
+    return _buildSection('Settings', [
+      _buildSwitchItem(CupertinoIcons.bell, 'Notifications', _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
+      _buildSwitchItem(CupertinoIcons.moon, 'Dark Mode', _darkModeEnabled, (val) {
+        setState(() => _darkModeEnabled = val);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dark mode coming soon!', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
+        );
+      }),
+      _buildMenuItem(CupertinoIcons.globe, 'Language', () => _showComingSoon('Language'), trailing: 'English'),
+      _buildMenuItem(CupertinoIcons.info_circle, 'About', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())), trailing: 'v1.0.0'),
+    ]);
   }
 
-  Widget _buildSupportSection() {
-    return _buildSection(
-      title: 'Support',
-      children: [
-        _buildMenuItem(
-          icon: CupertinoIcons.question_circle,
-          title: 'Help Center',
-          onTap: () => _showComingSoon('Help Center'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.chat_bubble_text,
-          title: 'Contact Us',
-          onTap: () => _showComingSoon('Contact Us'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.doc_text,
-          title: 'Terms & Conditions',
-          onTap: () => _showComingSoon('Terms & Conditions'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.lock_shield,
-          title: 'Privacy Policy',
-          onTap: () => _showComingSoon('Privacy Policy'),
-        ),
-        _buildMenuItem(
-          icon: CupertinoIcons.info_circle,
-          title: 'About',
-          trailing: 'v1.0.0',
-          onTap: () => _showComingSoon('About'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
+  Widget _buildSection(String title, List<Widget> children) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -405,41 +208,22 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Text(
-              title,
-              style: AppTextStyles.heading3.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
+            child: Text(title, style: AppTextStyles.heading3.copyWith(color: AppColors.textSecondary, fontSize: 14)),
           ),
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: AppColors.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
             ),
-            child: Column(
-              children: children,
-            ),
+            child: Column(children: children),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    String? trailing,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, {String? trailing}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -447,65 +231,29 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 22,
-              color: AppColors.iconPrimary,
-            ),
+            Icon(icon, size: 22, color: AppColors.iconPrimary),
             const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: AppTextStyles.bodyMedium,
-              ),
-            ),
+            Expanded(child: Text(title, style: AppTextStyles.bodyMedium)),
             if (trailing != null) ...[
-              Text(
-                trailing,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text(trailing, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
               const SizedBox(width: 8),
             ],
-            Icon(
-              CupertinoIcons.chevron_right,
-              size: 18,
-              color: AppColors.iconSecondary,
-            ),
+            Icon(CupertinoIcons.chevron_right, size: 18, color: AppColors.iconSecondary),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSwitchItem({
-    required IconData icon,
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
+  Widget _buildSwitchItem(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 22,
-            color: AppColors.iconPrimary,
-          ),
+          Icon(icon, size: 22, color: AppColors.iconPrimary),
           const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: AppTextStyles.bodyMedium,
-            ),
-          ),
-          CupertinoSwitch(
-            value: value,
-            activeColor: AppColors.primary,
-            onChanged: onChanged,
-          ),
+          Expanded(child: Text(title, style: AppTextStyles.bodyMedium)),
+          CupertinoSwitch(value: value, activeColor: AppColors.primary, onChanged: onChanged),
         ],
       ),
     );
@@ -517,30 +265,20 @@ class _ProfilePageState extends State<ProfilePage> {
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () {
-            _showLogoutDialog();
-          },
+          onPressed: _showLogoutDialog,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.error,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                CupertinoIcons.square_arrow_right,
-                size: 20,
-              ),
+              const Icon(CupertinoIcons.square_arrow_right, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Logout',
-                style: AppTextStyles.button,
-              ),
+              Text('Logout', style: AppTextStyles.button),
             ],
           ),
         ),
@@ -550,15 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$feature feature coming soon!',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(milliseconds: 700),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text('$feature feature coming soon!', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
     );
   }
 
@@ -566,31 +296,17 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          'Logout',
-          style: AppTextStyles.heading3,
-        ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: AppTextStyles.bodyMedium,
-        ),
+        title: Text('Logout', style: AppTextStyles.heading3),
+        content: Text('Are you sure you want to logout?', style: AppTextStyles.bodyMedium),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              _handleLogout();
+              await FirebaseAuth.instance.signOut();
+              if (mounted) Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
             },
-            child: Text(
-              'Logout',
-              style: TextStyle(color: AppColors.error),
-            ),
+            child: Text('Logout', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
