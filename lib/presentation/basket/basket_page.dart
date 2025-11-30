@@ -10,8 +10,6 @@ const double DELIVERY_FEE = 1;
 const String DELIVERY_TIME = "25-30 min";
 const double PROMO_THRESHOLD = 20;
 
-//TODO: make the prices in sums
-
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
 
@@ -286,7 +284,6 @@ class _BasketPageState extends State<BasketPage> {
                         elevation: 0,
                       ),
                       onPressed: () {
-                        // Navigate to checkout page
                         Navigator.push(
                           context,
                           MaterialPageRoute(

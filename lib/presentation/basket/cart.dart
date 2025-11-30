@@ -53,9 +53,8 @@ class Cart {
       final data = _items.map((item) => item.toMap()).toList();
       await _box.put('cart_items', data);
       notifier.value++;
-      debugPrint("Cart Saved: ${_items.length} items");
     } catch (e) {
-      debugPrint("Error saving cart: $e");
+      // In case of error, do nothing to avoid crash
     }
   }
 
@@ -68,12 +67,8 @@ class Cart {
           data.map((e) => CartItem.fromMap(e as Map<dynamic, dynamic>)).toList(),
         );
         notifier.value++;
-        debugPrint("Cart Loaded: ${_items.length} items from Hive");
-      } else {
-        debugPrint("Cart is empty (New install or cleared)");
       }
     } catch (e) {
-      debugPrint("Error loading cart: $e");
       _box.delete('cart_items');
     }
   }

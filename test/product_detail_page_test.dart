@@ -18,12 +18,8 @@ void main() {
     await Hive.openBox('shopping_cart');
   });
 
-  tearDown(() {
+  setUp(() {
     Cart.instance.clear();
-  });
-
-  tearDownAll(() async {
-    await Hive.close();
   });
 
   final testMeal = MealModel(
@@ -32,7 +28,7 @@ void main() {
     category: 'Chicken',
     price: 45.0,
     imageUrl: 'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
-    rating: 0.0, // Rating is no longer displayed, but the model still has it.
+    rating: 0.0,
     description: 'A delicious Japanese dish.',
     ingredients: ['soy sauce', 'chicken', 'rice'],
     area: 'Japanese',
@@ -43,7 +39,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: ProductDetailPage(meal: testMeal),
       ));
-
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('45'), findsOneWidget);

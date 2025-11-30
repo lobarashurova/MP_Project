@@ -25,10 +25,6 @@ void main() {
     await Hive.box(LocalStorageRepository.orderBoxName).clear();
   });
 
-  tearDownAll(() async {
-    await Hive.close();
-  });
-
   final testMeal1 = MealModel(
     id: '1',
     name: 'Test Meal 1',
