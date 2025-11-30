@@ -13,7 +13,6 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  // Form controllers
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -29,9 +28,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     super.dispose();
   }
 
-  /// Place order - Everything in one place, no helper needed!
   Future<void> _placeOrder() async {
-    // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -39,13 +36,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Get current user
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('Please log in to place an order');
       }
 
-      // 2. Get cart items (ONLY READING, not modifying!)
       final cart = Cart.instance;
       final cartItems = cart.items;
 
@@ -53,25 +48,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
         throw Exception('Your cart is empty');
       }
 
-      // 3. Calculate total
       double total = 0;
       for (var item in cartItems) {
-        total += item.price * item.quantity;
+        total += item.product.price * item.quantity;
       }
 
-      // 4. Convert cart items to simple map for Firebase
       List<Map<String, dynamic>> orderItems = [];
       for (var item in cartItems) {
         orderItems.add({
-          'id': item.id,
-          'name': item.name,
-          'price': item.price,
+          'id': item.product.id,
+          'name': item.product.name,
+          'price': item.product.price,
           'quantity': item.quantity,
-          'image': item.image,
+          'image': item.product.imageUrl,
         });
       }
 
-      // 5. Save order to Firebase
       final orderRef = await FirebaseFirestore.instance
           .collection('orders')
           .add({
@@ -86,13 +78,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // 6. Clear cart (OPTIONAL - Ask teammates first!)
-      // UNCOMMENT ONLY IF your teammates say it's okay:
-      // cart.clear();
+
+      cart.clear();
 
       setState(() => _isLoading = false);
 
-      // 7. Go to confirmation page
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -104,7 +94,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         );
       }
     } catch (e) {
-      // Handle errors
       setState(() => _isLoading = false);
 
       if (mounted) {
@@ -153,7 +142,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order Summary Section
                 Text(
                   'Order Summary',
                   style: TextStyle(
@@ -163,7 +151,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 SizedBox(height: 12),
 
-                // Items count
+                //items cnt
                 Card(
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -186,7 +174,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                 SizedBox(height: 24),
 
-                // Delivery Details Section
+                //delivery details
                 Text(
                   'Delivery Details',
                   style: TextStyle(
@@ -196,7 +184,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 SizedBox(height: 12),
 
-                // Address Input
                 TextFormField(
                   controller: _addressController,
                   decoration: InputDecoration(
@@ -221,7 +208,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                 SizedBox(height: 16),
 
-                // Phone Input
                 TextFormField(
                   controller: _phoneController,
                   decoration: InputDecoration(
@@ -246,7 +232,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                 SizedBox(height: 16),
 
-                // Delivery Notes (Optional)
                 TextFormField(
                   controller: _notesController,
                   decoration: InputDecoration(
@@ -262,7 +247,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                 SizedBox(height: 24),
 
-                // Price Breakdown
                 Card(
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -313,7 +297,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                 SizedBox(height: 24),
 
-                // Place Order Button
+                //place order btn
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
