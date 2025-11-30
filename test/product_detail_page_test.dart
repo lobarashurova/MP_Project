@@ -32,7 +32,7 @@ void main() {
     category: 'Chicken',
     price: 45.0,
     imageUrl: 'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
-    rating: 4.5,
+    rating: 0.0, // Rating is no longer displayed, but the model still has it.
     description: 'A delicious Japanese dish.',
     ingredients: ['soy sauce', 'chicken', 'rice'],
     area: 'Japanese',
@@ -44,9 +44,9 @@ void main() {
         home: ProductDetailPage(meal: testMeal),
       ));
 
+
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('45'), findsOneWidget);
-      expect(find.text('4.5'), findsOneWidget);
       expect(find.textContaining('A delicious Chicken dish'), findsOneWidget);
       expect(find.widgetWithText(Chip, 'soy sauce'), findsOneWidget);
       expect(find.widgetWithText(ElevatedButton, 'Add to Basket'), findsOneWidget);
