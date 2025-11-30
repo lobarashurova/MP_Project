@@ -14,7 +14,6 @@ class OrderDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get order data
     final status = order['status'] ?? 'pending';
     final total = order['total'] ?? 0.0;
     final items = (order['items'] as List?) ?? [];
@@ -26,7 +25,6 @@ class OrderDetailsPage extends StatelessWidget {
         ? DateFormat('MMMM dd, yyyy - HH:mm').format(createdAt)
         : 'Unknown date';
 
-    //status color
     Color statusColor;
     switch (status.toLowerCase()) {
       case 'delivered':
@@ -55,7 +53,6 @@ class OrderDetailsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Order ID Card
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -131,7 +128,6 @@ class OrderDetailsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      //address
                       Row(
                         children: [
                           Icon(Icons.location_on, color: AppColors.primary),
@@ -147,7 +143,6 @@ class OrderDetailsPage extends StatelessWidget {
                       SizedBox(height: 12),
                       Divider(),
                       SizedBox(height: 12),
-                      //phone
                       Row(
                         children: [
                           Icon(Icons.phone, color: AppColors.primary),
@@ -165,7 +160,6 @@ class OrderDetailsPage extends StatelessWidget {
 
               SizedBox(height: 20),
 
-              //order items
               Text(
                 'Order Items',
                 style: TextStyle(
@@ -175,7 +169,6 @@ class OrderDetailsPage extends StatelessWidget {
               ),
               SizedBox(height: 12),
 
-              //list of items
               ...items.map((item) => OrderItemCard(item: item)).toList(),
 
               SizedBox(height: 20),
@@ -201,6 +194,7 @@ class OrderDetailsPage extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 8),
+                      //delivery fee
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -211,7 +205,6 @@ class OrderDetailsPage extends StatelessWidget {
                       SizedBox(height: 12),
                       Divider(),
                       SizedBox(height: 12),
-                      // Total
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -239,11 +232,13 @@ class OrderDetailsPage extends StatelessWidget {
 
               SizedBox(height: 20),
 
+              // Help Button (optional)
               if (status != 'delivered' && status != 'cancelled')
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
+                      // Show help dialog
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
@@ -299,7 +294,7 @@ class OrderItemCard extends StatelessWidget {
         padding: EdgeInsets.all(12),
         child: Row(
           children: [
-            // Image
+            //img
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: image.isNotEmpty
@@ -327,7 +322,7 @@ class OrderItemCard extends StatelessWidget {
 
             SizedBox(width: 12),
 
-            // Details
+            //details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
