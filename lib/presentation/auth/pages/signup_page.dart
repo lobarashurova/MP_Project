@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/data/models/auth_method.dart';
 import 'package:xurmo/data/repositories/auth_repository.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -14,9 +17,11 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -26,9 +31,18 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _switchMethod(AuthMethod method) {
+    if (method == _method) return;
+    setState(() {
+      _method = method;
+      _errorMessage = null;
+    });
   }
 
   Future<void> _signup() async {
@@ -47,11 +61,21 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await context.read<AuthProvider>().signUp(
+      final auth = context.read<AuthProvider>();
+      switch (_method) {
+        case AuthMethod.email:
+          await auth.signUp(
             name: _nameController.text,
             email: _emailController.text,
             password: _passwordController.text,
           );
+        case AuthMethod.phone:
+          await auth.signUpWithPhone(
+            name: _nameController.text,
+            phone: _phoneController.text,
+            password: _passwordController.text,
+          );
+      }
 
       if (mounted) {
         // Return to the existing home screen rather than pushing a second
@@ -117,6 +141,12 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                 if (_errorMessage != null) const SizedBox(height: 16),
+                AuthMethodToggle(
+                  value: _method,
+                  onChanged: _switchMethod,
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 20),
                 const Text(
                   'Full Name',
                   style: TextStyle(
@@ -148,40 +178,12 @@ class _SignupPageState extends State<SignupPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.iconPrimary,
-                  ),
-                ),
+                authFieldLabel(_method == AuthMethod.email ? 'Email' : 'Phone Number'),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your email',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Email is required';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
+                if (_method == AuthMethod.email)
+                  EmailField(controller: _emailController, enabled: !_isLoading)
+                else
+                  PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 16),
                 const Text(
                   'Password',

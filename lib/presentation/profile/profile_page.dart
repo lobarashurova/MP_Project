@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/utils/phone_number.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/profile/personal_info_page.dart';
@@ -141,11 +142,22 @@ class _ProfilePageState extends State<ProfilePage> {
                   .get(),
               builder: (context, snapshot) {
                 String name = 'User';
-                String email = _currentUser?.email ?? 'No email';
+                // Phone accounts sign in through a synthetic email that must
+                // never be shown, so prefer the profile's own contact fields.
+                String contact = isSyntheticEmail(_currentUser?.email)
+                    ? formatPhoneForDisplay(phoneFromSyntheticEmail(_currentUser?.email)!)
+                    : (_currentUser?.email ?? 'No contact');
 
                 if (snapshot.hasData && snapshot.data!.exists) {
                   final data = snapshot.data!.data() as Map<String, dynamic>;
                   name = data['name'] ?? 'User';
+                  final email = (data['email'] as String?) ?? '';
+                  final phone = (data['phone'] as String?) ?? '';
+                  if (email.isNotEmpty && !isSyntheticEmail(email)) {
+                    contact = email;
+                  } else if (phone.isNotEmpty) {
+                    contact = formatPhoneForDisplay(phone);
+                  }
                 }
 
                 return Column(
@@ -153,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Text(name, style: AppTextStyles.heading2),
                     const SizedBox(height: 4),
-                    Text(email, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                    Text(contact, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(

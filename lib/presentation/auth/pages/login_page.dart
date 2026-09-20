@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/data/models/auth_method.dart';
 import 'package:xurmo/data/repositories/auth_repository.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
 
 class LoginPage extends StatefulWidget {
   /// When true (the default) a successful login replaces this page with the
@@ -18,8 +21,10 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -27,8 +32,17 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _switchMethod(AuthMethod method) {
+    if (method == _method) return;
+    setState(() {
+      _method = method;
+      _errorMessage = null;
+    });
   }
 
   Future<void> _login() async {
@@ -40,10 +54,19 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await context.read<AuthProvider>().signIn(
+      final auth = context.read<AuthProvider>();
+      switch (_method) {
+        case AuthMethod.email:
+          await auth.signIn(
             email: _emailController.text,
             password: _passwordController.text,
           );
+        case AuthMethod.phone:
+          await auth.signInWithPhone(
+            phone: _phoneController.text,
+            password: _passwordController.text,
+          );
+      }
 
       if (mounted && widget.navigateOnSuccess) {
         // Return to the existing home screen rather than pushing a second one.
@@ -62,6 +85,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _forgotPassword() async {
+    if (_method == AuthMethod.phone) {
+      setState(() {
+        _errorMessage =
+            'Password reset is not available for phone accounts yet. '
+            'If you also registered an email, switch to Email and reset there.';
+      });
+      return;
+    }
+
     final email = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -134,40 +166,18 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 if (_errorMessage != null) const SizedBox(height: 16),
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.iconPrimary,
-                  ),
+                AuthMethodToggle(
+                  value: _method,
+                  onChanged: _switchMethod,
+                  enabled: !_isLoading,
                 ),
+                const SizedBox(height: 20),
+                authFieldLabel(_method == AuthMethod.email ? 'Email' : 'Phone Number'),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your email',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Email is required';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
+                if (_method == AuthMethod.email)
+                  EmailField(controller: _emailController, enabled: !_isLoading)
+                else
+                  PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 20),
                 const Text(
                   'Password',
