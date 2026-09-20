@@ -5,11 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
-import 'package:xurmo/data/manager/favorites_manager.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/profile/personal_info_page.dart';
 import 'package:xurmo/presentation/orders/order_page.dart';
 import 'package:xurmo/presentation/profile/about_page.dart';
+import 'package:xurmo/presentation/auth/pages/login_page.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart' as auth;
 
 class ProfilePage extends StatefulWidget {
@@ -20,24 +21,26 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final FavoritesManager _favoritesManager = FavoritesManager();
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  /// The signed-in user for the current build. Read from AuthProvider on
+  /// every build so the page follows login and logout without a restart.
+  User? _currentUser;
 
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   int _orderCount = 0;
 
+  /// Which user the order count was last fetched for, so a login or a change
+  /// of account triggers a fresh fetch.
+  String? _orderCountUid;
+
   @override
   void initState() {
     super.initState();
-    _favoritesManager.addListener(_onDataChanged);
     Cart.instance.notifier.addListener(_onDataChanged);
-    _loadOrderCount();
   }
 
   @override
   void dispose() {
-    _favoritesManager.removeListener(_onDataChanged);
     Cart.instance.notifier.removeListener(_onDataChanged);
     super.dispose();
   }
@@ -46,21 +49,37 @@ class _ProfilePageState extends State<ProfilePage> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadOrderCount() async {
-    if (_currentUser == null) return;
+  /// Re-fetches the order count for the signed-in user, e.g. after returning
+  /// from the order history screen.
+  void _refreshOrderCount() {
+    final uid = _currentUser?.uid;
+    if (uid != null) _loadOrderCount(uid);
+  }
+
+  Future<void> _loadOrderCount(String uid) async {
+    _orderCountUid = uid;
     final orders = await FirebaseFirestore.instance
         .collection('orders')
-        .where('userId', isEqualTo: _currentUser.uid)
+        .where('userId', isEqualTo: uid)
         .get();
-    setState(() => _orderCount = orders.docs.length);
+    if (mounted && _orderCountUid == uid) {
+      setState(() => _orderCount = orders.docs.length);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<auth.AuthProvider>(
       builder: (context, authProvider, _) {
+        _currentUser = authProvider.user;
+
         if (!authProvider.isAuthenticated) {
           return _buildLoginView(context);
+        }
+
+        final uid = _currentUser!.uid;
+        if (_orderCountUid != uid) {
+          _loadOrderCount(uid);
         }
 
         return Scaffold(
@@ -155,11 +174,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatsSection() {
+    final favoriteCount = context.watch<FavoritesProvider>().favoriteCount;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, _favoritesManager.favoriteCount.toString(), 'Favorites', AppColors.error)),
+          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), 'Favorites', AppColors.error)),
           const SizedBox(width: 12),
           Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), 'In Cart', AppColors.primary)),
           const SizedBox(width: 12),
@@ -192,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildAccountSection() {
     return _buildSection('Account', [
       _buildMenuItem(CupertinoIcons.person, 'Personal Information', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInformationPage()))),
-      _buildMenuItem(CupertinoIcons.time, 'Order History', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _loadOrderCount())),
+      _buildMenuItem(CupertinoIcons.time, 'Order History', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _refreshOrderCount())),
     ]);
   }
 
@@ -313,7 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await FirebaseAuth.instance.signOut();
+              await this.context.read<auth.AuthProvider>().logout();
             },
             child: Text('Logout', style: TextStyle(color: AppColors.error)),
           ),
@@ -322,245 +342,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// The profile tab shows the shared login page when signed out. The
+  /// AuthProvider rebuilds this widget on login, so no navigation is needed.
   Widget _buildLoginView(BuildContext context) {
-    final _emailController = TextEditingController();
-    final _passwordController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
-    bool _isLoading = false;
-    bool _obscurePassword = true;
-    String? _errorMessage;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
-                    const Text(
-                      'Welcome Back',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.iconPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sign in to your account to continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    if (_errorMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    if (_errorMessage != null) const SizedBox(height: 16),
-                    const Text(
-                      'Email',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.iconPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Enter your email',
-                        hintStyle: const TextStyle(color: AppColors.textSecondary),
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Email is required';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Password',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.iconPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Enter your password',
-                        hintStyle: const TextStyle(color: AppColors.textSecondary),
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Password is required';
-                        }
-                        if (value!.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () async {
-                                if (!_formKey.currentState!.validate()) return;
-
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-
-                                try {
-                                  await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                    email: _emailController.text.trim(),
-                                    password: _passwordController.text,
-                                  );
-                                  _loadOrderCount();
-                                } on FirebaseAuthException catch (e) {
-                                  setState(() {
-                                    _errorMessage = e.message ?? 'An error occurred';
-                                  });
-                                } catch (e) {
-                                  setState(() {
-                                    _errorMessage = 'An unexpected error occurred';
-                                  });
-                                } finally {
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.divider,
-                                  ),
-                                ),
-                              )
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.divider,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pushNamed('/signup');
-                          },
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
+    return const LoginPage(navigateOnSuccess: false);
   }
 }

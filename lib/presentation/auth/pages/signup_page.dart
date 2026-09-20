@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/data/repositories/auth_repository.dart';
+import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -46,39 +47,26 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      final userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await context.read<AuthProvider>().signUp(
+            name: _nameController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Return to the existing home screen rather than pushing a second
+        // one. The profile tab rebuilds itself as signed in.
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          navigator.pushReplacementNamed('/home');
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'An error occurred';
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred';
-      });
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
