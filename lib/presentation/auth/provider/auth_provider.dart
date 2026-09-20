@@ -44,6 +44,22 @@ class AuthProvider extends ChangeNotifier {
         ));
   }
 
+  Future<void> signInWithPhone({required String phone, required String password}) {
+    return _run(() => _repository.signInWithPhone(phone: phone, password: password));
+  }
+
+  Future<void> signUpWithPhone({
+    required String name,
+    required String phone,
+    required String password,
+  }) {
+    return _run(() => _repository.signUpWithPhone(
+          name: name,
+          phone: phone,
+          password: password,
+        ));
+  }
+
   Future<void> sendPasswordReset({required String email}) {
     return _run(() => _repository.sendPasswordReset(email: email));
   }

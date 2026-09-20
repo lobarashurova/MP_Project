@@ -33,6 +33,18 @@ void main() {
     test('handles a null code', () {
       expect(authErrorMessage(null), isNotEmpty);
     });
+
+    test('rewords identifier errors for phone accounts', () {
+      expect(authErrorMessage('invalid-credential', phone: true),
+          'Incorrect phone number or password.');
+      expect(authErrorMessage('email-already-in-use', phone: true),
+          contains('phone number already exists'));
+      expect(authErrorMessage('invalid-email', phone: true),
+          'Enter a valid phone number.');
+      // Messages that do not mention the identifier are unchanged.
+      expect(authErrorMessage('weak-password', phone: true),
+          authErrorMessage('weak-password'));
+    });
   });
 
   group('UserRole', () {

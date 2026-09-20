@@ -3,27 +3,35 @@
 /// Firebase's own messages are written for developers ("The supplied auth
 /// credential is malformed or has expired"). These are written for the person
 /// holding the phone. Unknown codes fall back to a generic message.
-String authErrorMessage(String? code) {
+///
+/// Phone accounts are email accounts underneath (see phone_number.dart), so
+/// Firebase reports their errors with email wording. Pass [phone] to reword
+/// them for the phone screens.
+String authErrorMessage(String? code, {bool phone = false}) {
+  final identifier = phone ? 'phone number' : 'email';
+
   switch (code) {
     // Sign in
     case 'invalid-credential':
     case 'invalid-login-credentials':
     case 'wrong-password':
     case 'user-not-found':
-      return 'Incorrect email or password.';
+      return 'Incorrect $identifier or password.';
     case 'invalid-email':
     case 'missing-email':
-      return 'Enter a valid email address.';
+      return phone
+          ? 'Enter a valid phone number.'
+          : 'Enter a valid email address.';
     case 'user-disabled':
       return 'This account has been disabled. Contact support for help.';
 
     // Sign up
     case 'email-already-in-use':
-      return 'An account with this email already exists. Try signing in.';
+      return 'An account with this $identifier already exists. Try signing in.';
     case 'weak-password':
       return 'Choose a stronger password with at least 6 characters.';
     case 'operation-not-allowed':
-      return 'Email sign-in is not enabled right now. Try again later.';
+      return 'Sign-in is not enabled right now. Try again later.';
 
     // Shared
     case 'too-many-requests':
