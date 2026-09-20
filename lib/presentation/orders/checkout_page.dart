@@ -40,7 +40,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final cart = Cart.instance;
       if (cart.items.isEmpty) throw Exception('Cart is empty');
 
-      double total = cart.totalPrice;
+      final subtotal = cart.subtotal;
+      final deliveryFee = cart.deliveryFee;
+      final total = cart.totalPrice;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -53,6 +55,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'userId': user.uid,
         'userEmail': user.email ?? '',
         'items': orderItems,
+        'subtotal': subtotal,
+        'deliveryFee': deliveryFee,
         'total': total,
         'address': _addressController.text,
         'phone': _phoneController.text,
@@ -69,17 +73,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      // The page is replaced on success, so guard against a disposed state.
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final cart = Cart.instance;
+    final subtotal = cart.subtotal;
+    final deliveryFee = cart.deliveryFee;
     final total = cart.totalPrice;
 
     return Scaffold(
@@ -243,16 +252,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text('\$${total.toStringAsFixed(2)}')]),
+                        children: [const Text('Subtotal'), Text('\$${subtotal.toStringAsFixed(2)}')]),
                     const SizedBox(height: 8),
-                    const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text('Delivery Fee'), Text('\$2.99')]),
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [const Text('Delivery Fee'), Text('\$${deliveryFee.toStringAsFixed(2)}')]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('\$${(total + 2.99).toStringAsFixed(2)}',
+                        Text('\$${total.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
                     ),

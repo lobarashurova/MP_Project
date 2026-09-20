@@ -44,7 +44,6 @@ class _OrdersPageState extends State<OrdersPage> {
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: userId)
-            //.orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -71,7 +70,19 @@ class _OrdersPageState extends State<OrdersPage> {
             );
           }
 
-          final orders = snapshot.data!.docs;
+          // Sort client-side so no composite Firestore index is required for
+          // the combined userId filter and createdAt ordering. An order whose
+          // server timestamp has not resolved yet is the newest, so it sorts
+          // first.
+          final orders = snapshot.data!.docs.toList()
+            ..sort((a, b) {
+              final aTime = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+              final bTime = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+              if (aTime == null && bTime == null) return 0;
+              if (aTime == null) return -1;
+              if (bTime == null) return 1;
+              return bTime.compareTo(aTime);
+            });
 
           return ListView.builder(
             padding: EdgeInsets.all(16),

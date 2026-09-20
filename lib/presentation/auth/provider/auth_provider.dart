@@ -1,8 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:xurmo/data/repositories/auth_repository.dart';
 
+/// Exposes the signed-in user to the widget tree and forwards every auth
+/// action to [AuthRepository]. Screens call this, never Firebase directly.
+///
+/// All actions throw [AuthFailure] with a message that is safe to show.
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthRepository _repository;
+  StreamSubscription<User?>? _authSubscription;
 
   User? _user;
   bool _isLoading = false;
@@ -11,29 +19,51 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
 
-  AuthProvider() {
-    _initializeAuth();
-  }
-
-  void _initializeAuth() {
-    _auth.authStateChanges().listen((User? user) {
+  AuthProvider({AuthRepository? repository})
+      : _repository = repository ?? AuthRepository() {
+    _user = _repository.currentUser;
+    _authSubscription = _repository.authStateChanges().listen((user) {
       _user = user;
       notifyListeners();
     });
   }
 
-  Future<void> logout() async {
+  Future<void> signIn({required String email, required String password}) {
+    return _run(() => _repository.signIn(email: email, password: password));
+  }
+
+  Future<void> signUp({
+    required String name,
+    required String email,
+    required String password,
+  }) {
+    return _run(() => _repository.signUp(
+          name: name,
+          email: email,
+          password: password,
+        ));
+  }
+
+  Future<void> sendPasswordReset({required String email}) {
+    return _run(() => _repository.sendPasswordReset(email: email));
+  }
+
+  Future<void> logout() => _run(_repository.signOut);
+
+  Future<void> _run(Future<void> Function() action) async {
     _isLoading = true;
     notifyListeners();
-
     try {
-      await FirebaseAuth.instance.signOut();
-      _user = null;
-    } catch (e) {
-      throw Exception('Failed to logout: $e');
+      await action();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

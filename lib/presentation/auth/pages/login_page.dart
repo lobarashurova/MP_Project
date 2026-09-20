@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/data/repositories/auth_repository.dart';
+import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  /// When true (the default) a successful login replaces this page with the
+  /// home route. Set it to false when the page is embedded inside another
+  /// screen, such as the profile tab, which rebuilds itself on login.
+  final bool navigateOnSuccess;
+
+  const LoginPage({super.key, this.navigateOnSuccess = true});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -33,28 +40,50 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      await context.read<AuthProvider>().signIn(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+      if (mounted && widget.navigateOnSuccess) {
+        // Return to the existing home screen rather than pushing a second one.
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          navigator.pushReplacementNamed('/home');
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'An error occurred';
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred';
-      });
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ForgotPasswordSheet(initialEmail: _emailController.text),
+    );
+    if (email == null || !mounted) return;
+
+    try {
+      await context.read<AuthProvider>().sendPasswordReset(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password reset link sent to $email. Check your inbox.'),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
     }
   }
 
@@ -190,8 +219,7 @@ class _LoginPageState extends State<LoginPage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                    },
+                    onPressed: _isLoading ? null : _forgotPassword,
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(color: AppColors.primary),
@@ -257,6 +285,117 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+/// Asks for the email to send a reset link to and pops with it, or with null
+/// when dismissed.
+class _ForgotPasswordSheet extends StatefulWidget {
+  final String initialEmail;
+
+  const _ForgotPasswordSheet({required this.initialEmail});
+
+  @override
+  State<_ForgotPasswordSheet> createState() => _ForgotPasswordSheetState();
+}
+
+class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
+  late final TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialEmail.trim());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(_controller.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Reset your password',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.iconPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Enter your email and we'll send you a link to set a new password.",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submit(),
+              decoration: InputDecoration(
+                hintText: 'Enter your email',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              validator: (value) {
+                if (value?.trim().isEmpty ?? true) return 'Email is required';
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!.trim())) {
+                  return 'Enter a valid email';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Send Reset Link',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.divider,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

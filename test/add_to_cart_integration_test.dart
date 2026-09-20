@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/basket/basket_page.dart';
@@ -67,13 +68,17 @@ void main() {
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
 
+      // Subtotal is the item price; total adds the delivery fee on top.
+      final expectedTotal = 45.0 + AppPricing.deliveryFee;
+      expect(find.text('\$45.00'), findsWidgets);
+      expect(find.text('\$${AppPricing.deliveryFee.toStringAsFixed(2)}'), findsOneWidget);
+
       final totalFinder = find.byWidgetPredicate(
         (Widget widget) =>
             widget is Text &&
-            widget.data != null &&
-            widget.data!.contains('45') &&
+            widget.data == '\$${expectedTotal.toStringAsFixed(2)}' &&
             widget.style?.fontSize == 20.0,
-        description: 'Text containing \'45\' with a font size of 20.0',
+        description: 'Total text with a font size of 20.0',
       );
 
       expect(totalFinder, findsOneWidget);
@@ -90,17 +95,30 @@ void main() {
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('Beef Stroganoff'), findsOneWidget);
-      
+
+      final expectedTotal = 80.0 + AppPricing.deliveryFee;
+      expect(find.text('\$80.00'), findsOneWidget);
+
       final totalFinder = find.byWidgetPredicate(
         (Widget widget) =>
             widget is Text &&
-            widget.data != null &&
-            widget.data!.contains('80') &&
+            widget.data == '\$${expectedTotal.toStringAsFixed(2)}' &&
             widget.style?.fontSize == 20.0,
-        description: 'Text containing \'80\' with a font size of 20.0',
+        description: 'Total text with a font size of 20.0',
       );
-      
+
       expect(totalFinder, findsOneWidget);
+    });
+
+    testWidgets('should not charge a delivery fee on an empty cart', (WidgetTester tester) async {
+      expect(Cart.instance.subtotal, 0);
+      expect(Cart.instance.deliveryFee, 0);
+      expect(Cart.instance.totalPrice, 0);
+
+      Cart.instance.add(testMeal1);
+      expect(Cart.instance.subtotal, 45.0);
+      expect(Cart.instance.deliveryFee, AppPricing.deliveryFee);
+      expect(Cart.instance.totalPrice, 45.0 + AppPricing.deliveryFee);
     });
 
     testWidgets('should display Order Now button', (WidgetTester tester) async {

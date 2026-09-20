@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_pricing.dart';
 
 class OrderDetailsPage extends StatelessWidget {
   final String orderId;
@@ -17,7 +18,15 @@ class OrderDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = order['status'] ?? 'pending';
-    final total = order['total'] ?? 0.0;
+    final storedTotal = (order['total'] as num?)?.toDouble() ?? 0.0;
+    final storedSubtotal = (order['subtotal'] as num?)?.toDouble();
+    final deliveryFee =
+        (order['deliveryFee'] as num?)?.toDouble() ?? AppPricing.deliveryFee;
+    // Orders placed before fees were stored kept an items-only amount in
+    // 'total', so treat that as the subtotal and add the fee on top.
+    final subtotal = storedSubtotal ?? storedTotal;
+    final total =
+        storedSubtotal != null ? storedTotal : storedTotal + deliveryFee;
     final items = (order['items'] as List?) ?? [];
     final address = order['address'] ?? 'No address';
     final phone = order['phone'] ?? 'No phone';
@@ -192,7 +201,7 @@ class OrderDetailsPage extends StatelessWidget {
                         children: [
                           Text('Subtotal', style: TextStyle(fontSize: 14)),
                           Text(
-                            '\$${total.toStringAsFixed(2)}',
+                            '\$${subtotal.toStringAsFixed(2)}',
                             style: TextStyle(fontSize: 14),
                           ),
                         ],
@@ -203,7 +212,8 @@ class OrderDetailsPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Delivery Fee', style: TextStyle(fontSize: 14)),
-                          Text('\$2.99', style: TextStyle(fontSize: 14)),
+                          Text('\$${deliveryFee.toStringAsFixed(2)}',
+                              style: TextStyle(fontSize: 14)),
                         ],
                       ),
                       SizedBox(height: 12),
@@ -220,7 +230,7 @@ class OrderDetailsPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '\$${(total + 2.99).toStringAsFixed(2)}',
+                            '\$${total.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

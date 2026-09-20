@@ -23,10 +23,9 @@ void main() async {
 
   Hive.registerAdapter(MealModelAdapter());
 
-  await Hive.openBox<MealModel>('productsBox');
-  await Hive.openBox<MealModel>('favoritesBox');
+  // The cart reads its box synchronously, so it must be open before runApp.
+  // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
-  await Hive.openBox('ordersBox');
 
   runApp(const MyApp());
 }

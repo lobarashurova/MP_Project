@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:flutter/foundation.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 
 class CartItem {
@@ -42,10 +43,17 @@ class Cart {
 
   int get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get totalPrice {
+  /// Sum of item prices times quantities, before any fees.
+  double get subtotal {
     return _items.fold(
         0, (sum, item) => sum + item.product.price * item.quantity);
   }
+
+  /// Delivery fee for the current basket. Zero when the basket is empty.
+  double get deliveryFee => _items.isEmpty ? 0 : AppPricing.deliveryFee;
+
+  /// Amount the customer pays: subtotal plus delivery fee.
+  double get totalPrice => subtotal + deliveryFee;
 
 
   Future<void> _saveCart() async {
