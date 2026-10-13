@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:xurmo/core/errors/app_exception.dart';
 
 class NetworkModule {
   static final NetworkModule _instance = NetworkModule._internal();
@@ -19,33 +21,27 @@ class NetworkModule {
       },
     ));
 
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      error: true,
-    ));
-  }
-
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    try {
-      return await dio.get(path, queryParameters: queryParameters);
-    } on DioException catch (e) {
-      throw _handleError(e);
+    if (kDebugMode) {
+      dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        error: true,
+      ));
     }
   }
 
-  String _handleError(DioException error) {
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return 'Connection timeout';
-      case DioExceptionType.badResponse:
-        return 'Server error: ${error.response?.statusCode}';
-      case DioExceptionType.cancel:
-        return 'Request cancelled';
-      default:
-        return 'Network error occurred';
+  /// Performs a GET and converts any transport failure into an
+  /// [AppException] carrying a message that is safe to show to the user.
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      return await dio.get(path, queryParameters: queryParameters);
+    } on DioException catch (e) {
+      throw AppException.from(e);
+    } catch (e) {
+      throw AppException.from(e);
     }
   }
 }
