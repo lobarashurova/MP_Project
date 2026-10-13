@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
@@ -21,9 +22,19 @@ class _BasketPageState extends State<BasketPage> {
   @override
   void initState() {
     super.initState();
-    Cart.instance.notifier.addListener(() {
-      setState(() {});
-    });
+    Cart.instance.notifier.addListener(_onCartChanged);
+  }
+
+  @override
+  void dispose() {
+    // Without this the listener outlives the page and calls setState on a
+    // disposed State every time the cart changes.
+    Cart.instance.notifier.removeListener(_onCartChanged);
+    super.dispose();
+  }
+
+  void _onCartChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -45,32 +56,12 @@ class _BasketPageState extends State<BasketPage> {
         centerTitle: false,
       ),
       body: items.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CupertinoIcons.cart,
-              size: 80,
-              color: AppColors.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Your basket is empty',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add items from the home page',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textHint,
-              ),
-            ),
-          ],
-        ),
-      )
+          ? const StateView.empty(
+              icon: CupertinoIcons.cart,
+              title: 'Your basket is empty',
+              message:
+                  'Browse the menu and tap + on anything you fancy — it will land here.',
+            )
           : Column(
         children: [
           Expanded(

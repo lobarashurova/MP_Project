@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
@@ -35,10 +37,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Please log in');
+      if (user == null) {
+        throw const AppException(
+          AppErrorType.unauthorized,
+          'Please sign in to place your order.',
+        );
+      }
 
       final cart = Cart.instance;
-      if (cart.items.isEmpty) throw Exception('Cart is empty');
+      if (cart.items.isEmpty) {
+        throw const AppException(
+          AppErrorType.unknown,
+          'Your cart is empty.',
+        );
+      }
 
       double total = cart.totalPrice;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
@@ -69,11 +81,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ));
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text(
+            AppException.from(e).message,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: _placeOrder,
+          ),
+        ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      // The success path navigates away, so guard before touching state.
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -91,16 +117,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
         elevation: 0,
       ),
       body: cart.items.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(CupertinoIcons.cart, size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            const Text('Your cart is empty', style: TextStyle(fontSize: 18, color: Colors.grey)),
-          ],
-        ),
-      )
+          ? StateView.empty(
+              icon: CupertinoIcons.cart,
+              title: 'Your cart is empty',
+              message: 'Add something to your basket before checking out.',
+              actionLabel: 'Back to basket',
+              onAction: () => Navigator.pop(context),
+            )
           : SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(

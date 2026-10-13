@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/home/widgets/banner_widget.dart';
 import 'package:xurmo/presentation/home/widgets/category_bar.dart';
@@ -110,50 +112,124 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  Future<void> _onRefresh() async {
+    final failure = await context.read<HomeProvider>().refreshProducts();
+    if (!mounted || failure == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          failure.message,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
-          final allMeals = provider.meals;
-          final itemCount = provider.isLoading ? 16 : allMeals.length + 6;
+          // Nothing to show and the load failed — offer a real way out.
+          if (provider.hasBlockingError) {
+            return _buildMessageScreen(
+              StateView.error(
+                error: provider.failure,
+                onRetry: provider.retry,
+              ),
+            );
+          }
 
-          return Stack(
-            children: [
-              SafeArea(
-                child: ScrollablePositionedList.builder(
-                  itemScrollController: _itemScrollController,
-                  itemPositionsListener: _itemPositionsListener,
-                  itemCount: itemCount,
-                  itemBuilder: (context, index) {
-                    if (index == 0) return const HomeHeader();
-                    if (index == 1) return const SearchBarWidget();
-                    if (index == 2) return const SizedBox(height: 24);
-                    if (index == 3) return const BannerWidget();
-                    if (index == 4) return const SizedBox(height: 24);
-                    if (index == 5) {
-                      return CategoryBar(
-                        categories: provider.categories,
-                        selectedCategory: provider.visibleCategory,
-                        scrollController: _categoryScrollController,
-                        onCategoryTap: _scrollToCategory,
-                      );
-                    }
+          // Load succeeded but the menu came back empty.
+          if (provider.isEmpty) {
+            return _buildMessageScreen(
+              StateView.empty(
+                icon: CupertinoIcons.square_list,
+                title: 'No meals yet',
+                message:
+                    "Our menu is empty right now. Pull down or tap below to check again.",
+                actionLabel: 'Refresh',
+                onAction: provider.retry,
+              ),
+            );
+          }
 
-                    if (index >= 6) {
+          return _buildMealList(provider);
+        },
+      ),
+    );
+  }
+
+  /// Full-screen empty/error layout that keeps the header for context.
+  Widget _buildMessageScreen(Widget stateView) {
+    return SafeArea(
+      child: Column(
+        children: [
+          const HomeHeader(),
+          const SizedBox(height: 8),
+          Expanded(child: stateView),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMealList(HomeProvider provider) {
+    final allMeals = provider.meals;
+    final itemCount = provider.isLoading ? 16 : allMeals.length + 6;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          // Cached meals are on screen but the refresh failed: inform the user
+          // without blocking what they can already see.
+          if (provider.isShowingStaleData)
+            OfflineNotice(
+              message: provider.isOffline
+                  ? "You're offline — showing saved meals."
+                  : provider.failure!.message,
+              onRetry: provider.isRefreshing ? null : _onRefresh,
+            ),
+          Expanded(
+            child: Stack(
+              children: [
+                RefreshIndicator(
+                  onRefresh: _onRefresh,
+                  color: AppColors.primary,
+                  child: ScrollablePositionedList.builder(
+                    itemScrollController: _itemScrollController,
+                    itemPositionsListener: _itemPositionsListener,
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return const HomeHeader();
+                      if (index == 1) return const SearchBarWidget();
+                      if (index == 2) return const SizedBox(height: 24);
+                      if (index == 3) return const BannerWidget();
+                      if (index == 4) return const SizedBox(height: 24);
+                      if (index == 5) {
+                        return CategoryBar(
+                          categories: provider.categories,
+                          selectedCategory: provider.visibleCategory,
+                          scrollController: _categoryScrollController,
+                          onCategoryTap: _scrollToCategory,
+                        );
+                      }
+
                       final rowIndex = index - 6;
                       final leftIndex = rowIndex * 2;
                       final rightIndex = leftIndex + 1;
 
                       if (provider.isLoading) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 10,
                           ),
                           child: Row(
-                            children: const [
+                            children: [
                               Expanded(child: MealCardShimmer()),
                               SizedBox(width: 16),
                               Expanded(child: MealCardShimmer()),
@@ -178,9 +254,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: Row(
                           children: [
-                            Expanded(
-                              child: MealCard(meal: leftMeal),
-                            ),
+                            Expanded(child: MealCard(meal: leftMeal)),
                             const SizedBox(width: 16),
                             Expanded(
                               child: rightMeal != null
@@ -190,18 +264,14 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       );
-                    }
-
-                    return const SizedBox.shrink();
-                  },
+                    },
+                  ),
                 ),
-              ),
-              if (_isBarSticky && !provider.isLoading)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: SafeArea(
+                if (_isBarSticky && !provider.isLoading)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     child: CategoryBar(
                       categories: provider.categories,
                       selectedCategory: provider.visibleCategory,
@@ -209,10 +279,10 @@ class _HomePageState extends State<HomePage> {
                       onCategoryTap: _scrollToCategory,
                     ),
                   ),
-                ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

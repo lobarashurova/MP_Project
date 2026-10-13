@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/state_view.dart';
 import 'order_detail_page.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -13,34 +15,41 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  /// Bumped to rebuild the StreamBuilder with a fresh subscription on retry.
+  int _streamAttempt = 0;
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Text('My Orders'),
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId == null) {
       return Scaffold(
-        backgroundColor: Colors.white, // Add this
-        appBar: AppBar(
-          title: Text('My Orders'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-        body: Center(
-          child: Text('Please log in to view orders'),
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(),
+        body: StateView.empty(
+          icon: CupertinoIcons.person_crop_circle,
+          title: 'Sign in to see your orders',
+          message: 'Your order history is tied to your account.',
+          actionLabel: 'Sign in',
+          onAction: () => Navigator.pushNamed(context, '/login'),
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text('My Orders'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
+      appBar: _buildAppBar(),
       body: StreamBuilder<QuerySnapshot>(
+        key: ValueKey(_streamAttempt),
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: userId)
@@ -48,42 +57,41 @@ class _OrdersPageState extends State<OrdersPage> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
 
+          // Offline or a Firestore failure — a friendly message plus a retry,
+          // not a raw exception dump.
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return StateView.error(
+              error: snapshot.error,
+              onRetry: () => setState(() => _streamAttempt++),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No orders yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                ],
-              ),
+            return const StateView.empty(
+              icon: CupertinoIcons.bag,
+              title: 'No orders yet',
+              message: 'Once you place an order it will show up here.',
             );
           }
 
           final orders = snapshot.data!.docs;
 
           return ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             itemCount: orders.length,
             itemBuilder: (context, index) {
               final order = orders[index].data() as Map<String, dynamic>;
               final orderId = orders[index].id;
-              final orderNumber = orders.length - index; // Sequential order number (newest = highest)
+              final orderNumber = orders.length - index;
 
               return OrderCard(
                 orderId: orderId,
-                orderNumber: orderNumber, // Pass the order number
+                orderNumber: orderNumber,
                 order: order,
               );
             },

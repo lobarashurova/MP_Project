@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -16,8 +17,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<MealModel> _filteredMeals = [];
-  bool _isSearching = false;
+  String _query = '';
 
   @override
   void initState() {
@@ -34,28 +34,27 @@ class _SearchPageState extends State<SearchPage> {
 
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase().trim();
-    final provider = context.read<HomeProvider>();
-
-    if (query.isEmpty) {
-      setState(() {
-        _filteredMeals = [];
-        _isSearching = false;
-      });
+    if (query == _query) {
+      // Still rebuild so the clear button appears/disappears.
+      setState(() {});
       return;
     }
+    setState(() => _query = query);
+  }
 
-    setState(() {
-      _isSearching = true;
-      _filteredMeals = provider.meals.where((meal) {
-        return meal.name.toLowerCase().contains(query) ||
-               meal.category.toLowerCase().contains(query) ||
-               meal.description.toLowerCase().contains(query);
-      }).toList();
-    });
+  List<MealModel> _matches(List<MealModel> meals) {
+    if (_query.isEmpty) return const [];
+    return meals.where((meal) {
+      return meal.name.toLowerCase().contains(_query) ||
+          meal.category.toLowerCase().contains(_query) ||
+          meal.area.toLowerCase().contains(_query);
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<HomeProvider>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -74,6 +73,7 @@ class _SearchPageState extends State<SearchPage> {
           child: TextField(
             controller: _searchController,
             autofocus: true,
+            textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: 'Search for food...',
               hintStyle: AppTextStyles.hint,
@@ -102,77 +102,84 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       body: SafeArea(
-        child: _buildBody(),
+        child: _buildBody(provider),
       ),
     );
   }
 
-  Widget _buildBody() {
-    if (!_isSearching) {
-      return _buildEmptyState(
+  Widget _buildBody(HomeProvider provider) {
+    if (provider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    // There is nothing loaded to search through because the menu failed to
+    // load — say that, rather than pretending the search found nothing.
+    if (provider.hasBlockingError) {
+      return StateView.error(
+        error: provider.failure,
+        onRetry: provider.retry,
+        retryLabel: 'Reload menu',
+      );
+    }
+
+    if (provider.meals.isEmpty) {
+      return StateView.empty(
+        icon: CupertinoIcons.square_list,
+        title: 'Nothing to search yet',
+        message: 'The menu is empty right now. Try reloading it.',
+        actionLabel: 'Reload menu',
+        onAction: provider.retry,
+      );
+    }
+
+    if (_query.isEmpty) {
+      return const StateView.empty(
         icon: CupertinoIcons.search,
         title: 'Search for food',
         message: 'Start typing to find your favorite meals',
       );
     }
 
-    if (_filteredMeals.isEmpty) {
-      return _buildEmptyState(
-        icon: CupertinoIcons.exclamationmark_triangle,
+    final matches = _matches(provider.meals);
+
+    if (matches.isEmpty) {
+      return StateView.empty(
+        icon: CupertinoIcons.doc_text_search,
         title: 'No results found',
-        message: 'Try searching with different keywords',
+        message:
+            'We could not find anything for "${_searchController.text.trim()}". '
+            'Try a different dish, category or cuisine.',
+        actionLabel: 'Clear search',
+        onAction: () => _searchController.clear(),
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: _filteredMeals.length,
-      itemBuilder: (context, index) {
-        return MealCard(meal: _filteredMeals[index]);
-      },
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String message,
-  }) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 80,
-            color: AppColors.iconSecondary.withOpacity(0.5),
+    return Column(
+      children: [
+        if (provider.isShowingStaleData)
+          OfflineNotice(
+            message: provider.isOffline
+                ? "You're offline — searching saved meals only."
+                : provider.failure!.message,
           ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: AppTextStyles.heading2.copyWith(
-              color: AppColors.textSecondary,
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.62,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
             ),
+            itemCount: matches.length,
+            itemBuilder: (context, index) {
+              return MealCard(meal: matches[index]);
+            },
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary.withOpacity(0.7),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
