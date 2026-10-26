@@ -4,6 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yandex_maps_mapkit_lite/init.dart';
+
+import 'package:xurmo/core/constants/map_config.dart';
 
 import 'package:xurmo/core/session/install_guard.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -32,6 +35,12 @@ void main() async {
   } catch (e) {
     // Never block startup on this; the worst case is staying signed in.
     debugPrint('Install guard failed: $e');
+  }
+
+  // Yandex MapKit needs its key before any map is shown. Builds without a key
+  // skip this, and the checkout hides the map picker.
+  if (MapConfig.isMapAvailable) {
+    await initMapkit(apiKey: MapConfig.yandexApiKey);
   }
 
   await Hive.initFlutter();
