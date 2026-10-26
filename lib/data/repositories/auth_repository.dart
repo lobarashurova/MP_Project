@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:xurmo/core/utils/auth_error_messages.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
 import 'package:xurmo/data/models/auth_method.dart';
@@ -24,18 +25,25 @@ class AuthFailure implements Exception {
 /// keeps error handling in one place and means a future change, such as SMS
 /// verification or a different backend, touches one file.
 ///
-/// Two ways to identify an account are supported, both with a password:
-///   - email, used as-is;
-///   - phone number, without SMS. The number is normalized and turned into a
-///     synthetic email (see phone_number.dart) that Firebase treats like any
-///     other email account.
+/// Three ways to sign in are supported:
+///   - email and password, used as-is;
+///   - phone number and password, without SMS. The number is normalized and
+///     turned into a synthetic email (see phone_number.dart) that Firebase
+///     treats like any other email account;
+///   - Google, through the Google account picker. The first Google sign-in
+///     also creates the user's profile, so it doubles as registration.
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _google;
 
-  AuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  AuthRepository({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? google,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _google = google ?? GoogleSignIn.instance;
 
   User? get currentUser => _auth.currentUser;
 
@@ -126,9 +134,101 @@ class AuthRepository {
     return e164;
   }
 
+  // --------------------------------------------------------------- Google
+
+  /// GoogleSignIn must be initialized exactly once per app run.
+  static Future<void>? _googleInit;
+
+  /// Signs in with a Google account, creating the profile on first use.
+  ///
+  /// Returns null when the person closes the account picker, so the caller
+  /// can simply do nothing.
+  Future<UserCredential?> signInWithGoogle() {
+    return _guard(() async {
+      if (!_google.supportsAuthenticate()) {
+        throw const AuthFailure(
+          'Google sign-in is not available on this device.',
+          code: 'google-unavailable',
+        );
+      }
+
+      // On Android the client ID comes from google-services.json, which must
+      // contain the web OAuth client that Firebase adds when Google sign-in
+      // is enabled.
+      _googleInit ??= _google.initialize();
+      try {
+        await _googleInit;
+      } catch (_) {
+        // Allow a retry on the next tap instead of failing forever.
+        _googleInit = null;
+        throw AuthFailure(authErrorMessage('google-not-configured'),
+            code: 'google-not-configured');
+      }
+
+      final GoogleSignInAccount account;
+      try {
+        account = await _google.authenticate();
+      } on GoogleSignInException catch (e) {
+        switch (e.code) {
+          case GoogleSignInExceptionCode.canceled:
+          case GoogleSignInExceptionCode.interrupted:
+            return null;
+          case GoogleSignInExceptionCode.clientConfigurationError:
+          case GoogleSignInExceptionCode.providerConfigurationError:
+            throw AuthFailure(authErrorMessage('google-not-configured'),
+                code: 'google-not-configured');
+          case GoogleSignInExceptionCode.uiUnavailable:
+            throw AuthFailure(authErrorMessage('google-unavailable'),
+                code: 'google-unavailable');
+          default:
+            throw AuthFailure(authErrorMessage('google-failed'), code: 'google-failed');
+        }
+      }
+
+      final idToken = account.authentication.idToken;
+      if (idToken == null) {
+        throw AuthFailure(authErrorMessage('google-not-configured'),
+            code: 'google-not-configured');
+      }
+
+      final credential = await _auth.signInWithCredential(
+        GoogleAuthProvider.credential(idToken: idToken),
+      );
+      await _ensureGoogleProfile(credential.user!);
+      return credential;
+    });
+  }
+
+  /// Creates the profile document the first time a Google account signs in.
+  /// Existing profiles are left alone, so a role set by an admin is kept.
+  Future<void> _ensureGoogleProfile(User user) async {
+    final ref = _firestore.collection('users').doc(user.uid);
+    if ((await ref.get()).exists) return;
+
+    await ref.set({
+      'name': user.displayName ?? '',
+      'email': user.email ?? '',
+      'phone': '',
+      'authMethod': AuthMethod.google.storageValue,
+      'role': UserRole.user,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // ------------------------------------------------------------- Shared
 
-  Future<void> signOut() => _guard(() => _auth.signOut());
+  Future<void> signOut() => _guard(() async {
+        await _auth.signOut();
+        // Forget the chosen Google account too, so the next Google sign-in
+        // shows the account picker instead of reusing the last account.
+        // Ignored when Google was never used in this run.
+        if (_googleInit != null) {
+          try {
+            await _google.signOut();
+          } catch (_) {}
+        }
+      });
 
   /// Creates the Firebase Auth account and its profile document in one step.
   ///

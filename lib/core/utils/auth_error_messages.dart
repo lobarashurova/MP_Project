@@ -33,6 +33,17 @@ String authErrorMessage(String? code, {bool phone = false}) {
     case 'operation-not-allowed':
       return 'Sign-in is not enabled right now. Try again later.';
 
+    // Google sign-in
+    case 'account-exists-with-different-credential':
+      return 'This email is already registered with a password. '
+          'Sign in with email and password instead.';
+    case 'google-not-configured':
+      return 'Google sign-in is not set up for this app yet.';
+    case 'google-unavailable':
+      return 'Google sign-in is not available on this device.';
+    case 'google-failed':
+      return 'Google sign-in did not finish. Please try again.';
+
     // Shared
     case 'too-many-requests':
       return 'Too many attempts. Wait a moment and try again.';

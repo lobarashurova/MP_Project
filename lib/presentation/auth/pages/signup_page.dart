@@ -6,6 +6,7 @@ import 'package:xurmo/data/repositories/auth_repository.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
+import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -23,6 +24,7 @@ class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
@@ -43,6 +45,31 @@ class _SignupPageState extends State<SignupPage> {
       _method = method;
       _errorMessage = null;
     });
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final signedIn = await context.read<AuthProvider>().signInWithGoogle();
+      if (!signedIn) return; // The account picker was closed.
+
+      if (mounted) {
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          navigator.pushReplacementNamed('/home');
+        }
+      }
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
   }
 
   Future<void> _signup() async {
@@ -75,6 +102,11 @@ class _SignupPageState extends State<SignupPage> {
             phone: _phoneController.text,
             password: _passwordController.text,
           );
+        case AuthMethod.google:
+          // The Email / Phone switch never selects Google, which has its own
+          // button. Handled here only so every method is covered.
+          await _signInWithGoogle();
+          return;
       }
 
       if (mounted) {
@@ -279,7 +311,7 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _signup,
+                    onPressed: _isLoading || _isGoogleLoading ? null : _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       disabledBackgroundColor:
@@ -309,6 +341,11 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 24),
+                GoogleSignInSection(
+                  onPressed: _isLoading || _isGoogleLoading ? null : _signInWithGoogle,
+                  isLoading: _isGoogleLoading,
                 ),
                 const SizedBox(height: 20),
                 Row(
