@@ -1,10 +1,18 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:xurmo/data/models/order_status.dart';
+import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_pricing.dart';
 
-class OrderDetailsPage extends StatelessWidget {
+class OrderDetailsPage extends StatefulWidget {
   final String orderId;
+
+  /// The order as it was when the list was shown. Used until the live copy
+  /// arrives from Firestore.
   final Map<String, dynamic> order;
   final int orderNumber;
 
@@ -16,8 +24,49 @@ class OrderDetailsPage extends StatelessWidget {
   });
 
   @override
+  State<OrderDetailsPage> createState() => _OrderDetailsPageState();
+}
+
+class _OrderDetailsPageState extends State<OrderDetailsPage> {
+  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _orderStream;
+
+  /// The status follows the clock, so redraw regularly while the screen is
+  /// open even when the order document itself does not change.
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _orderStream = FirebaseFirestore.instance
+        .collection('orders')
+        .doc(widget.orderId)
+        .snapshots();
+    _ticker = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final status = order['status'] ?? 'pending';
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _orderStream,
+      builder: (context, snapshot) {
+        // Fall back to the copy from the list while loading, or if the live
+        // read fails, so the screen never goes blank.
+        final order = snapshot.data?.data() ?? widget.order;
+        return _buildForOrder(context, order);
+      },
+    );
+  }
+
+  Widget _buildForOrder(BuildContext context, Map<String, dynamic> order) {
+    final orderNumber = widget.orderNumber;
     final storedTotal = (order['total'] as num?)?.toDouble() ?? 0.0;
     final storedSubtotal = (order['subtotal'] as num?)?.toDouble();
     final deliveryFee =
@@ -30,26 +79,20 @@ class OrderDetailsPage extends StatelessWidget {
     final items = (order['items'] as List?) ?? [];
     final address = order['address'] ?? 'No address';
     final phone = order['phone'] ?? 'No phone';
-    final createdAt = order['createdAt']?.toDate();
+    final createdAt = (order['createdAt'] as Timestamp?)?.toDate();
+    final status = OrderStatus.resolve(
+      stored: order['status'],
+      placedAt: createdAt,
+      now: DateTime.now(),
+    );
+    final estimatedDelivery = OrderStatus.estimatedDelivery(
+      stored: order['status'],
+      placedAt: createdAt,
+    );
 
     final dateString = createdAt != null
         ? DateFormat('MMMM dd, yyyy - HH:mm').format(createdAt)
         : 'Unknown date';
-
-    Color statusColor;
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        statusColor = Colors.green;
-        break;
-      case 'cancelled':
-        statusColor = Colors.red;
-        break;
-      case 'processing':
-        statusColor = Colors.blue;
-        break;
-      default:
-        statusColor = Colors.orange;
-    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -100,22 +143,28 @@ class OrderDetailsPage extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 12),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          status.toUpperCase(),
-                          style: TextStyle(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
+                      OrderStatusBadge(status: status),
                     ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20),
+              Text(
+                'Order Status',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              SizedBox(height: 12),
+              Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: OrderProgress(
+                    status: status,
+                    placedAt: createdAt,
+                    estimatedDelivery: estimatedDelivery,
                   ),
                 ),
               ),
@@ -246,7 +295,7 @@ class OrderDetailsPage extends StatelessWidget {
 
               SizedBox(height: 20),
 
-              if (status != 'delivered' && status != 'cancelled')
+              if (!status.isFinal)
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
