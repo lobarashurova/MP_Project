@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:xurmo/core/errors/app_exception.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/data/repositories/product_repository.dart';
 
@@ -10,16 +11,38 @@ class HomeProvider extends ChangeNotifier {
 
   List<MealModel> _products = [];
   bool _isLoading = false;
-  String? _error;
+  bool _hasLoadedOnce = false;
+  bool _isRefreshing = false;
+  AppException? _failure;
+  bool _isShowingCachedData = false;
   String _selectedCategory = 'All';
   String _visibleCategory = 'All';
 
   List<MealModel> get products => _products;
   List<MealModel> get meals => _products;
   bool get isLoading => _isLoading;
-  String? get error => _error;
+  bool get isRefreshing => _isRefreshing;
   String get selectedCategory => _selectedCategory;
   String get visibleCategory => _visibleCategory;
+
+  /// The failure from the last load, if any.
+  AppException? get failure => _failure;
+  String? get error => _failure?.message;
+  bool get hasError => _failure != null;
+
+  /// A blocking error: the load failed and we have nothing to show.
+  bool get hasBlockingError => _failure != null && _products.isEmpty;
+
+  /// A non-blocking error: the refresh failed but cached meals are on screen.
+  bool get isShowingStaleData => _failure != null && _products.isNotEmpty;
+
+  bool get isOffline => _failure?.isConnectivityIssue ?? false;
+
+  /// True once a load has completed and legitimately returned nothing — an
+  /// empty menu rather than a failed one.
+  bool get isEmpty => _hasLoadedOnce && _products.isEmpty && _failure == null;
+
+  bool get isShowingCachedData => _isShowingCachedData;
 
   List<String> get categories {
     final Set<String> categorySet = {'All'};
@@ -64,32 +87,72 @@ class HomeProvider extends ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
+    if (_isLoading) return;
+
     _isLoading = true;
-    _error = null;
+    _failure = null;
     notifyListeners();
 
-    try {
-      _products = await _repository.fetchProducts();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
+    await _load();
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> loadMeals() async {
     await loadProducts();
   }
 
-  Future<void> refreshProducts() async {
-    try {
-      _products = await _repository.fetchProducts(forceRefresh: true);
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+  /// Pull-to-refresh / retry-after-error. Keeps existing meals on screen while
+  /// the request is in flight so a failed refresh never blanks the page.
+  ///
+  /// Returns the failure, or null when the refresh succeeded, so the caller can
+  /// surface a snackbar without reading provider state back.
+  Future<AppException?> refreshProducts() async {
+    if (_isRefreshing) return _failure;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    await _load(forceRefresh: true);
+
+    _isRefreshing = false;
+    notifyListeners();
+    return _failure;
+  }
+
+  /// Retry from an error state: shows the loading skeleton again because there
+  /// is nothing on screen to preserve.
+  Future<void> retry() async {
+    if (_products.isEmpty) {
+      await loadProducts();
+    } else {
+      await refreshProducts();
     }
+  }
+
+  Future<void> _load({bool forceRefresh = false}) async {
+    try {
+      final result = await _repository.fetchProducts(forceRefresh: forceRefresh);
+
+      if (result.products.isNotEmpty) {
+        _products = result.products;
+      }
+      _failure = result.failure;
+      _isShowingCachedData = result.fromCache;
+      _hasLoadedOnce = true;
+    } catch (e) {
+      // The repository is not supposed to throw, but never let an unexpected
+      // error leave the page stuck on a spinner.
+      _failure = AppException.from(e);
+      _hasLoadedOnce = true;
+    }
+  }
+
+  /// Clears a non-blocking error, e.g. after it has been shown in a snackbar.
+  void clearError() {
+    if (_failure == null) return;
+    _failure = null;
+    notifyListeners();
   }
 }

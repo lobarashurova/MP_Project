@@ -28,6 +28,10 @@ This project utilizes a multi-layered testing strategy, which is a professional 
 -   **Purpose:** Tests the `MealModel` data class.
 -   **What it covers:** Verifies that a `MealModel` object can be correctly created from JSON data (simulating an API response) and that computed properties like `price` are calculated correctly.
 
+#### `empty_and_error_states_test.dart`
+-   **Purpose:** Tests how the app behaves when a load fails or returns nothing.
+-   **What it covers:** Verifies that `AppException` classifies offline, timeout, server and authorization failures correctly and never surfaces a raw exception string; that `HomeProvider` tells an empty menu apart from a failed one, keeps cached meals on screen when a refresh fails, and recovers on retry; that the shared `StateView` renders the right copy and retry action; and that `SearchPage` shows an offline error rather than "No results found" when the menu never loaded.
+
 #### `local_storage_repository_test.dart`
 -   **Purpose:** Tests the `LocalStorageRepository`, which handles saving data to the device's local storage.
 -   **What it covers:** Ensures that adding, retrieving, and deleting data for favorites, the shopping cart, and orders works as expected.
