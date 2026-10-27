@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/data/repositories/favorites_repository.dart';
 
@@ -96,7 +97,7 @@ class FavoritesProvider extends ChangeNotifier {
       id: data['id'] ?? '',
       name: data['name'] ?? 'Unknown Meal',
       category: data['category'] ?? 'General',
-      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      price: normalizeLegacySomAmount(data['price'] as num? ?? 0),
       imageUrl: data['imageUrl'] ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       description: data['description'] ?? 'No description available',

@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
 
-const double DELIVERY_FEE = 1;
 const String DELIVERY_TIME = "25-30 min";
-const double PROMO_THRESHOLD = 20;
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -40,7 +40,8 @@ class _BasketPageState extends State<BasketPage> {
   @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
-    final subtotal = Cart.instance.totalPrice - DELIVERY_FEE;
+    final subtotal = Cart.instance.totalPrice;
+    final total = subtotal + deliveryFeeSom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -149,7 +150,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      '\$${PROMO_THRESHOLD.toStringAsFixed(0)}',
+                                      formatSom(freeItemThresholdSom),
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -205,7 +206,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${subtotal.toStringAsFixed(2)}',
+                        formatSom(subtotal),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -225,7 +226,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${DELIVERY_FEE.toStringAsFixed(2)}',
+                        formatSom(deliveryFeeSom),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -252,7 +253,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${Cart.instance.totalPrice.toStringAsFixed(2)}',
+                        formatSom(total),
                         style: AppTextStyles.heading3.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,

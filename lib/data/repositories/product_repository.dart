@@ -1,6 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
 import 'package:xurmo/core/network/network_module.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 
 /// Outcome of a product load.
@@ -112,7 +113,7 @@ class ProductRepository {
   Future<List<MealModel>> _cachedProducts() async {
     try {
       final box = await Hive.openBox<MealModel>(_boxName);
-      return box.values.toList();
+      return _normalizeCachedPrices(box);
     } catch (_) {
       // A corrupt or unavailable cache is not worth failing the screen over.
       return const [];
@@ -134,7 +135,7 @@ class ProductRepository {
 
       if (box.isNotEmpty && !forceRefresh) {
         return ProductsResult(
-          products: box.values.toList(),
+          products: await _normalizeCachedPrices(box),
           fromCache: true,
         );
       }
@@ -181,7 +182,9 @@ class ProductRepository {
     }
 
     // Nothing came back from the network — fall back to whatever we stored.
-    final cached = box?.values.toList() ?? await _cachedProducts();
+    final cached = box != null
+        ? await _normalizeCachedPrices(box)
+        : await _cachedProducts();
     if (cached.isNotEmpty) {
       return ProductsResult(
         products: cached,
@@ -194,5 +197,23 @@ class ProductRepository {
       products: const [],
       failure: lastFailure,
     );
+  }
+
+  Future<List<MealModel>> _normalizeCachedPrices(Box<MealModel> box) async {
+    final products = <MealModel>[];
+    for (final key in box.keys) {
+      final meal = box.get(key);
+      if (meal == null) continue;
+
+      final normalizedPrice = normalizeLegacySomAmount(meal.price);
+      final normalizedMeal = normalizedPrice == meal.price
+          ? meal
+          : meal.copyWith(price: normalizedPrice);
+      if (!identical(normalizedMeal, meal)) {
+        await box.put(key, normalizedMeal);
+      }
+      products.add(normalizedMeal);
+    }
+    return products;
   }
 }

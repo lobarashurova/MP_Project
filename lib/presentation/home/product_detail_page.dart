@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
@@ -84,7 +85,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Row(
                     children: [
                       Text(
-                        '${_product.price.toStringAsFixed(0)}',
+                        formatSom(_product.price),
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/pricing.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/state_view.dart';
 import 'order_detail_page.dart';
 
@@ -117,7 +119,10 @@ class OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = order['status'] ?? 'pending';
-    final total = order['total'] ?? 0.0;
+    final storedTotal = order['total'] as num? ?? 0;
+    final total = order['currency'] == 'UZS'
+        ? storedTotal
+        : normalizeLegacySomAmount(storedTotal) + legacyDeliveryFeeSom;
     final itemCount = (order['items'] as List?)?.length ?? 0;
     final createdAt = (order['createdAt'] as Timestamp?)?.toDate();
 
@@ -216,7 +221,7 @@ class OrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${total.toStringAsFixed(2)}',
+                    formatSom(total),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,

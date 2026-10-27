@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/pricing.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class OrderDetailsPage extends StatelessWidget {
   final String orderId;
@@ -17,7 +19,15 @@ class OrderDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = order['status'] ?? 'pending';
-    final total = order['total'] ?? 0.0;
+    final storedTotal = order['total'] as num? ?? 0;
+    final isSomOrder = order['currency'] == 'UZS';
+    final subtotal = isSomOrder
+        ? (order['subtotal'] as num? ?? storedTotal - deliveryFeeSom)
+        : normalizeLegacySomAmount(storedTotal);
+    final deliveryFee = isSomOrder
+        ? (order['deliveryFee'] as num? ?? deliveryFeeSom)
+        : legacyDeliveryFeeSom;
+    final total = isSomOrder ? storedTotal : subtotal + deliveryFee;
     final items = (order['items'] as List?) ?? [];
     final address = order['address'] ?? 'No address';
     final phone = order['phone'] ?? 'No phone';
@@ -192,7 +202,7 @@ class OrderDetailsPage extends StatelessWidget {
                         children: [
                           Text('Subtotal', style: TextStyle(fontSize: 14)),
                           Text(
-                            '\$${total.toStringAsFixed(2)}',
+                            formatSom(subtotal),
                             style: TextStyle(fontSize: 14),
                           ),
                         ],
@@ -203,7 +213,7 @@ class OrderDetailsPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Delivery Fee', style: TextStyle(fontSize: 14)),
-                          Text('\$2.99', style: TextStyle(fontSize: 14)),
+                          Text(formatSom(deliveryFee), style: TextStyle(fontSize: 14)),
                         ],
                       ),
                       SizedBox(height: 12),
@@ -220,7 +230,7 @@ class OrderDetailsPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '\$${(total + 2.99).toStringAsFixed(2)}',
+                            formatSom(total),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -352,7 +362,7 @@ class OrderItemCard extends StatelessWidget {
 
             //price
             Text(
-              '\$${(price * quantity).toStringAsFixed(2)}',
+              formatSom(normalizeLegacySomAmount(price) * quantity),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,

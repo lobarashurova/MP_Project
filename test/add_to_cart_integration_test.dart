@@ -27,7 +27,7 @@ void main() {
     id: '52772',
     name: 'Teriyaki Chicken Casserole',
     category: 'Chicken',
-    price: 45.0,
+    price: 45000,
     imageUrl: 'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
     rating: 4.5,
     description: 'A delicious Japanese dish.',
@@ -39,7 +39,7 @@ void main() {
     id: '52873',
     name: 'Beef Stroganoff',
     category: 'Beef',
-    price: 35.0,
+    price: 35000,
     imageUrl: 'https://www.themealdb.com/images/media/meals/svprys1511876957.jpg',
     rating: 4.3,
     description: 'A creamy Russian classic.',
@@ -71,9 +71,9 @@ void main() {
         (Widget widget) =>
             widget is Text &&
             widget.data != null &&
-            widget.data!.contains('45') &&
+            widget.data!.contains('65 000 soʻm') &&
             widget.style?.fontSize == 20.0,
-        description: 'Text containing \'45\' with a font size of 20.0',
+        description: 'Total of 65 000 soʻm',
       );
 
       expect(totalFinder, findsOneWidget);
@@ -95,9 +95,9 @@ void main() {
         (Widget widget) =>
             widget is Text &&
             widget.data != null &&
-            widget.data!.contains('80') &&
+            widget.data!.contains('100 000 soʻm') &&
             widget.style?.fontSize == 20.0,
-        description: 'Text containing \'80\' with a font size of 20.0',
+        description: 'Total of 100 000 soʻm',
       );
       
       expect(totalFinder, findsOneWidget);

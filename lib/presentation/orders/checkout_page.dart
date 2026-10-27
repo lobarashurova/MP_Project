@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/constants/pricing.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
@@ -52,7 +54,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         );
       }
 
-      double total = cart.totalPrice;
+      final subtotal = cart.totalPrice;
+      final total = subtotal + deliveryFeeSom;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -65,7 +68,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'userId': user.uid,
         'userEmail': user.email ?? '',
         'items': orderItems,
+        'subtotal': subtotal,
+        'deliveryFee': deliveryFeeSom,
         'total': total,
+        'currency': 'UZS',
         'address': _addressController.text,
         'phone': _phoneController.text,
         'notes': _notesController.text,
@@ -106,7 +112,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final cart = Cart.instance;
-    final total = cart.totalPrice;
+    final subtotal = cart.totalPrice;
+    final total = subtotal + deliveryFeeSom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -144,7 +151,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${cart.items.length} items', style: const TextStyle(fontSize: 16)),
-                    Text('\$${total.toStringAsFixed(2)}',
+                    Text(formatSom(subtotal),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
@@ -266,16 +273,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text('\$${total.toStringAsFixed(2)}')]),
+                        children: [const Text('Subtotal'), Text(formatSom(subtotal))]),
                     const SizedBox(height: 8),
-                    const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text('Delivery Fee'), Text('\$2.99')]),
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [const Text('Delivery Fee'), Text(formatSom(deliveryFeeSom))]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('\$${(total + 2.99).toStringAsFixed(2)}',
+                        Text(formatSom(total),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
                     ),

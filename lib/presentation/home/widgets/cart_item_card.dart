@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
@@ -43,7 +44,7 @@ class CartItemCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '\$${cartItem.product.price.toStringAsFixed(2)}',
+                        formatSom(cartItem.product.price),
                         style: AppTextStyles.productPrice.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
@@ -252,7 +253,7 @@ class _MealCardState extends State<MealCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${_product.price.toStringAsFixed(0)}k',
+                            formatSom(_product.price),
                             style: AppTextStyles.productPrice,
                           ),
                           if (_quantity == 0)

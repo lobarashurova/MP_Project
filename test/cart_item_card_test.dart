@@ -26,7 +26,7 @@ void main() {
     id: '101',
     name: 'Test Meal',
     category: 'Test Category',
-    price: 25.00,
+    price: 25000,
     imageUrl: '',
     rating: 5.0,
     description: 'Delicious test meal',
@@ -43,7 +43,7 @@ void main() {
       ));
 
       expect(find.text('Test Meal'), findsOneWidget);
-      expect(find.text('\$25.00'), findsOneWidget);
+      expect(find.text('25 000 soʻm'), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
     });
 
