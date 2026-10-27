@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "86978289864",
+    "project_id": "xurmo-app-11f22",
+    "storage_bucket": "xurmo-app-11f22.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86978289864:android:8aba001e3aad247e0505fd",
+        "android_client_info": {
+          "package_name": "uz.imperishables.xurmo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgoiHGH9xATSknvAoVPTlbmcnKWAY7-bI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

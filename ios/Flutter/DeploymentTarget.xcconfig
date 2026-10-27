@@ -1,0 +1,5 @@
+// Minimum iOS version for the whole app. This is the only place to change it.
+// Every build configuration of the Xcode project is based on this file, and
+// the Podfile reads the value from here as well.
+// Yandex MapKit needs iOS 13 or newer.
+IPHONEOS_DEPLOYMENT_TARGET = 15.0

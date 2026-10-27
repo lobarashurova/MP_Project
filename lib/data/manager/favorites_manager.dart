@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../models/product_model.dart';
+import '../models/meal_model.dart';
 
 class FavoritesManager extends ChangeNotifier {
   static final FavoritesManager _instance = FavoritesManager._internal();
@@ -9,21 +9,17 @@ class FavoritesManager extends ChangeNotifier {
   FavoritesManager._internal();
 
   final Set<String> _favoriteIds = {};
-  final Map<String, ProductModel> _favoriteProducts = {};
+  final Map<String, MealModel> _favoriteProducts = {};
 
-  // Get all favorite products
-  List<ProductModel> get favorites => _favoriteProducts.values.toList();
+  List<MealModel> get favorites => _favoriteProducts.values.toList();
 
-  // Get favorite count
   int get favoriteCount => _favoriteProducts.length;
 
-  // Check if a product is favorite
   bool isFavorite(String productId) {
     return _favoriteIds.contains(productId);
   }
 
-  // Toggle favorite status
-  void toggleFavorite(ProductModel product) {
+  void toggleFavorite(MealModel product) {
     if (_favoriteIds.contains(product.id)) {
       _favoriteIds.remove(product.id);
       _favoriteProducts.remove(product.id);
@@ -34,8 +30,7 @@ class FavoritesManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add to favorites
-  void addFavorite(ProductModel product) {
+  void addFavorite(MealModel product) {
     if (!_favoriteIds.contains(product.id)) {
       _favoriteIds.add(product.id);
       _favoriteProducts[product.id] = product;
@@ -43,7 +38,6 @@ class FavoritesManager extends ChangeNotifier {
     }
   }
 
-  // Remove from favorites
   void removeFavorite(String productId) {
     if (_favoriteIds.contains(productId)) {
       _favoriteIds.remove(productId);
@@ -52,7 +46,6 @@ class FavoritesManager extends ChangeNotifier {
     }
   }
 
-  // Clear all favorites
   void clearFavorites() {
     _favoriteIds.clear();
     _favoriteProducts.clear();

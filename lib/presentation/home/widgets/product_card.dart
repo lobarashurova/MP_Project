@@ -2,13 +2,23 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
-import 'package:xurmo/data/models/product_model.dart';
+import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
 class ProductCard extends StatelessWidget {
-  final ProductModel product;
+  final MealModel product;
 
   const ProductCard({super.key, required this.product});
+
+  Widget _imagePlaceholder() {
+    return Center(
+      child: Icon(
+        CupertinoIcons.cube_box_fill,
+        size: 48,
+        color: AppColors.primary.withOpacity(0.7),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,22 +49,20 @@ class ProductCard extends StatelessWidget {
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
-              image: product.imageUrl.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(product.imageUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
             ),
+            clipBehavior: Clip.antiAlias,
             child: product.imageUrl.isEmpty
-                ? Center(
-                    child: Icon(
-                      CupertinoIcons.cube_box_fill,
-                      size: 48,
-                      color: AppColors.primary.withOpacity(0.7),
-                    ),
-                  )
-                : null,
+                ? _imagePlaceholder()
+                : Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    // A broken or unreachable image must not leave a blank
+                    // card or throw up a red error box.
+                    errorBuilder: (context, error, stackTrace) =>
+                        _imagePlaceholder(),
+                    loadingBuilder: (context, child, progress) =>
+                        progress == null ? child : _imagePlaceholder(),
+                  ),
           ),
 
           // Product details
