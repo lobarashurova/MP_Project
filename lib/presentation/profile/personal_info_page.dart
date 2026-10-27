@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({super.key});
@@ -62,7 +63,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   }
 
   Future<void> _saveUserData() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      Haptics.warning();
+      return;
+    }
+    Haptics.tap();
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;

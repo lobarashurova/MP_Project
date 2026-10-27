@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 /// A single, consistent way to render "there is nothing here" and
 /// "something failed" screens across the app.
@@ -110,7 +111,12 @@ class StateView extends StatelessWidget {
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 28),
               ElevatedButton(
-                onPressed: onAction,
+                onPressed: onAction == null
+                    ? null
+                    : () {
+                        Haptics.tap();
+                        onAction!();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.surface,
@@ -174,7 +180,12 @@ class OfflineNotice extends StatelessWidget {
           ),
           if (onRetry != null)
             TextButton(
-              onPressed: onRetry,
+              onPressed: onRetry == null
+                  ? null
+                  : () {
+                      Haptics.tap();
+                      onRetry!();
+                    },
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: const Size(0, 32),

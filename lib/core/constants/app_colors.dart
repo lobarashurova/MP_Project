@@ -32,6 +32,20 @@ class AppColors {
   static const Color iconPrimary = Color(0xFF424242);
   static const Color iconSecondary = Color(0xFF9E9E9E);
 
-  // Shadow
+  // Shadow — three depths so elevation reads as a scale, not one flat blur.
   static const Color shadow = Color(0x1A000000);
+  static const Color shadowSoft = Color(0x0D000000);
+  static const Color shadowStrong = Color(0x26000000);
+
+  // Tinted surfaces built from the brand colour. Pre-mixed against white so
+  // they stay opaque and avoid the muddy edges you get from stacked alphas.
+  static const Color primarySoft = Color(0xFFFDF0E7);
+  static const Color primaryTint = Color(0xFFFBE2D2);
+  static const Color surfaceAlt = Color(0xFFF4F4F6);
+
+  /// Warm brand gradient for banners and primary calls to action.
+  static const List<Color> primaryGradient = <Color>[
+    Color(0xFFFF8A3D),
+    Color(0xFFE65E07),
+  ];
 }

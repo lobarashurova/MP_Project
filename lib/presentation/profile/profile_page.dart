@@ -13,6 +13,7 @@ import 'package:xurmo/presentation/orders/order_page.dart';
 import 'package:xurmo/presentation/profile/about_page.dart';
 import 'package:xurmo/presentation/auth/pages/login_page.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart' as auth;
+import 'package:xurmo/core/utils/haptics.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -335,6 +336,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showLogoutDialog() {
+    Haptics.tap();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -344,6 +346,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
           TextButton(
             onPressed: () async {
+              Haptics.warning();
               Navigator.pop(context);
               await this.context.read<auth.AuthProvider>().logout();
             },

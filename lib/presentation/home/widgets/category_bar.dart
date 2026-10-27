@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class CategoryBar extends StatelessWidget {
   final List<String> categories;
@@ -32,7 +33,10 @@ class CategoryBar extends StatelessWidget {
             final isSelected = selectedCategory == category;
 
             return GestureDetector(
-              onTap: () => onCategoryTap(category),
+              onTap: () {
+                Haptics.selection();
+                onCategoryTap(category);
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(right: 12),

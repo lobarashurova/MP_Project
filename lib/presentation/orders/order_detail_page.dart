@@ -7,6 +7,7 @@ import 'package:xurmo/data/models/order_status.dart';
 import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_pricing.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;
@@ -300,6 +301,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
+                      Haptics.tap();
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(

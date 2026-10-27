@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 
@@ -107,28 +109,19 @@ class ProductCard extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
+                        Haptics.success();
                         Cart.instance.add(product);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${product.name} added to basket!',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: AppColors.primary,
-                            duration: const Duration(milliseconds: 700),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSmall),
                         ),
                         child: Icon(
                           CupertinoIcons.add,
-                          size: 16,
+                          size: 18,
                           color: AppColors.surface,
                         ),
                       ),

@@ -9,6 +9,7 @@ import 'package:yandex_maps_mapkit_lite/init.dart';
 import 'package:xurmo/core/constants/map_config.dart';
 
 import 'package:xurmo/core/session/install_guard.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/pages/login_page.dart';
@@ -68,10 +69,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Xurmo App',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.orange,
-          useMaterial3: true,
-        ),
+        theme: AppTheme.light,
         home: const MainPage(),
         routes: {
           '/login': (context) => const LoginPage(),

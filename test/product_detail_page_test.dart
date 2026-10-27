@@ -47,7 +47,8 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Add to Basket'), findsOneWidget);
     });
 
-    testWidgets('should show a SnackBar when Add to Basket is tapped', (WidgetTester tester) async {
+    testWidgets('should add the meal to the cart when Add to Basket is tapped',
+        (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
         home: ProductDetailPage(meal: testMeal),
       ));
@@ -55,7 +56,36 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, 'Add to Basket'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Teriyaki Chicken Casserole added to basket!'), findsOneWidget);
+      expect(Cart.instance.getQuantity(testMeal.id), 1);
+    });
+
+    testWidgets('should not show a confirmation SnackBar when adding to basket',
+        (WidgetTester tester) async {
+      // Adding is confirmed by the basket badge and a haptic tick, so a toast
+      // would only stack up when adding several items in a row.
+      await tester.pumpWidget(MaterialApp(
+        home: ProductDetailPage(meal: testMeal),
+      ));
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Add to Basket'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('should keep counting up when Add to Basket is tapped twice',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: ProductDetailPage(meal: testMeal),
+      ));
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add to Basket');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(Cart.instance.getQuantity(testMeal.id), 2);
     });
   });
 }
