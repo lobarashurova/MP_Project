@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/utils/phone_number.dart';
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({super.key});
@@ -48,7 +49,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
         _nameController.text = data['name'] ?? '';
         _phoneController.text = data['phone'] ?? '';
       }
-      _emailController.text = user.email ?? '';
+      // Phone accounts have a synthetic login email that is not a real
+      // address, so leave the field blank for them.
+      _emailController.text = isSyntheticEmail(user.email) ? '' : (user.email ?? '');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),

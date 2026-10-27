@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:flutter/foundation.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 
 class CartItem {
@@ -42,21 +43,39 @@ class Cart {
 
   int get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get totalPrice {
+  /// Sum of item prices times quantities, before any fees.
+  double get subtotal {
     return _items.fold(
         0, (sum, item) => sum + item.product.price * item.quantity);
   }
 
+  /// Delivery fee for the current basket. Zero when the basket is empty.
+  double get deliveryFee => _items.isEmpty ? 0 : AppPricing.deliveryFee;
 
+  /// Amount the customer pays: subtotal plus delivery fee.
+  double get totalPrice => subtotal + deliveryFee;
+
+
+  /// Persists the cart and tells listeners it changed.
+  ///
+  /// The in-memory cart has already changed when this runs, so listeners are
+  /// notified even if writing to disk fails. Otherwise the screen would show
+  /// a basket that no longer matches the real one. A failed write is logged
+  /// and only means the change is not kept after the app restarts.
   Future<void> _saveCart() async {
     try {
       final data = _items.map((item) => item.toMap()).toList();
       await _box.put('cart_items', data);
+    } catch (e, stack) {
+      _logError('Could not save the cart', e, stack);
+    } finally {
       notifier.value++;
-    } catch (e) {
     }
   }
 
+  /// Restores the saved cart. Data that cannot be read, for example after the
+  /// cart format changed, is logged and discarded so the app still opens with
+  /// an empty basket instead of failing on every launch.
   void _loadCart() {
     try {
       if (_box.containsKey('cart_items')) {
@@ -67,9 +86,18 @@ class Cart {
         );
         notifier.value++;
       }
-    } catch (e) {
-      _box.delete('cart_items');
+    } catch (e, stack) {
+      _logError('Could not read the saved cart; starting with an empty one', e, stack);
+      _items.clear();
+      _box.delete('cart_items').catchError(
+            (Object e, StackTrace s) => _logError('Could not clear the saved cart', e, s),
+          );
     }
+  }
+
+  static void _logError(String message, Object error, StackTrace stack) {
+    debugPrint('Cart: $message: $error');
+    if (kDebugMode) debugPrintStack(stackTrace: stack, maxFrames: 5);
   }
 
 

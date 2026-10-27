@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/data/models/auth_method.dart';
+import 'package:xurmo/data/repositories/auth_repository.dart';
+import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
+import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -13,10 +18,13 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
@@ -25,9 +33,43 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _switchMethod(AuthMethod method) {
+    if (method == _method) return;
+    setState(() {
+      _method = method;
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final signedIn = await context.read<AuthProvider>().signInWithGoogle();
+      if (!signedIn) return; // The account picker was closed.
+
+      if (mounted) {
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          navigator.pushReplacementNamed('/home');
+        }
+      }
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
   }
 
   Future<void> _signup() async {
@@ -46,39 +88,41 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      final userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      final auth = context.read<AuthProvider>();
+      switch (_method) {
+        case AuthMethod.email:
+          await auth.signUp(
+            name: _nameController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+        case AuthMethod.phone:
+          await auth.signUpWithPhone(
+            name: _nameController.text,
+            phone: _phoneController.text,
+            password: _passwordController.text,
+          );
+        case AuthMethod.google:
+          // The Email / Phone switch never selects Google, which has its own
+          // button. Handled here only so every method is covered.
+          await _signInWithGoogle();
+          return;
+      }
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Return to the existing home screen rather than pushing a second
+        // one. The profile tab rebuilds itself as signed in.
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          navigator.pushReplacementNamed('/home');
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'An error occurred';
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred';
-      });
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -129,6 +173,12 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                 if (_errorMessage != null) const SizedBox(height: 16),
+                AuthMethodToggle(
+                  value: _method,
+                  onChanged: _switchMethod,
+                  enabled: !_isLoading,
+                ),
+                const SizedBox(height: 20),
                 const Text(
                   'Full Name',
                   style: TextStyle(
@@ -160,40 +210,12 @@ class _SignupPageState extends State<SignupPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.iconPrimary,
-                  ),
-                ),
+                authFieldLabel(_method == AuthMethod.email ? 'Email' : 'Phone Number'),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your email',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Email is required';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
+                if (_method == AuthMethod.email)
+                  EmailField(controller: _emailController, enabled: !_isLoading)
+                else
+                  PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 16),
                 const Text(
                   'Password',
@@ -289,7 +311,7 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _signup,
+                    onPressed: _isLoading || _isGoogleLoading ? null : _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       disabledBackgroundColor:
@@ -319,6 +341,11 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 24),
+                GoogleSignInSection(
+                  onPressed: _isLoading || _isGoogleLoading ? null : _signInWithGoogle,
+                  isLoading: _isGoogleLoading,
                 ),
                 const SizedBox(height: 20),
                 Row(

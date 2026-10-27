@@ -1,8 +1,21 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Release builds need INTERNET declared here; the template only adds it
+         to the debug and profile manifests. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- "Use my location" on the delivery address map. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- allowBackup is off so a reinstall does not restore the previous
+         user's Firebase session from the Google Drive backup (issue #11).
+         tools:replace stops a library manifest from turning it back on. -->
     <application
         android:label="xurmo"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        tools:replace="android:allowBackup">
         <activity
             android:name=".MainActivity"
             android:exported="true"

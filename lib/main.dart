@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yandex_maps_mapkit_lite/init.dart';
 
+import 'package:xurmo/core/constants/map_config.dart';
+
+import 'package:xurmo/core/session/install_guard.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/pages/login_page.dart';
@@ -19,14 +25,31 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // A reinstalled app must start signed out (issue #11). This runs before
+  // AuthProvider reads the current user, so no screen sees the old session.
+  try {
+    await InstallGuard(
+      prefs: await SharedPreferences.getInstance(),
+      signOut: FirebaseAuth.instance.signOut,
+    ).run();
+  } catch (e) {
+    // Never block startup on this; the worst case is staying signed in.
+    debugPrint('Install guard failed: $e');
+  }
+
+  // Yandex MapKit needs its key before any map is shown. Builds without a key
+  // skip this, and the checkout hides the map picker.
+  if (MapConfig.isMapAvailable) {
+    await initMapkit(apiKey: MapConfig.yandexApiKey);
+  }
+
   await Hive.initFlutter();
 
   Hive.registerAdapter(MealModelAdapter());
 
-  await Hive.openBox<MealModel>('productsBox');
-  await Hive.openBox<MealModel>('favoritesBox');
+  // The cart reads its box synchronously, so it must be open before runApp.
+  // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
-  await Hive.openBox('ordersBox');
 
   runApp(const MyApp());
 }

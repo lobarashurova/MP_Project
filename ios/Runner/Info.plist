@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Xurmo</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Xurmo uses your location to place the delivery pin where you are.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

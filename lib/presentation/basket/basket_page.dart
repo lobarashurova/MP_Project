@@ -1,15 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
-
-const double DELIVERY_FEE = 1;
-const String DELIVERY_TIME = "25-30 min";
-const double PROMO_THRESHOLD = 20;
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -40,7 +37,7 @@ class _BasketPageState extends State<BasketPage> {
   @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
-    final subtotal = Cart.instance.totalPrice - DELIVERY_FEE;
+    final subtotal = Cart.instance.subtotal;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -111,7 +108,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      DELIVERY_TIME,
+                                      AppPricing.deliveryTime,
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -149,7 +146,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      '\$${PROMO_THRESHOLD.toStringAsFixed(0)}',
+                                      '\$${AppPricing.promoThreshold.toStringAsFixed(0)}',
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -225,7 +222,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${DELIVERY_FEE.toStringAsFixed(2)}',
+                        '\$${Cart.instance.deliveryFee.toStringAsFixed(2)}',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
