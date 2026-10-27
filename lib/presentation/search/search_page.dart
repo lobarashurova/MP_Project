@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,12 +17,10 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  HomeProvider? _homeProvider;
+  List<MealModel> _searchableMeals = [];
   List<MealModel> _filteredMeals = [];
-  Timer? _searchDebounce;
-  int _searchRequestId = 0;
   String _query = '';
-  bool _isLoading = false;
-  String? _searchError;
 
   @override
   void initState() {
@@ -33,50 +29,40 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = context.read<HomeProvider>();
+    if (identical(provider, _homeProvider)) return;
+
+    _homeProvider?.removeListener(_onMealsChanged);
+    _homeProvider = provider..addListener(_onMealsChanged);
+    _searchableMeals = List.of(provider.meals);
+    _filteredMeals = _findLocalMatches(_searchableMeals, _query);
+  }
+
+  @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _homeProvider?.removeListener(_onMealsChanged);
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim();
-    final provider = context.read<HomeProvider>();
-    final requestId = ++_searchRequestId;
-    _searchDebounce?.cancel();
+    final query = _searchController.text.toLowerCase().trim();
+    setState(() {
+      _query = query;
+      _filteredMeals = _findLocalMatches(_searchableMeals, query);
+    });
+  }
+
+  void _onMealsChanged() {
+    final provider = _homeProvider;
+    if (provider == null || !mounted) return;
 
     setState(() {
-      _query = query.toLowerCase();
-      _isLoading = query.isNotEmpty;
-      _searchError = null;
-      _filteredMeals = _findLocalMatches(provider.meals, query);
-    });
-
-    if (query.isEmpty) return;
-
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
-      try {
-        final remoteMeals = await provider.searchMeals(query);
-        if (!mounted || requestId != _searchRequestId) return;
-
-        final mealsById = <String, MealModel>{
-          for (final meal in _filteredMeals) meal.id: meal,
-          for (final meal in remoteMeals) meal.id: meal,
-        };
-        setState(() {
-          _filteredMeals = mealsById.values.toList();
-          _isLoading = false;
-        });
-      } catch (error) {
-        if (!mounted || requestId != _searchRequestId) return;
-        debugPrint('Meal search failed: $error');
-        setState(() {
-          _isLoading = false;
-          _searchError =
-              'Online search failed. Check your connection and try again.';
-        });
-      }
+      _searchableMeals = List.of(provider.meals);
+      _filteredMeals = _findLocalMatches(_searchableMeals, _query);
     });
   }
 
@@ -183,19 +169,6 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    if (_filteredMeals.isEmpty && _isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-
-    if (_filteredMeals.isEmpty && _searchError != null) {
-      return StateView.error(
-        error: _searchError,
-        onRetry: () => _onSearchChanged(),
-      );
-    }
-
     if (_filteredMeals.isEmpty) {
       return StateView.empty(
         icon: CupertinoIcons.doc_text_search,
@@ -210,13 +183,6 @@ class _SearchPageState extends State<SearchPage> {
 
     return Column(
       children: [
-        if (_isLoading)
-          const LinearProgressIndicator(
-            color: AppColors.primary,
-            minHeight: 2,
-          ),
-        if (_searchError != null)
-          OfflineNotice(message: _searchError!),
         if (provider.isShowingStaleData)
           OfflineNotice(
             message: provider.isOffline

@@ -59,10 +59,6 @@ class HomeProvider extends ChangeNotifier {
     return _products.where((p) => p.category == category).toList();
   }
 
-  Future<List<MealModel>> searchMeals(String query) {
-    return _repository.searchProducts(query);
-  }
-
   Map<String, int> getCategoryStartIndices() {
     final Map<String, int> indices = {};
     const fixedWidgetsCount = 6;

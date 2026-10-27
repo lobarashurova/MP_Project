@@ -332,6 +332,39 @@ void main() {
 
       expect(find.text('Search for food'), findsOneWidget);
     });
+
+    testWidgets('filters the loaded meal list locally without another request',
+        (tester) async {
+      final repository = FakeProductRepository(
+        ProductsResult(
+          products: [
+            MealModel(
+              id: '2',
+              name: 'Chicken Pilaf',
+              category: 'Main Dishes',
+              price: 56000,
+              imageUrl: '',
+              rating: 4.5,
+              description: 'Rice dish',
+              ingredients: ['chicken', 'rice'],
+              area: 'Uzbek',
+            ),
+          ],
+        ),
+      );
+      final provider = HomeProvider(repository: repository);
+      await provider.loadProducts();
+
+      await tester.pumpWidget(wrapWithProvider(const SearchPage(), provider));
+      await tester.pump();
+      expect(repository.callCount, 1);
+
+      await tester.enterText(find.byType(TextField), 'rice');
+      await tester.pump();
+
+      expect(find.text('Chicken Pilaf'), findsOneWidget);
+      expect(repository.callCount, 1);
+    });
   });
 }
 
