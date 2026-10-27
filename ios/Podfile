@@ -1,5 +1,8 @@
-# Uncomment this line to define a global platform for your project
-platform :ios, '15.0'
+# The minimum iOS version is defined once, in Flutter/DeploymentTarget.xcconfig,
+# so the app and its pods always agree.
+ios_deployment_target = File.read(File.join(__dir__, 'Flutter', 'DeploymentTarget.xcconfig'))[/^IPHONEOS_DEPLOYMENT_TARGET\s*=\s*([\d.]+)/, 1]
+raise 'IPHONEOS_DEPLOYMENT_TARGET missing from Flutter/DeploymentTarget.xcconfig' unless ios_deployment_target
+platform :ios, ios_deployment_target
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
