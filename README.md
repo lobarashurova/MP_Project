@@ -7,7 +7,7 @@ A modern, feature-rich food delivery mobile application built with Flutter and F
 ### Core Features
 - **Browse Menu**: Explore a wide variety of meals with beautiful UI and smooth scrolling
 - **Category Filtering**: Smart category-based filtering with auto-scrolling navigation
-- **Search Functionality**: Real-time search across meals by name, category, or description
+- **Search Functionality**: Search online for dishes by name, ingredient, category, and cuisine/area, with local matching across meal details
 - **Shopping Cart**: Add, remove, and manage items with quantity controls
 - **Favorites**: Save your favorite meals for quick access
 - **Order Management**: Complete checkout process with order history tracking

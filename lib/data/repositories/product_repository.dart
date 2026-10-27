@@ -37,6 +37,78 @@ class ProductRepository {
   ProductRepository({NetworkModule? networkModule})
       : _networkModule = networkModule ?? NetworkModule();
 
+  Future<List<MealModel>> searchProducts(String query) async {
+    final normalizedQuery = query.trim();
+    if (normalizedQuery.isEmpty) {
+      return [];
+    }
+
+    final responses = await Future.wait([
+      _networkModule.get(
+        'search.php',
+        queryParameters: {'s': normalizedQuery},
+      ),
+      _networkModule.get(
+        'filter.php',
+        queryParameters: {'i': normalizedQuery.replaceAll(' ', '_')},
+      ),
+      _networkModule.get(
+        'filter.php',
+        queryParameters: {'c': normalizedQuery},
+      ),
+      _networkModule.get(
+        'filter.php',
+        queryParameters: {'a': normalizedQuery},
+      ),
+    ]);
+
+    final mealsById = <String, MealModel>{};
+    for (final mealJson in _readMeals(responses.first.data)) {
+      final meal = MealModel.fromJson(mealJson);
+      mealsById[meal.id] = meal;
+    }
+
+    final filteredMealIds = <String>{};
+    for (final response in responses.skip(1)) {
+      for (final mealJson in _readMeals(response.data)) {
+        final id = mealJson['idMeal'] as String?;
+        if (id != null && id.isNotEmpty && !mealsById.containsKey(id)) {
+          filteredMealIds.add(id);
+        }
+      }
+    }
+
+    final idsToLoad = filteredMealIds.take(20).toList();
+    for (var index = 0; index < idsToLoad.length; index += 4) {
+      final batch = idsToLoad.skip(index).take(4);
+      final detailResponses = await Future.wait(
+        batch.map(
+          (id) => _networkModule.get(
+            'lookup.php',
+            queryParameters: {'i': id},
+          ),
+        ),
+      );
+      for (final response in detailResponses) {
+        for (final mealJson in _readMeals(response.data)) {
+          final meal = MealModel.fromJson(mealJson);
+          mealsById[meal.id] = meal;
+        }
+      }
+    }
+
+    return mealsById.values.toList();
+  }
+
+  List<Map<String, dynamic>> _readMeals(dynamic responseData) {
+    final meals = responseData is Map<String, dynamic>
+        ? responseData['meals']
+        : null;
+    return meals is List
+        ? meals.whereType<Map<String, dynamic>>().toList()
+        : [];
+  }
+
   Future<List<MealModel>> _cachedProducts() async {
     try {
       final box = await Hive.openBox<MealModel>(_boxName);

@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
+import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card.dart';
-import 'package:xurmo/data/models/meal_model.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -17,7 +19,12 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  List<MealModel> _filteredMeals = [];
+  Timer? _searchDebounce;
+  int _searchRequestId = 0;
   String _query = '';
+  bool _isLoading = false;
+  String? _searchError;
 
   @override
   void initState() {
@@ -27,27 +34,65 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase().trim();
-    if (query == _query) {
-      // Still rebuild so the clear button appears/disappears.
-      setState(() {});
-      return;
-    }
-    setState(() => _query = query);
+    final query = _searchController.text.trim();
+    final provider = context.read<HomeProvider>();
+    final requestId = ++_searchRequestId;
+    _searchDebounce?.cancel();
+
+    setState(() {
+      _query = query.toLowerCase();
+      _isLoading = query.isNotEmpty;
+      _searchError = null;
+      _filteredMeals = _findLocalMatches(provider.meals, query);
+    });
+
+    if (query.isEmpty) return;
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      try {
+        final remoteMeals = await provider.searchMeals(query);
+        if (!mounted || requestId != _searchRequestId) return;
+
+        final mealsById = <String, MealModel>{
+          for (final meal in _filteredMeals) meal.id: meal,
+          for (final meal in remoteMeals) meal.id: meal,
+        };
+        setState(() {
+          _filteredMeals = mealsById.values.toList();
+          _isLoading = false;
+        });
+      } catch (error) {
+        if (!mounted || requestId != _searchRequestId) return;
+        debugPrint('Meal search failed: $error');
+        setState(() {
+          _isLoading = false;
+          _searchError =
+              'Online search failed. Check your connection and try again.';
+        });
+      }
+    });
   }
 
-  List<MealModel> _matches(List<MealModel> meals) {
-    if (_query.isEmpty) return const [];
+  List<MealModel> _findLocalMatches(List<MealModel> meals, String query) {
+    if (query.isEmpty) return [];
+
+    final queryWords = query.toLowerCase().split(RegExp(r'\s+'));
     return meals.where((meal) {
-      return meal.name.toLowerCase().contains(_query) ||
-          meal.category.toLowerCase().contains(_query) ||
-          meal.area.toLowerCase().contains(_query);
+      final searchableText = [
+        meal.name,
+        meal.category,
+        meal.description,
+        meal.area,
+        ...meal.ingredients,
+      ].join(' ').toLowerCase();
+      return queryWords.every(searchableText.contains);
     }).toList();
   }
 
@@ -87,9 +132,7 @@ class _SearchPageState extends State<SearchPage> {
                         CupertinoIcons.clear_circled_solid,
                         color: AppColors.iconSecondary,
                       ),
-                      onPressed: () {
-                        _searchController.clear();
-                      },
+                      onPressed: _searchController.clear,
                     )
                   : null,
               border: InputBorder.none,
@@ -114,8 +157,6 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    // There is nothing loaded to search through because the menu failed to
-    // load — say that, rather than pretending the search found nothing.
     if (provider.hasBlockingError) {
       return StateView.error(
         error: provider.failure,
@@ -142,26 +183,44 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    final matches = _matches(provider.meals);
+    if (_filteredMeals.isEmpty && _isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
 
-    if (matches.isEmpty) {
+    if (_filteredMeals.isEmpty && _searchError != null) {
+      return StateView.error(
+        error: _searchError,
+        onRetry: () => _onSearchChanged(),
+      );
+    }
+
+    if (_filteredMeals.isEmpty) {
       return StateView.empty(
         icon: CupertinoIcons.doc_text_search,
         title: 'No results found',
         message:
             'We could not find anything for "${_searchController.text.trim()}". '
-            'Try a different dish, category or cuisine.',
+            'Try a different dish, ingredient, category or cuisine.',
         actionLabel: 'Clear search',
-        onAction: () => _searchController.clear(),
+        onAction: _searchController.clear,
       );
     }
 
     return Column(
       children: [
+        if (_isLoading)
+          const LinearProgressIndicator(
+            color: AppColors.primary,
+            minHeight: 2,
+          ),
+        if (_searchError != null)
+          OfflineNotice(message: _searchError!),
         if (provider.isShowingStaleData)
           OfflineNotice(
             message: provider.isOffline
-                ? "You're offline — searching saved meals only."
+                ? "You're offline — showing saved meals where possible."
                 : provider.failure!.message,
           ),
         Expanded(
@@ -173,9 +232,9 @@ class _SearchPageState extends State<SearchPage> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
-            itemCount: matches.length,
+            itemCount: _filteredMeals.length,
             itemBuilder: (context, index) {
-              return MealCard(meal: matches[index]);
+              return MealCard(meal: _filteredMeals[index]);
             },
           ),
         ),
