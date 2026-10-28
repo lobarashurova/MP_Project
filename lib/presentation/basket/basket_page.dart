@@ -7,6 +7,7 @@ import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -146,7 +147,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      '\$${AppPricing.promoThreshold.toStringAsFixed(0)}',
+                                        formatSum(AppPricing.promoThreshold),
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -202,7 +203,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${subtotal.toStringAsFixed(2)}',
+                        formatSum(subtotal),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -222,7 +223,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${Cart.instance.deliveryFee.toStringAsFixed(2)}',
+                        formatSum(Cart.instance.deliveryFee),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -249,7 +250,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        '\$${Cart.instance.totalPrice.toStringAsFixed(2)}',
+                        formatSum(Cart.instance.totalPrice),
                         style: AppTextStyles.heading3.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,

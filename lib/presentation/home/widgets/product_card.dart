@@ -4,6 +4,7 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class ProductCard extends StatelessWidget {
   final MealModel product;
@@ -102,7 +103,7 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '\$${product.price.toStringAsFixed(2)}',
+                      formatSum(product.price),
                       style: AppTextStyles.productPrice,
                     ),
                     GestureDetector(

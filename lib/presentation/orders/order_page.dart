@@ -10,6 +10,7 @@ import '../../core/widgets/state_view.dart';
 import 'package:xurmo/data/models/order_status.dart';
 import 'order_detail_page.dart';
 import 'widgets/order_status_widgets.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -137,7 +138,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
 class OrderCard extends StatelessWidget {
   final String orderId;
-  final int orderNumber; // Add this
+  final int orderNumber;
   final Map<String, dynamic> order;
 
   const OrderCard({
@@ -149,7 +150,7 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = order['total'] ?? 0.0;
+    final total = (order['total'] as num?) ?? 0;
     final itemCount = (order['items'] as List?)?.length ?? 0;
     final createdAt = (order['createdAt'] as Timestamp?)?.toDate();
     final status = OrderStatus.resolve(
@@ -163,7 +164,7 @@ class OrderCard extends StatelessWidget {
         : 'Unknown date';
     return Card(
       color: Colors.white,
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -183,7 +184,7 @@ class OrderCard extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -192,7 +193,7 @@ class OrderCard extends StatelessWidget {
                 children: [
                   Text(
                     'Order #$orderNumber',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -206,13 +207,9 @@ class OrderCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              SizedBox(height: 12),
-
+              const SizedBox(height: 12),
               OrderStatusBadge(status: status),
-
-              SizedBox(height: 12),
-
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -224,8 +221,8 @@ class OrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${total.toStringAsFixed(2)}',
-                    style: TextStyle(
+                    formatSum(total),
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                       color: AppColors.primary,
