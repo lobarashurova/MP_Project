@@ -20,7 +20,6 @@ class BannerWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
-        height: 190,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.primaryDark],
@@ -78,53 +77,60 @@ class BannerWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              Padding(
-                padding:
-                EdgeInsets.fromLTRB(24, 24, meal != null ? 130 : 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Today's Special", style: AppTextStyles.bannerTitle),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Get ${AppPricing.promoDiscountPercent}% off on all dishes',
-                      style: AppTextStyles.bannerSubtitle.copyWith(
-                        color: AppColors.surface.withOpacity(0.9),
-                      ),
-                    ),
-                    if (meal != null) ...[
-                      const SizedBox(height: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 190),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    24,
+                    meal != null ? 130 : 24,
+                    24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Today's Special", style: AppTextStyles.bannerTitle),
+                      const SizedBox(height: 8),
                       Text(
-                        'Try: ${meal.name}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        'Get ${AppPricing.promoDiscountPercent}% off on all dishes',
+                        style: AppTextStyles.bannerSubtitle.copyWith(
+                          color: AppColors.surface.withOpacity(0.9),
+                        ),
+                      ),
+                      if (meal != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Try: ${meal.name}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: onOrderNow,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Order Now',
+                            style: AppTextStyles.buttonPrimary,
+                          ),
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: onOrderNow,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Order Now',
-                          style: AppTextStyles.buttonPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
