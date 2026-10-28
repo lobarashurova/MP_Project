@@ -8,6 +8,7 @@ import 'package:xurmo/core/utils/money.dart';
 import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_pricing.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;

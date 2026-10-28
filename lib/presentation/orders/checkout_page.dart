@@ -75,6 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final subtotal = cart.subtotal;
       final deliveryFee = cart.deliveryFee;
       final total = cart.totalPrice;
+      final discount = cart.discount;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -92,6 +93,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'subtotal': subtotal,
         'deliveryFee': deliveryFee,
         'total': total,
+        'discount': discount,
         'address': _addressController.text,
         if (_location != null)
           'location': GeoPoint(_location!.latitude, _location!.longitude),

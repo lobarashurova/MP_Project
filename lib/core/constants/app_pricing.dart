@@ -5,9 +5,15 @@
 class AppPricing {
   AppPricing._();
 
-  /// Flat delivery fee added to every non-empty order.
+  /// Flat delivery fee in sums.
   static const double deliveryFee = 15000;
-  static const double promoThreshold = 200000; // the "Free item over" banner
-  /// Estimated delivery window shown in the basket.
+
+  /// "Free item over ..." banner amount in sums.
+  static const double promoThreshold = 200000;
+
+  /// Shown in the "Delivery Time" banner.
   static const String deliveryTime = '25-30 min';
+
+  /// Discount advertised on the home banner and applied to the basket.
+  static const int promoDiscountPercent = 30;
 }

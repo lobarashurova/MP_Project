@@ -53,7 +53,8 @@ class Cart {
   double get deliveryFee => _items.isEmpty ? 0 : AppPricing.deliveryFee;
 
   /// Amount the customer pays: subtotal plus delivery fee.
-  double get totalPrice => subtotal + deliveryFee;
+  double get discount => subtotal * AppPricing.promoDiscountPercent / 100;
+  double get totalPrice => subtotal - discount + deliveryFee;
 
 
   /// Persists the cart and tells listeners it changed.
