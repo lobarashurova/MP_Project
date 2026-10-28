@@ -3,42 +3,24 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
-import 'package:xurmo/data/repositories/meal_repository.dart';
 
-class BannerWidget extends StatefulWidget {
-  const BannerWidget({super.key});
+class BannerWidget extends StatelessWidget {
+  /// A meal from the menu, or null while the menu is loading.
+  final MealModel? meal;
 
-  @override
-  State<BannerWidget> createState() => _BannerWidgetState();
-}
+  /// Called when the user taps "Order Now".
+  final VoidCallback? onOrderNow;
 
-class _BannerWidgetState extends State<BannerWidget> {
-  MealModel? _meal;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMeal();
-  }
-
-  Future<void> _loadMeal() async {
-    try {
-      final meal = await MealRepository().fetchRandomMeal();
-      if (!mounted) return;
-      setState(() => _meal = meal);
-    } catch (_) {
-      // The banner still works without a featured meal.
-    }
-  }
+  const BannerWidget({super.key, this.meal, this.onOrderNow});
 
   @override
   Widget build(BuildContext context) {
-    final meal = _meal;
+    final meal = this.meal;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
-        height: 170,
+        height: 190,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [AppColors.primary, AppColors.primaryDark],
@@ -85,7 +67,7 @@ class _BannerWidgetState extends State<BannerWidget> {
               if (meal != null && meal.imageUrl.isNotEmpty)
                 Positioned(
                   right: 20,
-                  top: 35,
+                  top: 45,
                   child: ClipOval(
                     child: Image.network(
                       meal.imageUrl,
@@ -97,16 +79,13 @@ class _BannerWidgetState extends State<BannerWidget> {
                   ),
                 ),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                    24, 24, meal != null ? 130 : 24, 24),
+                padding:
+                EdgeInsets.fromLTRB(24, 24, meal != null ? 130 : 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Today\'s Special',
-                      style: AppTextStyles.bannerTitle,
-                    ),
+                    Text("Today's Special", style: AppTextStyles.bannerTitle),
                     const SizedBox(height: 8),
                     Text(
                       'Get ${AppPricing.promoDiscountPercent}% off on all dishes',
@@ -128,18 +107,21 @@ class _BannerWidgetState extends State<BannerWidget> {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Order Now',
-                        style: AppTextStyles.buttonPrimary,
+                    GestureDetector(
+                      onTap: onOrderNow,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Order Now',
+                          style: AppTextStyles.buttonPrimary,
+                        ),
                       ),
                     ),
                   ],

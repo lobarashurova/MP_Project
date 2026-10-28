@@ -13,6 +13,8 @@ import 'package:xurmo/presentation/home/widgets/meal_card_shimmer.dart';
 import 'package:xurmo/presentation/home/widgets/search_bar_widget.dart';
 
 import '../favorites/provider/favorites_provider.dart';
+import 'package:xurmo/data/models/meal_model.dart';
+import './product_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -207,7 +209,20 @@ class _HomePageState extends State<HomePage> {
                       if (index == 0) return const HomeHeader();
                       if (index == 1) return const SearchBarWidget();
                       if (index == 2) return const SizedBox(height: 24);
-                      if (index == 3) return const BannerWidget();
+                      if (index == 3) {
+                        final MealModel? featured =
+                        (!provider.isLoading && allMeals.isNotEmpty) ? allMeals.first : null;
+                        return BannerWidget(
+                          meal: featured,
+                          onOrderNow: featured == null
+                              ? null
+                              : () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProductDetailPage(meal: featured),
+                            ),
+                          ),
+                        );
+                      }
                       if (index == 4) return const SizedBox(height: 24);
                       if (index == 5) {
                         return CategoryBar(
