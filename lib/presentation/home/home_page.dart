@@ -11,7 +11,7 @@ import 'package:xurmo/presentation/home/widgets/home_header.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card_shimmer.dart';
 import 'package:xurmo/presentation/home/widgets/search_bar_widget.dart';
-
+import 'package:xurmo/presentation/home/category_page.dart';
 import '../favorites/provider/favorites_provider.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import './product_detail_page.dart';
@@ -95,6 +95,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _scrollToCategory(String category) {
+    if (category != 'All') {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CategoryPage(initialCategory: category),
+        ),
+      );
+      return;
+    }
+
     final provider = context.read<HomeProvider>();
     final categoryIndices = provider.getCategoryStartIndices();
     final targetIndex = categoryIndices[category] ?? 0;

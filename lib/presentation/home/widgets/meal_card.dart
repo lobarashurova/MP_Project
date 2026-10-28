@@ -33,6 +33,13 @@ class _MealCardState extends State<MealCard> {
     _updateQuantity();
     Cart.instance.notifier.addListener(_updateQuantity);
   }
+  @override
+  void didUpdateWidget(covariant MealCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.meal.id != widget.meal.id) {
+      _product = widget.meal;
+    }
+  }
 
   @override
   void dispose() {
