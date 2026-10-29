@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_text_styles.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/state_view.dart';
-import '../../presentation/favorites/provider/favorites_provider.dart';
-import '../../presentation/home/widgets/meal_card.dart';
-import 'package:xurmo/core/utils/haptics.dart';
+import '../home/widgets/meal_card.dart';
+import 'provider/favorites_provider.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -29,28 +32,30 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FavoritesProvider>();
-    final favorites = provider.favorites;
+    final count = provider.favorites.length;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Favorites',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.iconPrimary,
-          ),
-        ),
+        titleSpacing: AppTheme.spaceLg,
+        title: const Text('Favorites'),
         actions: [
-          if (favorites.isNotEmpty)
+          if (count > 0) ...[
+            Center(
+              child: Text(
+                count == 1 ? '1 meal' : '$count meals',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
             IconButton(
               onPressed: () => _showClearDialog(context),
-              icon: const Icon(CupertinoIcons.trash, color: AppColors.error),
+              tooltip: 'Clear all',
+              icon: Icon(CupertinoIcons.trash, color: AppColors.error),
             ),
+            const SizedBox(width: AppTheme.spaceSm),
+          ],
         ],
       ),
       body: _buildBody(provider),
@@ -85,7 +90,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     if (provider.favorites.isEmpty) {
       return const StateView.empty(
         icon: CupertinoIcons.heart,
-        title: 'No Favorites Yet',
+        title: 'No favorites yet',
         message: 'Tap the heart on any meal and it will show up here.',
       );
     }
@@ -100,31 +105,28 @@ class _FavoritesPageState extends State<FavoritesPage> {
             onRetry: provider.retry,
           ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            itemCount: (provider.favorites.length / 2).ceil(),
-            itemBuilder: (context, row) {
-              final favorites = provider.favorites;
-              final left = favorites[row * 2];
-              final right =
-              row * 2 + 1 < favorites.length ? favorites[row * 2 + 1] : null;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: MealCard(key: ValueKey(left.id), meal: left),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: right != null
-                          ? MealCard(key: ValueKey(right.id), meal: right)
-                          : const SizedBox(),
-                    ),
-                  ],
-                ),
-              );
+          // A real grid rather than a ListView of hand-paired rows: the
+          // max-extent delegate decides the column count from the available
+          // width, so wide phones and tablets get three or four columns
+          // instead of two stretched ones, and the last row is not padded
+          // out with an empty placeholder.
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spaceMd,
+              AppTheme.spaceMd,
+              AppTheme.spaceMd,
+              AppTheme.spaceLg,
+            ),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              mainAxisExtent: 304,
+              crossAxisSpacing: AppTheme.spaceMd,
+              mainAxisSpacing: AppTheme.spaceMd,
+            ),
+            itemCount: provider.favorites.length,
+            itemBuilder: (context, index) {
+              final meal = provider.favorites[index];
+              return MealCard(key: ValueKey(meal.id), meal: meal);
             },
           ),
         ),
@@ -137,7 +139,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear Favorites'),
+        title: const Text('Clear favorites'),
         content: const Text('Are you sure you want to remove all items?'),
         actions: [
           TextButton(
@@ -156,11 +158,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
               try {
                 await provider.clearFavorites();
               } catch (e) {
-                debugPrint('Failed to clear favorites: ${AppException.from(e).message}');
+                debugPrint(
+                  'Failed to clear favorites: ${AppException.from(e).message}',
+                );
               }
             },
             child: const Text(
-              'Clear All',
+              'Clear all',
               style: TextStyle(color: AppColors.error),
             ),
           ),
