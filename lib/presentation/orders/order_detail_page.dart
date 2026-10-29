@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:xurmo/data/models/order_status.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/utils/money.dart';
 import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
@@ -96,7 +97,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Order Details'),
+        title: Text(context.tr('order_details')),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -240,7 +241,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Subtotal',
+                          Text(context.tr('subtotal'),
                               style: TextStyle(fontSize: 14)),
                           Text(formatSum(subtotal),
                               style: const TextStyle(fontSize: 14)),
@@ -251,7 +252,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Discount',
+                            Text(context.tr('discount'),
                                 style: TextStyle(fontSize: 14)),
                             Text('-${formatSum(storedDiscount)}',
                                 style: const TextStyle(
@@ -263,7 +264,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Delivery Fee',
+                          Text(context.tr('delivery_fee'),
                               style: TextStyle(fontSize: 14)),
                           Text(formatSum(deliveryFee),
                               style: const TextStyle(fontSize: 14)),
@@ -308,13 +309,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Need Help?'),
+                          title: Text(context.tr('need_help')),
                           content: const Text(
                               'Contact customer support at support@xurmo.com'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
+                              child: Text(context.tr('ok')),
                             ),
                           ],
                         ),
@@ -322,7 +323,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                     },
                     icon: const Icon(Icons.help_outline,
                         color: AppColors.primary),
-                    label: const Text('Need Help?',
+                    label: Text(context.tr('need_help'),
                         style: TextStyle(color: AppColors.primary)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),

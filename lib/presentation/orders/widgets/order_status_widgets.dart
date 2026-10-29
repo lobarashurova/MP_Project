@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/data/models/order_status.dart';
 
 /// Colour used for a status everywhere in the app.
@@ -60,11 +61,12 @@ class OrderProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (status == OrderStatus.cancelled) {
-      return const Row(
+      // Not const: the message is looked up through context.
+      return Row(
         children: [
-          Icon(Icons.cancel, color: Colors.red),
-          SizedBox(width: 8),
-          Expanded(child: Text('This order was cancelled.')),
+          const Icon(Icons.cancel, color: Colors.red),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.tr('order_cancelled_msg'))),
         ],
       );
     }
@@ -87,7 +89,9 @@ class OrderProgress extends StatelessWidget {
         if (!status.isFinal && estimatedDelivery != null) ...[
           const SizedBox(height: 8),
           Text(
-            'Expected delivery by ${time.format(estimatedDelivery!)}',
+            context
+                .tr('expected_delivery')
+                .replaceFirst('{t}', time.format(estimatedDelivery!)),
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],

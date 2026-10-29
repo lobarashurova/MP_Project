@@ -7,16 +7,24 @@ import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/map_config.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/data/models/delivery_location.dart';
+import 'package:xurmo/data/models/saved_address.dart';
+import 'package:xurmo/data/repositories/saved_address_repository.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/presentation/orders/widgets/saved_address_picker.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
 class CheckoutPage extends StatefulWidget {
-  const CheckoutPage({super.key});
+  /// Injected by tests; production uses the device store.
+  final SavedAddressRepository? savedAddresses;
+
+  const CheckoutPage({super.key, this.savedAddresses});
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -33,6 +41,141 @@ class _CheckoutPageState extends State<CheckoutPage> {
   /// the customer can add an apartment or entrance number.
   DeliveryLocation? _location;
 
+  late final SavedAddressRepository _savedRepo;
+
+  /// Addresses kept from earlier orders, most recently used first.
+  List<SavedAddress> _saved = const [];
+
+  /// The saved address currently filling the form, while the text still
+  /// matches it. Editing the address clears this.
+  String? _selectedSavedId;
+
+  /// Offered by default for an address that is not saved yet; once the
+  /// customer flips the switch themselves, [_saveSwitchTouched] stops it from
+  /// turning back on while they keep typing.
+  bool _saveAddress = true;
+  bool _saveSwitchTouched = false;
+
+  /// Null until the customer picks a chip, so the first localised suggestion
+  /// can be the default without reading strings in initState.
+  String? _saveLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _savedRepo = widget.savedAddresses ?? SavedAddressRepository();
+    _loadSavedAddresses();
+  }
+
+  Future<void> _loadSavedAddresses() async {
+    final saved = await _savedRepo.load();
+    if (!mounted || saved.isEmpty) return;
+
+    setState(() => _saved = saved);
+    // Ordering to the same place as last time is the common case, so the most
+    // recent address fills the form straight away — but never over something
+    // the customer already typed.
+    if (_addressController.text.trim().isEmpty) {
+      _applySavedAddress(saved.first, haptic: false);
+    }
+  }
+
+  /// Fills the delivery fields from [address]. A phone number typed by hand
+  /// survives: the saved one only fills an empty field.
+  void _applySavedAddress(SavedAddress address, {bool haptic = true}) {
+    if (haptic) Haptics.selection();
+    setState(() {
+      _selectedSavedId = address.id;
+      _addressController.text = address.address;
+      _location = address.location;
+      _saveAddress = false;
+      _saveSwitchTouched = false;
+      _saveLabel = address.label;
+      if (address.phone.isNotEmpty && _phoneController.text.trim().isEmpty) {
+        _phoneController.text = address.phone;
+      }
+    });
+  }
+
+  Future<void> _removeSavedAddress(SavedAddress address) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.tr('remove_address_title')),
+        content: Text(
+          context.tr('remove_address_msg').replaceAll('{label}', address.label),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.tr('keep')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: Text(context.tr('remove')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    Haptics.warning();
+    final remaining = await _savedRepo.remove(address.id);
+    if (!mounted) return;
+    setState(() {
+      _saved = remaining;
+      // The fields keep what they hold; only the highlight goes away.
+      if (_selectedSavedId == address.id) _selectedSavedId = null;
+    });
+  }
+
+  /// Keeps the address now on the form, under the chosen label.
+  Future<void> _persistCurrentAddress(String label) async {
+    final address = _addressController.text.trim();
+    if (address.isEmpty) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final saved = await _savedRepo.save(SavedAddress(
+      id: now.toString(),
+      label: label.trim().isEmpty ? 'Address' : label.trim(),
+      address: address,
+      latitude: _location?.latitude,
+      longitude: _location?.longitude,
+      phone: _phoneController.text.trim(),
+      lastUsedAt: now,
+    ));
+    if (!mounted) return;
+    setState(() => _saved = saved);
+  }
+
+  /// True when the text on the form is already one of the saved addresses, in
+  /// which case there is nothing to offer saving.
+  bool get _addressAlreadySaved =>
+      _savedMatching(_addressController.text) != null;
+
+  /// The saved address whose text matches [value], ignoring case and spacing.
+  SavedAddress? _savedMatching(String value) {
+    final key = SavedAddress.normalize(value);
+    if (key.isEmpty) return null;
+    for (final address in _saved) {
+      if (address.key == key) return address;
+    }
+    return null;
+  }
+
+  /// Keeps the saved-address highlight and the save switch in step with what
+  /// the customer types.
+  void _onAddressChanged(String value) {
+    final match = _savedMatching(value);
+    setState(() {
+      _selectedSavedId = match?.id;
+      if (!_saveSwitchTouched) {
+        _saveAddress = match == null && value.trim().isNotEmpty;
+      }
+    });
+  }
+
   Future<void> _pickOnMap() async {
     final picked = await Navigator.of(context).push<DeliveryLocation>(
       MaterialPageRoute(builder: (_) => LocationPickerPage(initial: _location)),
@@ -41,6 +184,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() {
       _location = picked;
       _addressController.text = picked.address;
+      _selectedSavedId = null;
+      // A freshly pinned address is worth keeping unless it is already saved.
+      if (!_saveSwitchTouched) _saveAddress = !_addressAlreadySaved;
     });
   }
 
@@ -134,15 +280,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Checkout'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: Text(context.tr('checkout')),
+        // Was hardcoded white-on-black, so the bar stayed light in dark mode.
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
       ),
       body: cart.items.isEmpty
           ? StateView.empty(
               icon: CupertinoIcons.cart,
-              title: 'Your cart is empty',
+              title: context.tr('cart_empty'),
               message: 'Add something to your basket before checking out.',
               actionLabel: 'Back to basket',
               onAction: () => Navigator.pop(context),
@@ -154,7 +301,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Order Summary', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(context.tr('order_summary'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -174,10 +321,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 32),
 
-              const Text('Delivery Details', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(context.tr('delivery_details'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
 
-              Text('Delivery Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text(context.tr('delivery_address'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               if (MapConfig.isMapAvailable) SizedBox(
                 width: double.infinity,
@@ -229,13 +376,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              Text('Phone Number', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text(context.tr('phone_number'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  hintText: 'Enter your phone number',
+                  hintText: context.tr('phone_hint'),
                   hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.phone_fill),
                   filled: true,
@@ -266,12 +413,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              Text('Delivery Notes (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text(context.tr('delivery_notes'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 decoration: InputDecoration(
-                  hintText: 'e.g., Ring doorbell, leave at door',
+                  hintText: context.tr('notes_hint'),
                   hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.doc_text),
                   filled: true,
@@ -304,24 +451,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
+                        children: [Text(context.tr('subtotal')), Text(formatSum(subtotal))]),
                     if (cart.discount > 0) ...[
                       const SizedBox(height: 8),
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Discount (${AppPricing.promoDiscountPercent}%)'),
+                            Text('${context.tr('discount')} (${AppPricing.promoDiscountPercent}%)'),
                             Text('-${formatSum(cart.discount)}',
                                 style: const TextStyle(color: AppColors.success)),
                           ]),
                     ],
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),
+                        children: [Text(context.tr('delivery_fee')), Text(formatSum(deliveryFee))]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(context.tr('total'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         Text(formatSum(total),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
@@ -344,9 +491,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   child: _isLoading
                       ? const SizedBox(height: 20, width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Place Order',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onPrimary))
+                      : Text(context.tr('place_order'),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.onPrimary)),
                 ),
               ),
             ],

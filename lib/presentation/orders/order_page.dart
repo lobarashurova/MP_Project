@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/localization/app_strings.dart';
 import '../../core/widgets/state_view.dart';
 import 'package:xurmo/data/models/order_status.dart';
 import 'order_detail_page.dart';
@@ -41,9 +42,9 @@ class _OrdersPageState extends State<OrdersPage> {
     super.dispose();
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('My Orders'),
+      title: Text(context.tr('my_orders')),
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       elevation: 0,
@@ -57,10 +58,10 @@ class _OrdersPageState extends State<OrdersPage> {
     if (userId == null) {
       return Scaffold(
         backgroundColor: Colors.white,
-        appBar: _buildAppBar(),
+        appBar: _buildAppBar(context),
         body: StateView.empty(
           icon: CupertinoIcons.person_crop_circle,
-          title: 'Sign in to see your orders',
+          title: context.tr('sign_in_orders'),
           message: 'Your order history is tied to your account.',
           actionLabel: 'Sign in',
           onAction: () => Navigator.pushNamed(context, '/login'),
@@ -70,7 +71,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(context),
       body: StreamBuilder<QuerySnapshot>(
         key: ValueKey(_streamAttempt),
         stream: FirebaseFirestore.instance
@@ -94,9 +95,9 @@ class _OrdersPageState extends State<OrdersPage> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const StateView.empty(
+            return StateView.empty(
               icon: CupertinoIcons.bag,
-              title: 'No orders yet',
+              title: context.tr('no_orders'),
               message: 'Once you place an order it will show up here.',
             );
           }

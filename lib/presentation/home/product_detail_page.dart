@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
@@ -88,8 +89,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Description',
+                  Text(
+                    context.tr('description'),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -107,8 +108,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Ingredients',
+                  Text(
+                    context.tr('ingredients_title'),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -117,7 +118,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 8),
                   _product.ingredients.isEmpty
                       ? Text(
-                          'No ingredients information available',
+                          context.tr('no_ingredients'),
                           style: TextStyle(color: AppColors.textSecondary),
                         )
                       : Wrap(
@@ -144,7 +145,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Category',
+                              context.tr('category'),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
@@ -166,7 +167,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Region',
+                              context.tr('region'),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
@@ -214,8 +215,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Add to Basket',
+            child: Text(
+              context.tr('add_to_basket'),
               style: TextStyle(fontSize: 18, color: AppColors.onPrimary),
             ),
           ),
