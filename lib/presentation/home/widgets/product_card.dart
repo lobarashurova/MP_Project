@@ -101,12 +101,21 @@ class ProductCard extends StatelessWidget {
 
                 // Price + Add button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      formatSum(product.price),
-                      style: AppTextStyles.productPrice,
+                    // Same flex as the meal card: the price carries a
+                    // currency suffix and must not shove the add button out.
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          formatSum(product.price),
+                          style: AppTextStyles.productPrice,
+                          maxLines: 1,
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     GestureDetector(
                       onTap: () {
                         Haptics.success();
@@ -119,10 +128,10 @@ class ProductCard extends StatelessWidget {
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSmall),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           CupertinoIcons.add,
                           size: 18,
-                          color: AppColors.surface,
+                          color: AppColors.onPrimary,
                         ),
                       ),
                     ),

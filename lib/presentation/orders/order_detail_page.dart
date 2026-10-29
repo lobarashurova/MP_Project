@@ -66,6 +66,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     final orderNumber = widget.orderNumber;
     final storedTotal = (order['total'] as num?)?.toDouble() ?? 0.0;
     final storedSubtotal = (order['subtotal'] as num?)?.toDouble();
+    // Orders placed before the promo have no discount field.
+    final storedDiscount = (order['discount'] as num?)?.toDouble() ?? 0.0;
     final deliveryFee =
         (order['deliveryFee'] as num?)?.toDouble() ?? AppPricing.deliveryFee;
     // Orders placed before fees were stored kept an items-only amount in
@@ -244,6 +246,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               style: const TextStyle(fontSize: 14)),
                         ],
                       ),
+                      if (storedDiscount > 0) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Discount',
+                                style: TextStyle(fontSize: 14)),
+                            Text('-${formatSum(storedDiscount)}',
+                                style: const TextStyle(
+                                    fontSize: 14, color: AppColors.success)),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

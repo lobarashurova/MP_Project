@@ -11,6 +11,7 @@ import 'package:xurmo/data/models/delivery_location.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
@@ -304,6 +305,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
+                    if (cart.discount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Discount (${AppPricing.promoDiscountPercent}%)'),
+                            Text('-${formatSum(cart.discount)}',
+                                style: const TextStyle(color: AppColors.success)),
+                          ]),
+                    ],
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),

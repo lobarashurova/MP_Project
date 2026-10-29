@@ -218,6 +218,16 @@ class _OrderSummary extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _Line(label: 'Subtotal', value: formatSum(cart.subtotal)),
+              // Without this row the panel read "100 000 + 15 000 = 85 000":
+              // the promo was being applied to the total but never itemised.
+              if (cart.discount > 0) ...[
+                const SizedBox(height: AppTheme.spaceSm),
+                _Line(
+                  label: 'Discount (${AppPricing.promoDiscountPercent}%)',
+                  value: '-${formatSum(cart.discount)}',
+                  valueColor: AppColors.success,
+                ),
+              ],
               const SizedBox(height: AppTheme.spaceSm),
               _Line(
                 label: 'Delivery fee',
@@ -268,10 +278,15 @@ class _OrderSummary extends StatelessWidget {
 }
 
 class _Line extends StatelessWidget {
-  const _Line({required this.label, required this.value});
+  const _Line({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +303,7 @@ class _Line extends StatelessWidget {
           value,
           style: AppTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: valueColor ?? AppColors.textPrimary,
           ),
         ),
       ],
