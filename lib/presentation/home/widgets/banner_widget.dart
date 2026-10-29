@@ -29,7 +29,7 @@ class BannerWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -47,7 +47,7 @@ class BannerWidget extends StatelessWidget {
                   height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -59,7 +59,7 @@ class BannerWidget extends StatelessWidget {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -95,7 +95,7 @@ class BannerWidget extends StatelessWidget {
                       Text(
                         'Get ${AppPricing.promoDiscountPercent}% off on all dishes',
                         style: AppTextStyles.bannerSubtitle.copyWith(
-                          color: AppColors.surface.withOpacity(0.9),
+                          color: AppColors.surface.withValues(alpha: 0.9),
                         ),
                       ),
                       if (meal != null) ...[

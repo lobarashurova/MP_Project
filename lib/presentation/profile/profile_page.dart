@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/widgets/app_card.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
 import 'package:xurmo/core/theme/theme_provider.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
@@ -87,21 +89,21 @@ class _ProfilePageState extends State<ProfilePage> {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
           body: SafeArea(
+            bottom: false,
             child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: AppTheme.spaceXl),
               child: Column(
                 children: [
                   _buildHeader(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spaceLg),
                   _buildStatsSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spaceLg),
                   _buildAccountSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spaceLg),
                   _buildSettingsSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spaceLg),
                   _buildLogoutButton(),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -113,30 +115,46 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spaceLg,
+        AppTheme.spaceLg,
+        AppTheme.spaceLg,
+        AppTheme.spaceXl,
+      ),
+      decoration: const BoxDecoration(
+        // The gradient gives the tab a header that reads as the brand rather
+        // than as one more white panel, and it works in both themes because
+        // the orange is theme-independent.
+        gradient: LinearGradient(
+          colors: AppColors.primaryGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppTheme.radiusLarge + 8),
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.onPrimary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
+              border: Border.all(
+                color: AppColors.onPrimary.withValues(alpha: 0.6),
+                width: 2,
+              ),
             ),
-            child: Icon(CupertinoIcons.person_fill, size: 40, color: AppColors.primary),
+            child: const Icon(
+              CupertinoIcons.person_fill,
+              size: 36,
+              color: AppColors.onPrimary,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: FutureBuilder<DocumentSnapshot>(
               future: FirebaseFirestore.instance
@@ -166,17 +184,51 @@ class _ProfilePageState extends State<ProfilePage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: AppTextStyles.heading2),
-                    const SizedBox(height: 4),
-                    Text(contact, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                    const SizedBox(height: 8),
+                    Text(
+                      name,
+                      style: AppTextStyles.heading2.copyWith(
+                        color: AppColors.onPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppTheme.spaceXs),
+                    Text(
+                      contact,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.onPrimary.withValues(alpha: 0.85),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppTheme.spaceSm + 4),
+                    // A pill rather than bare text: on the gradient a plain
+                    // orange link would disappear.
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(
-                        builder: (context) => const PersonalInformationPage(),
-                      )),
-                      child: Text(context.tr('edit_profile'), style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primary, fontWeight: FontWeight.w600,
-                      )),
+                      onTap: () {
+                        Haptics.tap();
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => const PersonalInformationPage(),
+                        ));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceSm + 4,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.onPrimary.withValues(alpha: 0.22),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusPill),
+                        ),
+                        child: Text(
+                          context.tr('edit_profile'),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 );
@@ -190,35 +242,56 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildStatsSection() {
     final favoriteCount = context.watch<FavoritesProvider>().favoriteCount;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), context.tr('favorites'), AppColors.error)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), context.tr('in_cart'), AppColors.primary)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), context.tr('orders'), AppColors.success)),
-        ],
+    // Pulled up into the header so the two read as one unit instead of
+    // leaving a band of empty background between them.
+    return Transform.translate(
+      offset: const Offset(0, -AppTheme.spaceLg),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), context.tr('favorites'), AppColors.error)),
+            const SizedBox(width: AppTheme.spaceSm + 4),
+            Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), context.tr('in_cart'), AppColors.primary)),
+            const SizedBox(width: AppTheme.spaceSm + 4),
+            Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), context.tr('orders'), AppColors.success)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStatCard(IconData icon, String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: AppColors.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+    return AppCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceSm,
+        vertical: AppTheme.spaceMd,
       ),
       child: Column(
         children: [
-          Icon(icon, size: 28, color: color),
-          const SizedBox(height: 8),
-          Text(value, style: AppTextStyles.heading2.copyWith(color: color)),
-          const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: AppTheme.spaceSm + 2),
+          Text(
+            value,
+            style: AppTextStyles.heading3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.subtitleSmall,
+          ),
         ],
       ),
     );
@@ -234,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildSettingsSection() {
     final settings = context.watch<SettingsProvider>();
     final themeProvider = context.watch<ThemeProvider>();
-    final s = (String k) => AppStrings.of(context, k);
+    String s(String k) => AppStrings.of(context, k);
 
     String fontLabel() {
       switch (settings.fontSize) {
@@ -325,44 +398,30 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSection(String title, List<Widget> children) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Text(title, style: AppTextStyles.heading3.copyWith(color: AppColors.textSecondary, fontSize: 14)),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: AppColors.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
-            ),
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
+    return AppSection(title: title, children: children);
   }
 
   Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, {String? trailing}) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Haptics.tap();
+        onTap();
+      },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd,
+          vertical: AppTheme.spaceSm + 4,
+        ),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: AppColors.iconPrimary),
-            const SizedBox(width: 16),
+            _RowIcon(icon: icon),
+            const SizedBox(width: AppTheme.spaceSm + 4),
             Expanded(child: Text(title, style: AppTextStyles.bodyMedium)),
             if (trailing != null) ...[
               Text(trailing, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spaceSm),
             ],
-            Icon(CupertinoIcons.chevron_right, size: 18, color: AppColors.iconSecondary),
+            Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.iconSecondary),
           ],
         ),
       ),
@@ -371,13 +430,25 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildSwitchItem(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceXs + 1,
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: AppColors.iconPrimary),
-          const SizedBox(width: 16),
+          _RowIcon(icon: icon),
+          const SizedBox(width: AppTheme.spaceSm + 4),
           Expanded(child: Text(title, style: AppTextStyles.bodyMedium)),
-          CupertinoSwitch(value: value, activeColor: AppColors.primary, onChanged: onChanged),
+          // Material Switch rather than CupertinoSwitch: it reads its colours
+          // from switchTheme, so both themes stay in step and the deprecated
+          // activeColor is gone.
+          Switch(
+            value: value,
+            onChanged: (v) {
+              Haptics.selection();
+              onChanged(v);
+            },
+          ),
         ],
       ),
     );
@@ -385,34 +456,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildLogoutButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _showLogoutDialog,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(CupertinoIcons.square_arrow_right, size: 20),
-              const SizedBox(width: 8),
-              Text('Logout', style: AppTextStyles.button),
-            ],
-          ),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
+      child: OutlinedButton(
+        onPressed: _showLogoutDialog,
+        // Logging out is destructive, so it is outlined in the error colour
+        // rather than wearing the same orange as "Order Now".
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.error,
+          side: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(CupertinoIcons.square_arrow_right, size: 20),
+            const SizedBox(width: AppTheme.spaceSm),
+            Text(
+              context.trRead('logout'),
+              style: AppTextStyles.button.copyWith(
+                fontSize: 16,
+                color: AppColors.error,
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature feature coming soon!', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
     );
   }
 
@@ -442,5 +509,26 @@ class _ProfilePageState extends State<ProfilePage> {
   /// AuthProvider rebuilds this widget on login, so no navigation is needed.
   Widget _buildLoginView(BuildContext context) {
     return const LoginPage(navigateOnSuccess: false);
+  }
+}
+
+/// The tinted square behind each settings-row glyph. Gives the rows a
+/// consistent left margin and keeps the icons from floating in whitespace.
+class _RowIcon extends StatelessWidget {
+  const _RowIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+      ),
+      child: Icon(icon, size: 18, color: AppColors.iconPrimary),
+    );
   }
 }

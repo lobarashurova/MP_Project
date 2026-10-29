@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/widgets/app_card.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
+
 import '../orders/checkout_page.dart';
-import 'package:xurmo/core/utils/haptics.dart';
-import 'package:xurmo/core/utils/money.dart';
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -39,20 +42,26 @@ class _BasketPageState extends State<BasketPage> {
   @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
-    final subtotal = Cart.instance.subtotal;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text(
-          'Your Basket',
-          style: AppTextStyles.heading2.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: false,
+        title: const Text('Your Basket'),
+        titleSpacing: AppTheme.spaceLg,
+        actions: [
+          if (items.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: AppTheme.spaceLg),
+              child: Center(
+                child: Text(
+                  '${Cart.instance.totalItems} items',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       body: items.isEmpty
           ? const StateView.empty(
@@ -62,241 +71,242 @@ class _BasketPageState extends State<BasketPage> {
                   'Browse the menu and tap + on anything you fancy — it will land here.',
             )
           : Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.only(
+                      top: AppTheme.spaceMd,
+                      bottom: AppTheme.spaceLg,
+                    ),
+                    children: [
+                      const _DeliveryStrip(),
+                      const SizedBox(height: AppTheme.spaceMd),
+                      for (final item in items)
+                        CartItemCard(key: ValueKey(item.product.id), cartItem: item),
+                    ],
+                  ),
+                ),
+                const _OrderSummary(),
+              ],
+            ),
+    );
+  }
+}
+
+/// The two delivery facts shown above the basket contents. One tile widget
+/// rather than the same forty lines written out twice.
+class _DeliveryStrip extends StatelessWidget {
+  const _DeliveryStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceSm + 4,
+      ),
+      child: Row(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  CupertinoIcons.clock,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Delivery Time',
-                                      style: AppTextStyles.subtitleSmall,
-                                    ),
-                                    Text(
-                                      AppPricing.deliveryTime,
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  CupertinoIcons.gift,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Free item over',
-                                      style: AppTextStyles.subtitleSmall,
-                                    ),
-                                    Text(
-                                        formatSum(AppPricing.promoThreshold),
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: items.length,
-                    padding: const EdgeInsets.only(top: 4, bottom: 4),
-                    itemBuilder: (context, index) {
-                      final cartItem = items[index];
-                      return CartItemCard(cartItem: cartItem);
-                    },
-                  ),
-                ],
-              ),
+            child: _Fact(
+              icon: CupertinoIcons.clock,
+              label: 'Delivery time',
+              value: AppPricing.deliveryTime,
             ),
           ),
-
           Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border(
-                top: BorderSide(
-                  color: AppColors.border,
-                  width: 1,
-                ),
-              ),
-            ),
-            padding: const EdgeInsets.all(20),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Subtotal',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        formatSum(subtotal),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Delivery Fee',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        formatSum(Cart.instance.deliveryFee),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Divider(
-                      color: AppColors.border,
-                      height: 1,
-                    ),
-                  ),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        formatSum(Cart.instance.totalPrice),
-                        style: AppTextStyles.heading3.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        Haptics.tap();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CheckoutPage(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Order Now',
-                        style: AppTextStyles.heading3.copyWith(
-                          color: AppColors.surface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            width: 1,
+            height: 36,
+            color: AppColors.divider,
+            margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm),
+          ),
+          Expanded(
+            child: _Fact(
+              icon: CupertinoIcons.gift,
+              label: 'Free item over',
+              value: formatSum(AppPricing.promoThreshold),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Fact extends StatelessWidget {
+  const _Fact({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 19),
+        ),
+        const SizedBox(width: AppTheme.spaceSm + 2),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.subtitleSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The pinned totals panel. It floats above the list with the same shadow the
+/// nav bar uses, so the two read as one layer.
+class _OrderSummary extends StatelessWidget {
+  const _OrderSummary();
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = Cart.instance;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: AppTheme.floatingShadow,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusLarge),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spaceLg,
+            AppTheme.spaceMd,
+            AppTheme.spaceLg,
+            AppTheme.spaceMd,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Line(label: 'Subtotal', value: formatSum(cart.subtotal)),
+              // Without this row the panel read "100 000 + 15 000 = 85 000":
+              // the promo was being applied to the total but never itemised.
+              if (cart.discount > 0) ...[
+                const SizedBox(height: AppTheme.spaceSm),
+                _Line(
+                  label: 'Discount (${AppPricing.promoDiscountPercent}%)',
+                  value: '-${formatSum(cart.discount)}',
+                  valueColor: AppColors.success,
+                ),
+              ],
+              const SizedBox(height: AppTheme.spaceSm),
+              _Line(
+                label: 'Delivery fee',
+                value: formatSum(cart.deliveryFee),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spaceSm + 4,
+                ),
+                child: Divider(height: 1, color: AppColors.divider),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    formatSum(cart.totalPrice),
+                    style: AppTextStyles.heading3.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+              // Unstyled on purpose: the elevated button theme already
+              // carries the height, radius and colours.
+              ElevatedButton(
+                onPressed: () {
+                  Haptics.tap();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CheckoutPage()),
+                  );
+                },
+                child: const Text('Order Now'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Line extends StatelessWidget {
+  const _Line({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: valueColor ?? AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

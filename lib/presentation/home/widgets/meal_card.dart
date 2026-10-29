@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/widgets/quantity_stepper.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
@@ -83,29 +84,14 @@ class _MealCardState extends State<MealCard> {
     Cart.instance.decreaseQuantity(_product);
   }
 
-  void _showMessage(String message, {Color? color}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color ?? AppColors.primary,
-        duration: const Duration(milliseconds: 500),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   Future<void> _toggleFavorite(FavoritesProvider favProvider) async {
-    // Favorites are stored per user, so tell a signed-out user what to do
-    // instead of failing with a generic error.
-    if (FirebaseAuth.instance.currentUser == null) {
-      _showMessage('Please log in to save favorites', color: Colors.red);
-      return;
-    }
+    // Favorites are stored per user, so a signed-out tap is a no-op rather
+    // than an error. The heart simply stays unfilled.
+    if (FirebaseAuth.instance.currentUser == null) return;
 
     final isFavorite = favProvider.isFavorite(_product.id);
-    // The heart fills in immediately, so a confirmation toast would only
-    // repeat what the icon already shows. Failures still need to be told.
+    // The heart reflects provider state, so it reverts by itself if the write
+    // fails; the tap haptic is the only feedback either way.
     Haptics.tap();
 
     try {
@@ -115,7 +101,7 @@ class _MealCardState extends State<MealCard> {
         await favProvider.addFavorite(_product);
       }
     } catch (e) {
-      _showMessage('Failed to update favorites', color: AppColors.error);
+      debugPrint('Failed to update favorites: $e');
     }
   }
 
@@ -246,14 +232,24 @@ class _MealCardState extends State<MealCard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            formatSum(_product.price),
-                            style: AppTextStyles.productPrice,
+                          // The price has to flex: with the currency suffix
+                          // it is wide enough to push the stepper off a
+                          // two-column card otherwise.
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                formatSum(_product.price),
+                                style: AppTextStyles.productPrice,
+                                maxLines: 1,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 6),
                           if (_quantity == 0)
                             GestureDetector(
                               onTap: _addToCart,
@@ -261,71 +257,23 @@ class _MealCardState extends State<MealCard> {
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary,
-                                  borderRadius:
-                                      BorderRadius.circular(AppTheme.radiusSmall),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusSmall,
+                                  ),
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   CupertinoIcons.add,
                                   size: 18,
-                                  color: AppColors.surface,
+                                  color: AppColors.onPrimary,
                                 ),
                               ),
                             )
                           else
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: _decreaseQuantity,
-                                    child: Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        shape: BoxShape.circle,
-                                        boxShadow: AppTheme.cardShadow,
-                                      ),
-                                      child: Icon(
-                                        CupertinoIcons.minus,
-                                        size: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    child: Text(
-                                      _quantity.toString(),
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: _increaseQuantity,
-                                    child: Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        shape: BoxShape.circle,
-                                        boxShadow: AppTheme.cardShadow,
-                                      ),
-                                      child: Icon(
-                                        CupertinoIcons.plus,
-                                        size: 14,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            QuantityStepper(
+                              quantity: _quantity,
+                              compact: true,
+                              onDecrease: _decreaseQuantity,
+                              onIncrease: _increaseQuantity,
                             ),
                         ],
                       ),

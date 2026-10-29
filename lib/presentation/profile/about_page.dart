@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/localization/app_strings.dart';
 
 class AboutPage extends StatelessWidget {
@@ -15,7 +16,7 @@ class AboutPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.1),
+            color: AppColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -49,7 +50,13 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bodyStyle = TextStyle(fontSize: 15, height: 1.5, color: Colors.black54);
+    // Not const and not Colors.black54: the body copy has to follow the
+    // theme, or it turns invisible on the dark background.
+    final bodyStyle = TextStyle(
+      fontSize: 15,
+      height: 1.5,
+      color: AppColors.textSecondary,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -96,16 +103,16 @@ class AboutPage extends StatelessWidget {
               context,
               Icons.build,
               context.tr('technologies'),
-              const Text(
+              Text(
                 '• Flutter & Dart\n• Firebase\n• Material Design\n• Provider State Management',
-                style: TextStyle(fontSize: 15, height: 1.6, color: Colors.black54),
+                style: bodyStyle.copyWith(height: 1.6),
               ),
             ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -130,7 +137,7 @@ class AboutPage extends StatelessWidget {
                   Text(
                     context.tr('rights'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    style: AppTextStyles.bodySmall,
                   ),
                 ],
               ),

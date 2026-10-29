@@ -214,11 +214,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     Navigator.of(context).pop(selected);
   }
 
+  /// Logs instead of showing anything: the map stays where the user left it,
+  /// and they can still place the pin by hand.
   void _showMessage(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
+    debugPrint('Location picker: $message');
   }
 
   // ------------------------------------------------------------------- UI

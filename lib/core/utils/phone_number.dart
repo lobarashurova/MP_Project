@@ -6,6 +6,7 @@
 /// from the number: "+998901234567" becomes "998901234567@phone.xurmo.app".
 /// Nothing is ever sent to that address. It exists only as a stable, unique
 /// identifier.
+library;
 
 /// Reserved domain for synthetic phone-account emails. Never send mail here.
 const String phoneEmailDomain = 'phone.xurmo.app';

@@ -48,17 +48,6 @@ void main() {
     });
   });
 
-  group('Google sign-in messages', () {
-    test('explains an email already registered with a password', () {
-      expect(authErrorMessage('account-exists-with-different-credential'),
-          contains('Sign in with email and password'));
-    });
-
-    test('explains when Google sign-in is not set up', () {
-      expect(authErrorMessage('google-not-configured'), contains('not set up'));
-    });
-  });
-
   group('AuthMethod.fromStorage', () {
     test('reads every stored method', () {
       for (final method in AuthMethod.values) {

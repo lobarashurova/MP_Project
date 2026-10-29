@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 
 /// A single, consistent way to render "there is nothing here" and
@@ -78,29 +79,28 @@ class StateView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceXl,
+          vertical: AppTheme.spaceLg,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.1),
+                color: accentColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 56,
-                color: accentColor.withOpacity(0.7),
-              ),
+              child: Icon(icon, size: 48, color: accentColor),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spaceLg),
             Text(
               title,
               textAlign: TextAlign.center,
               style: AppTextStyles.heading2,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spaceSm + 4),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -109,32 +109,19 @@ class StateView extends StatelessWidget {
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 28),
+              const SizedBox(height: AppTheme.spaceLg + 4),
+              // Width-constrained rather than full-bleed: the button theme
+              // stretches to the full line otherwise, which looks wrong under
+              // centred copy.
               ElevatedButton(
-                onPressed: onAction == null
-                    ? null
-                    : () {
-                        Haptics.tap();
-                        onAction!();
-                      },
+                onPressed: () {
+                  Haptics.tap();
+                  onAction!();
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.surface,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
+                  minimumSize: const Size(160, 48),
                 ),
-                child: Text(
-                  actionLabel!,
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.surface,
-                  ),
-                ),
+                child: Text(actionLabel!),
               ),
             ],
           ],
@@ -160,8 +147,20 @@ class OfflineNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.warning.withOpacity(0.18),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: const EdgeInsets.fromLTRB(
+        AppTheme.spaceMd,
+        AppTheme.spaceSm,
+        AppTheme.spaceMd,
+        0,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceSm + 4,
+        vertical: AppTheme.spaceSm + 2,
+      ),
       child: Row(
         children: [
           Icon(

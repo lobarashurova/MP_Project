@@ -29,7 +29,6 @@ dependencies:
   cloud_firestore: 6.1.0
   intl: ^0.20.2
   flutter_launcher_icons: ^0.14.4
-  google_sign_in: ^7.2.0
   geolocator: ^14.0.2
   yandex_maps_mapkit_lite: ^4.45.0
   flutter_localizations:
@@ -39,7 +38,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  scrollable_positioned_list: ^0.3.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

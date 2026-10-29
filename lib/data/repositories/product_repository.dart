@@ -41,7 +41,9 @@ class ProductRepository {
   Future<List<MealModel>> _cachedProducts() async {
     try {
       final box = await Hive.openBox<MealModel>(_boxName);
-      return _normalizeCachedPrices(box);
+      // Awaited inside the try so a failure here is caught below rather than
+      // escaping to the caller as an unhandled rejection.
+      return await _normalizeCachedPrices(box);
     } catch (_) {
       // A corrupt or unavailable cache is not worth failing the screen over.
       return const [];

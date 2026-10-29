@@ -124,19 +124,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onRefresh() async {
-    final failure = await context.read<HomeProvider>().refreshProducts();
-    if (!mounted || failure == null) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          failure.message,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // A failed refresh surfaces through the OfflineNotice banner below, which
+    // reads provider.failure directly, so there is nothing to report here.
+    await context.read<HomeProvider>().refreshProducts();
   }
 
   @override

@@ -11,6 +11,7 @@ import 'package:xurmo/data/models/delivery_location.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
@@ -116,22 +117,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ));
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppException.from(e).message,
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Retry',
-            textColor: Colors.white,
-            onPressed: _placeOrder,
-          ),
-        ),
-      );
+      debugPrint('Order failed: ${AppException.from(e).message}');
     } finally {
       // The success path navigates away, so guard before touching state.
       if (mounted) setState(() => _isLoading = false);
@@ -319,6 +305,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
+                    if (cart.discount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Discount (${AppPricing.promoDiscountPercent}%)'),
+                            Text('-${formatSum(cart.discount)}',
+                                style: const TextStyle(color: AppColors.success)),
+                          ]),
+                    ],
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),
@@ -343,7 +338,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   onPressed: _isLoading ? null : _placeOrder,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+                    disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

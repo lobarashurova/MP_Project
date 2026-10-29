@@ -60,16 +60,6 @@ class AuthProvider extends ChangeNotifier {
         ));
   }
 
-  /// Signs in with Google. Returns false when the person closed the account
-  /// picker, true when they are now signed in.
-  Future<bool> signInWithGoogle() async {
-    var signedIn = false;
-    await _run(() async {
-      signedIn = await _repository.signInWithGoogle() != null;
-    });
-    return signedIn;
-  }
-
   Future<void> sendPasswordReset({required String email}) {
     return _run(() => _repository.sendPasswordReset(email: email));
   }
