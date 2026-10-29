@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_strings.dart';
+
 import '../basket/basket_page.dart';
 import '../favorites/favorites_page.dart';
 import '../home/home_page.dart';
@@ -17,29 +19,31 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  static const List<NavDestination> _destinations = <NavDestination>[
-    NavDestination(
-      icon: CupertinoIcons.house,
-      activeIcon: CupertinoIcons.house_fill,
-      label: 'Home',
-    ),
-    NavDestination(
-      icon: CupertinoIcons.heart,
-      activeIcon: CupertinoIcons.heart_fill,
-      label: 'Favorites',
-    ),
-    NavDestination(
-      icon: CupertinoIcons.cart,
-      activeIcon: CupertinoIcons.cart_fill,
-      label: 'Basket',
-      showsCartBadge: true,
-    ),
-    NavDestination(
-      icon: CupertinoIcons.person,
-      activeIcon: CupertinoIcons.person_fill,
-      label: 'Profile',
-    ),
-  ];
+  /// Built per frame rather than held as a const list: the labels are
+  /// translated, so they have to follow the chosen language.
+  List<NavDestination> _destinations(BuildContext context) => <NavDestination>[
+        NavDestination(
+          icon: CupertinoIcons.house,
+          activeIcon: CupertinoIcons.house_fill,
+          label: context.tr('nav_home'),
+        ),
+        NavDestination(
+          icon: CupertinoIcons.heart,
+          activeIcon: CupertinoIcons.heart_fill,
+          label: context.tr('nav_favorites'),
+        ),
+        NavDestination(
+          icon: CupertinoIcons.cart,
+          activeIcon: CupertinoIcons.cart_fill,
+          label: context.tr('nav_basket'),
+          showsCartBadge: true,
+        ),
+        NavDestination(
+          icon: CupertinoIcons.person,
+          activeIcon: CupertinoIcons.person_fill,
+          label: context.tr('nav_profile'),
+        ),
+      ];
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -59,7 +63,7 @@ class _MainPageState extends State<MainPage> {
       ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _selectedIndex,
-        destinations: _destinations,
+        destinations: _destinations(context),
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
         },

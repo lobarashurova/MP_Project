@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -71,13 +72,14 @@ class _SearchPageState extends State<SearchPage> {
 
     final queryWords = query.toLowerCase().split(RegExp(r'\s+'));
     return meals.where((meal) {
-      final searchableText = [
-        meal.name,
-        meal.category,
-        meal.description,
-        meal.area,
-        ...meal.ingredients,
-      ].join(' ').toLowerCase();
+      final searchableText =
+          [
+            meal.name,
+            meal.category,
+            meal.description,
+            meal.area,
+            ...meal.ingredients,
+          ].join(' ').toLowerCase();
       return queryWords.every(searchableText.contains);
     }).toList();
   }
@@ -112,15 +114,16 @@ class _SearchPageState extends State<SearchPage> {
                 CupertinoIcons.search,
                 color: AppColors.iconSecondary,
               ),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(
-                        CupertinoIcons.clear_circled_solid,
-                        color: AppColors.iconSecondary,
-                      ),
-                      onPressed: _searchController.clear,
-                    )
-                  : null,
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        icon: Icon(
+                          CupertinoIcons.clear_circled_solid,
+                          color: AppColors.iconSecondary,
+                        ),
+                        onPressed: _searchController.clear,
+                      )
+                      : null,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -130,9 +133,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: _buildBody(provider),
-      ),
+      body: SafeArea(child: _buildBody(provider)),
     );
   }
 
@@ -162,17 +163,17 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     if (_query.isEmpty) {
-      return const StateView.empty(
+      return StateView.empty(
         icon: CupertinoIcons.search,
-        title: 'Search for food',
-        message: 'Start typing to find your favorite meals',
+        title: context.tr('search_prompt'),
+        message: context.tr('search_prompt_msg'),
       );
     }
 
     if (_filteredMeals.isEmpty) {
       return StateView.empty(
         icon: CupertinoIcons.doc_text_search,
-        title: 'No results found',
+        title: context.tr('no_dishes'),
         message:
             'We could not find anything for "${_searchController.text.trim()}". '
             'Try a different dish, ingredient, category or cuisine.',
@@ -185,16 +186,20 @@ class _SearchPageState extends State<SearchPage> {
       children: [
         if (provider.isShowingStaleData)
           OfflineNotice(
-            message: provider.isOffline
-                ? "You're offline — showing saved meals where possible."
-                : provider.failure!.message,
+            message:
+                provider.isOffline
+                    ? "You're offline — showing saved meals where possible."
+                    : provider.failure!.message,
           ),
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.all(20),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.62,
+            // Height in pixels, not an aspect ratio: the ratio resolved to a
+            // card 5px shorter than MealCard's content and overflowed. This
+            // matches the favorites grid.
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              mainAxisExtent: 304,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),

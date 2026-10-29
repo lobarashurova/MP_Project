@@ -108,16 +108,18 @@ class AppTextStyles {
       );
 
   // Banner Text
-  static TextStyle get bannerTitle => TextStyle(
+  // Banner copy always sits on the brand orange, which does not change with
+  // the theme, so it uses onPrimary rather than the theme-dependent surface.
+  static TextStyle get bannerTitle => const TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: AppColors.surface,
+        color: AppColors.onPrimary,
       );
 
-  static TextStyle get bannerSubtitle => TextStyle(
+  static TextStyle get bannerSubtitle => const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        color: AppColors.surface,
+        color: AppColors.onPrimary,
       );
 
   // Navigation

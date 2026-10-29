@@ -133,11 +133,23 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Embedded in the profile tab, this sits inside MainPage's Scaffold,
+      // which has already shrunk its body to make room for the keyboard.
+      // Resizing here as well subtracts the keyboard height a second time and
+      // squeezes the form into a strip a few dozen pixels tall, so the field
+      // you tapped scrolls out of reach and the page looks frozen.
+      resizeToAvoidBottomInset: widget.navigateOnSuccess,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          // Let a drag put the keyboard away, so a form taller than the
+          // remaining space can still be read.
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
+            // Errors appear as the field is corrected rather than only on
+            // submit.
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -182,9 +194,15 @@ class _LoginPageState extends State<LoginPage> {
                 authFieldLabel(_method == AuthMethod.email ? 'Email' : 'Phone Number'),
                 const SizedBox(height: 8),
                 if (_method == AuthMethod.email)
-                  EmailField(controller: _emailController, enabled: !_isLoading)
+                  EmailField(
+                    controller: _emailController,
+                    enabled: !_isLoading,
+                  )
                 else
-                  PhoneField(controller: _phoneController, enabled: !_isLoading),
+                  PhoneField(
+                    controller: _phoneController,
+                    enabled: !_isLoading,
+                  ),
                 const SizedBox(height: 20),
                 Text(
                   'Password',
@@ -197,6 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordController,
+                  enabled: !_isLoading,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
@@ -222,15 +241,9 @@ class _LoginPageState extends State<LoginPage> {
                       vertical: 16,
                     ),
                   ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Password is required';
-                    }
-                    if (value!.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _isLoading ? null : _login(),
+                  validator: validatePassword,
                 ),
                 // Phone accounts sign in through a synthetic address with no
                 // inbox behind it, so there is nothing to send a reset to.
@@ -265,7 +278,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
+                          AppColors.onPrimary,
                         ),
                       ),
                     )
@@ -274,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                   ),
@@ -409,7 +422,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                 ),
               ),

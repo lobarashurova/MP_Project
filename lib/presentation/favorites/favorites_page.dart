@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/localization/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/state_view.dart';
@@ -37,7 +38,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: AppTheme.spaceLg,
-        title: const Text('Favorites'),
+        title: Text(context.tr('favorites')),
         actions: [
           if (count > 0) ...[
             Center(
@@ -88,9 +89,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
 
     if (provider.favorites.isEmpty) {
-      return const StateView.empty(
+      return StateView.empty(
         icon: CupertinoIcons.heart,
-        title: 'No favorites yet',
+        title: context.tr('no_favorites'),
         message: 'Tap the heart on any meal and it will show up here.',
       );
     }

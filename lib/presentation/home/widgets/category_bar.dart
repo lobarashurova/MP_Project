@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/utils/haptics.dart';
@@ -56,7 +57,7 @@ class CategoryBar extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    category,
+                    category == 'All' ? context.tr('all') : category,
                     style: AppTextStyles.categoryChip.copyWith(
                       color: isSelected
                           ? AppColors.onPrimary

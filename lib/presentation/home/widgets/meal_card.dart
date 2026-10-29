@@ -16,10 +16,7 @@ import 'package:xurmo/core/utils/money.dart';
 class MealCard extends StatefulWidget {
   final MealModel meal;
 
-  const MealCard({
-    super.key,
-    required this.meal,
-  });
+  const MealCard({super.key, required this.meal});
 
   @override
   State<MealCard> createState() => _MealCardState();
@@ -36,6 +33,7 @@ class _MealCardState extends State<MealCard> {
     _updateQuantity();
     Cart.instance.notifier.addListener(_updateQuantity);
   }
+
   @override
   void didUpdateWidget(covariant MealCard oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -53,7 +51,7 @@ class _MealCardState extends State<MealCard> {
   void _updateQuantity() {
     try {
       final cartItem = Cart.instance.items.firstWhere(
-            (item) => item.product.id == _product.id,
+        (item) => item.product.id == _product.id,
       );
       if (mounted) {
         setState(() {
@@ -128,6 +126,7 @@ class _MealCardState extends State<MealCard> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Stack(
                   children: [
@@ -169,9 +168,7 @@ class _MealCardState extends State<MealCard> {
                             isFavorite
                                 ? CupertinoIcons.heart_fill
                                 : CupertinoIcons.heart,
-                            color: isFavorite
-                                ? Colors.red
-                                : AppColors.primary,
+                            color: isFavorite ? Colors.red : AppColors.primary,
                             size: 20,
                           ),
                         ),
@@ -179,105 +176,124 @@ class _MealCardState extends State<MealCard> {
                     ),
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.meal.name,
-                        style: AppTextStyles.productName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              widget.meal.category,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              widget.meal.area,
-                              style: AppTextStyles.bodySmall,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.list_bullet,
-                            color: AppColors.iconSecondary,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.meal.ingredients.length} ingredients',
-                            style: AppTextStyles.bodySmall,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          // The price has to flex: with the currency suffix
-                          // it is wide enough to push the stepper off a
-                          // two-column card otherwise.
-                          Expanded(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                formatSum(_product.price),
-                                style: AppTextStyles.productPrice,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          if (_quantity == 0)
-                            GestureDetector(
-                              onTap: _addToCart,
+                // Flexible so a card a few pixels short squeezes the text
+                // block rather than painting an overflow stripe.
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.meal.name,
+                          style: AppTextStyles.productName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            // Both sides flex: a long category name used to
+                            // push this row past the card's width.
+                            Flexible(
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radiusSmall,
+                                  color: AppColors.primarySoft,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  widget.meal.category,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                child: const Icon(
-                                  CupertinoIcons.add,
-                                  size: 18,
-                                  color: AppColors.onPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                widget.meal.area,
+                                style: AppTextStyles.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.list_bullet,
+                              color: AppColors.iconSecondary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                '${widget.meal.ingredients.length} ingredients',
+                                style: AppTextStyles.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            // The price has to flex: with the currency suffix
+                            // it is wide enough to push the stepper off a
+                            // two-column card otherwise.
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  formatSum(_product.price),
+                                  style: AppTextStyles.productPrice,
+                                  maxLines: 1,
                                 ),
                               ),
-                            )
-                          else
-                            QuantityStepper(
-                              quantity: _quantity,
-                              compact: true,
-                              onDecrease: _decreaseQuantity,
-                              onIncrease: _increaseQuantity,
                             ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 6),
+                            if (_quantity == 0)
+                              GestureDetector(
+                                onTap: _addToCart,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusSmall,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    CupertinoIcons.add,
+                                    size: 18,
+                                    color: AppColors.onPrimary,
+                                  ),
+                                ),
+                              )
+                            else
+                              QuantityStepper(
+                                quantity: _quantity,
+                                compact: true,
+                                onDecrease: _decreaseQuantity,
+                                onIncrease: _increaseQuantity,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

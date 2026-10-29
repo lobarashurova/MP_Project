@@ -96,7 +96,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Personal Information'),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         foregroundColor: AppColors.iconPrimary,
         elevation: 0,
         actions: [
@@ -132,7 +132,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface,
                 ),
                 validator: (v) => v?.isEmpty ?? true ? 'Name required' : null,
               ),
@@ -142,15 +142,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 enabled: false,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: const Icon(CupertinoIcons.mail, color: Colors.grey),
+                  prefixIcon: Icon(CupertinoIcons.mail, color: AppColors.iconSecondary),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   disabledBorder: OutlineInputBorder( // Add this for disabled state
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -179,7 +179,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface,
                 ),
                 validator: (v) =>
                 v != null && v.isNotEmpty && v.length < 10
@@ -199,7 +199,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text(
-                        'Save Changes', style: TextStyle(color: Colors.white)),
+                        'Save Changes', style: TextStyle(color: AppColors.onPrimary)),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -41,7 +41,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             elevation: 0,
             backgroundColor: AppColors.background,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: Icon(Icons.arrow_back, color: AppColors.iconPrimary),
               onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -100,10 +100,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     _product.description.isNotEmpty
                         ? 'A delicious ${_product.category} dish from the ${_product.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.'
                         : 'A delicious ${widget.meal.category} dish from the ${widget.meal.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       height: 1.5,
-                      color: Colors.black54,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -116,9 +116,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
                   const SizedBox(height: 8),
                   _product.ingredients.isEmpty
-                      ? const Text(
+                      ? Text(
                           'No ingredients information available',
-                          style: TextStyle(color: Colors.black54),
+                          style: TextStyle(color: AppColors.textSecondary),
                         )
                       : Wrap(
                           spacing: 8.0,
@@ -143,11 +143,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Category',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black54,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -165,11 +165,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Region',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black54,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -216,7 +216,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
             child: const Text(
               'Add to Basket',
-              style: TextStyle(fontSize: 18, color: Colors.white),
+              style: TextStyle(fontSize: 18, color: AppColors.onPrimary),
             ),
           ),
         ),

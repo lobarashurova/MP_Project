@@ -43,7 +43,7 @@ class AuthMethodToggle extends StatelessWidget {
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             return states.contains(WidgetState.selected)
-                ? Colors.white
+                ? AppColors.onPrimary
                 : AppColors.textSecondary;
           }),
           side: WidgetStateProperty.all(BorderSide(color: AppColors.border)),

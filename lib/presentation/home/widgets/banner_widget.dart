@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -90,22 +91,24 @@ class BannerWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Today's Special", style: AppTextStyles.bannerTitle),
+                      Text(context.tr('todays_special'), style: AppTextStyles.bannerTitle),
                       const SizedBox(height: 8),
                       Text(
-                        'Get ${AppPricing.promoDiscountPercent}% off on all dishes',
+                        context
+                            .tr('get_off')
+                            .replaceFirst('{p}', '${AppPricing.promoDiscountPercent}'),
                         style: AppTextStyles.bannerSubtitle.copyWith(
-                          color: AppColors.surface.withValues(alpha: 0.9),
+                          color: AppColors.onPrimary.withValues(alpha: 0.9),
                         ),
                       ),
                       if (meal != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Try: ${meal.name}',
+                          '${context.tr('try_label')} ${meal.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -120,11 +123,11 @@ class BannerWidget extends StatelessWidget {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: AppColors.onPrimary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'Order Now',
+                            context.tr('order_now'),
                             style: AppTextStyles.buttonPrimary,
                           ),
                         ),

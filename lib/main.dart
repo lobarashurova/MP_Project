@@ -114,7 +114,16 @@ class MyApp extends StatelessWidget {
                 data: MediaQuery.of(context).copyWith(
                   textScaler: TextScaler.linear(settings.textScale),
                 ),
-                child: child!,
+                // AppColors resolves its tokens through a global isDarkMode
+                // flag, so a widget only picks up a theme change when it
+                // rebuilds. Const subtrees — the four tabs inside MainPage's
+                // IndexedStack among them — are skipped on a normal rebuild
+                // and would keep the old palette. Keying on the mode rebuilds
+                // the tree from scratch instead.
+                child: KeyedSubtree(
+                  key: ValueKey<bool>(themeProvider.isDarkMode),
+                  child: child!,
+                ),
               );
             },
             home: const MainPage(),

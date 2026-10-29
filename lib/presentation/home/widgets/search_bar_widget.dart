@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/search/search_page.dart';
 
@@ -33,7 +34,7 @@ class SearchBarWidget extends StatelessWidget {
           child: IgnorePointer(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search for food...',
+                hintText: context.tr('search_hint'),
                 hintStyle: AppTextStyles.hint,
                 prefixIcon: Icon(
                   CupertinoIcons.search,

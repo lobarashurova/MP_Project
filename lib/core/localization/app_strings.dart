@@ -39,6 +39,8 @@ class AppStrings {
       'hello': 'Hello',
       'what_eat': 'What would you like to eat today?',
       'search_hint': 'Search for food...',
+      'search_prompt': 'Search for food',
+      'search_prompt_msg': 'Start typing to find your favorite meals',
       'todays_special': "Today's Special",
       'get_off': 'Get {p}% off on all dishes',
       'try_label': 'Try:',
@@ -118,6 +120,8 @@ class AppStrings {
       'hello': 'Привет',
       'what_eat': 'Что бы вы хотели съесть сегодня?',
       'search_hint': 'Поиск блюд...',
+      'search_prompt': 'Поиск блюд',
+      'search_prompt_msg': 'Начните вводить, чтобы найти любимые блюда',
       'todays_special': 'Предложение дня',
       'get_off': 'Скидка {p}% на все блюда',
       'try_label': 'Попробуйте:',
@@ -192,6 +196,8 @@ class AppStrings {
       'hello': 'Salom',
       'what_eat': 'Bugun nima yegingiz keladi?',
       'search_hint': 'Taom qidirish...',
+      'search_prompt': 'Taom qidirish',
+      'search_prompt_msg': 'Sevimli taomingizni topish uchun yozing',
       'todays_special': 'Kun taklifi',
       'get_off': 'Barcha taomlarga {p}% chegirma',
       'try_label': "Tatib ko'ring:",
@@ -239,7 +245,14 @@ class AppStrings {
 
   /// Looks up [key] in the current language. Rebuilds when the language changes.
   static String of(BuildContext context, String key) {
-    final code = context.watch<SettingsProvider>().locale.languageCode;
+    // Falls back to English when no SettingsProvider is above this context,
+    // so a screen pumped on its own renders rather than throwing.
+    String code = 'en';
+    try {
+      code = context.watch<SettingsProvider>().locale.languageCode;
+    } on ProviderNotFoundException {
+      // Keep the default.
+    }
     return table[code]?[key] ?? table['en']![key] ?? key;
   }
 }
@@ -250,7 +263,12 @@ extension AppStringsX on BuildContext {
 
   /// Use inside tap handlers and callbacks, where watch isn't allowed.
   String trRead(String key) {
-    final code = read<SettingsProvider>().locale.languageCode;
+    String code = 'en';
+    try {
+      code = read<SettingsProvider>().locale.languageCode;
+    } on ProviderNotFoundException {
+      // Keep the default.
+    }
     return AppStrings.table[code]?[key] ?? AppStrings.table['en']![key] ?? key;
   }
 }

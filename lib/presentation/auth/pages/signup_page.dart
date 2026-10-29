@@ -54,14 +54,6 @@ class _SignupPageState extends State<SignupPage> {
     }
     Haptics.tap();
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      Haptics.warning();
-      setState(() {
-        _errorMessage = 'Passwords do not match';
-      });
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -108,8 +100,10 @@ class _SignupPageState extends State<SignupPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -155,6 +149,7 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
+                  enabled: !_isLoading,
                   decoration: InputDecoration(
                     hintText: 'Enter your full name',
                     hintStyle: TextStyle(color: AppColors.textSecondary),
@@ -167,12 +162,9 @@ class _SignupPageState extends State<SignupPage> {
                       vertical: 16,
                     ),
                   ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Name is required';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  validator: validateName,
                 ),
                 const SizedBox(height: 16),
                 authFieldLabel(_method == AuthMethod.email ? 'Email' : 'Phone Number'),
@@ -193,6 +185,7 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordController,
+                  enabled: !_isLoading,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
@@ -218,15 +211,8 @@ class _SignupPageState extends State<SignupPage> {
                       vertical: 16,
                     ),
                   ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Password is required';
-                    }
-                    if (value!.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.next,
+                  validator: validatePassword,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -240,6 +226,7 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _confirmPasswordController,
+                  enabled: !_isLoading,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
                     hintText: 'Confirm your password',
@@ -265,12 +252,10 @@ class _SignupPageState extends State<SignupPage> {
                       vertical: 16,
                     ),
                   ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Please confirm your password';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _isLoading ? null : _signup(),
+                  validator: (value) =>
+                      validateConfirmPassword(value, _passwordController.text),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
@@ -293,7 +278,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
+                          AppColors.onPrimary,
                         ),
                       ),
                     )
@@ -302,7 +287,7 @@ class _SignupPageState extends State<SignupPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                   ),

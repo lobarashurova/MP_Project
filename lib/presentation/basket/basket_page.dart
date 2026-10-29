@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
@@ -45,7 +46,7 @@ class _BasketPageState extends State<BasketPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Basket'),
+        title: Text(context.tr('your_basket')),
         titleSpacing: AppTheme.spaceLg,
         actions: [
           if (items.isNotEmpty)
@@ -53,7 +54,7 @@ class _BasketPageState extends State<BasketPage> {
               padding: const EdgeInsets.only(right: AppTheme.spaceLg),
               child: Center(
                 child: Text(
-                  '${Cart.instance.totalItems} items',
+                  '${Cart.instance.totalItems} ${context.tr('items')}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
@@ -64,11 +65,10 @@ class _BasketPageState extends State<BasketPage> {
         ],
       ),
       body: items.isEmpty
-          ? const StateView.empty(
+          ? StateView.empty(
               icon: CupertinoIcons.cart,
-              title: 'Your basket is empty',
-              message:
-                  'Browse the menu and tap + on anything you fancy — it will land here.',
+              title: context.tr('basket_empty'),
+              message: context.tr('basket_empty_msg'),
             )
           : Column(
               children: [
@@ -111,7 +111,7 @@ class _DeliveryStrip extends StatelessWidget {
           Expanded(
             child: _Fact(
               icon: CupertinoIcons.clock,
-              label: 'Delivery time',
+              label: context.tr('delivery_time'),
               value: AppPricing.deliveryTime,
             ),
           ),
@@ -124,7 +124,7 @@ class _DeliveryStrip extends StatelessWidget {
           Expanded(
             child: _Fact(
               icon: CupertinoIcons.gift,
-              label: 'Free item over',
+              label: context.tr('free_item_over'),
               value: formatSum(AppPricing.promoThreshold),
             ),
           ),
@@ -217,20 +217,24 @@ class _OrderSummary extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _Line(label: 'Subtotal', value: formatSum(cart.subtotal)),
+              _Line(
+                label: context.tr('subtotal'),
+                value: formatSum(cart.subtotal),
+              ),
               // Without this row the panel read "100 000 + 15 000 = 85 000":
               // the promo was being applied to the total but never itemised.
               if (cart.discount > 0) ...[
                 const SizedBox(height: AppTheme.spaceSm),
                 _Line(
-                  label: 'Discount (${AppPricing.promoDiscountPercent}%)',
+                  label:
+                      '${context.tr('discount')} (${AppPricing.promoDiscountPercent}%)',
                   value: '-${formatSum(cart.discount)}',
                   valueColor: AppColors.success,
                 ),
               ],
               const SizedBox(height: AppTheme.spaceSm),
               _Line(
-                label: 'Delivery fee',
+                label: context.tr('delivery_fee'),
                 value: formatSum(cart.deliveryFee),
               ),
               Padding(
@@ -243,7 +247,7 @@ class _OrderSummary extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total',
+                    context.tr('total'),
                     style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -267,7 +271,7 @@ class _OrderSummary extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const CheckoutPage()),
                   );
                 },
-                child: const Text('Order Now'),
+                child: Text(context.tr('order_now')),
               ),
             ],
           ),

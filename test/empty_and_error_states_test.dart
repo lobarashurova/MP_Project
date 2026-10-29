@@ -353,7 +353,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'sushi');
       await tester.pump();
 
-      expect(find.text('No results found'), findsOneWidget);
+      expect(find.text('No dishes found'), findsOneWidget);
       expect(find.textContaining('sushi'), findsWidgets);
 
       await tester.tap(find.text('Clear search'));

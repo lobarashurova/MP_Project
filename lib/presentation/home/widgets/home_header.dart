@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/localization/app_strings.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/theme/app_theme.dart';
 
@@ -60,14 +61,14 @@ class _HomeHeaderState extends State<HomeHeader> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, $_userName',
+                  '${context.tr('hello')}, $_userName',
                   style: AppTextStyles.heading1,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppTheme.spaceXs),
                 Text(
-                  'What would you like to eat today?',
+                  context.tr('what_eat'),
                   style: AppTextStyles.subtitle,
                 ),
               ],

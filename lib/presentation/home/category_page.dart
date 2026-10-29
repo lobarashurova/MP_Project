@@ -70,7 +70,7 @@ class _CategoryPageState extends State<CategoryPage> {
         selectedColor: AppColors.primary,
         backgroundColor: AppColors.surface,
         labelStyle: TextStyle(
-          color: selected ? Colors.white : AppColors.textPrimary,
+          color: selected ? AppColors.onPrimary : AppColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
         onSelected: (_) => setState(() => _sort = selected ? _Sort.none : value),

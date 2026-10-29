@@ -64,10 +64,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadOrderCount(String uid) async {
     _orderCountUid = uid;
-    final orders = await FirebaseFirestore.instance
-        .collection('orders')
-        .where('userId', isEqualTo: uid)
-        .get();
+    final orders =
+        await FirebaseFirestore.instance
+            .collection('orders')
+            .where('userId', isEqualTo: uid)
+            .get();
     if (mounted && _orderCountUid == uid) {
       setState(() => _orderCount = orders.docs.length);
     }
@@ -157,17 +158,21 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(_currentUser?.uid)
-                  .get(),
+              future:
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(_currentUser?.uid)
+                      .get(),
               builder: (context, snapshot) {
                 String name = 'User';
                 // Phone accounts sign in through a synthetic email that must
                 // never be shown, so prefer the profile's own contact fields.
-                String contact = isSyntheticEmail(_currentUser?.email)
-                    ? formatPhoneForDisplay(phoneFromSyntheticEmail(_currentUser?.email)!)
-                    : (_currentUser?.email ?? 'No contact');
+                String contact =
+                    isSyntheticEmail(_currentUser?.email)
+                        ? formatPhoneForDisplay(
+                          phoneFromSyntheticEmail(_currentUser?.email)!,
+                        )
+                        : (_currentUser?.email ?? 'No contact');
 
                 if (snapshot.hasData && snapshot.data!.exists) {
                   final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -207,9 +212,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     GestureDetector(
                       onTap: () {
                         Haptics.tap();
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => const PersonalInformationPage(),
-                        ));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => const PersonalInformationPage(),
+                          ),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -218,8 +227,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.onPrimary.withValues(alpha: 0.22),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusPill),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusPill,
+                          ),
                         ),
                         child: Text(
                           context.tr('edit_profile'),
@@ -248,21 +258,53 @@ class _ProfilePageState extends State<ProfilePage> {
       offset: const Offset(0, -AppTheme.spaceLg),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), context.tr('favorites'), AppColors.error)),
-            const SizedBox(width: AppTheme.spaceSm + 4),
-            Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), context.tr('in_cart'), AppColors.primary)),
-            const SizedBox(width: AppTheme.spaceSm + 4),
-            Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), context.tr('orders'), AppColors.success)),
-          ],
+        // IntrinsicHeight gives the row a definite height to stretch the
+        // cards to. Without it, CrossAxisAlignment.stretch inside the page's
+        // scroll view hands the cards an unbounded height and layout throws,
+        // leaving every later section unlaid-out.
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  CupertinoIcons.heart_fill,
+                  favoriteCount.toString(),
+                  context.tr('favorites'),
+                  AppColors.error,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceSm + 4),
+              Expanded(
+                child: _buildStatCard(
+                  CupertinoIcons.cart_fill,
+                  Cart.instance.totalItems.toString(),
+                  context.tr('in_cart'),
+                  AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceSm + 4),
+              Expanded(
+                child: _buildStatCard(
+                  CupertinoIcons.cube_box_fill,
+                  _orderCount.toString(),
+                  context.tr('orders'),
+                  AppColors.success,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(IconData icon, String value, String label, Color color) {
+  Widget _buildStatCard(
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) {
     return AppCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceSm,
@@ -282,7 +324,9 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: AppTheme.spaceSm + 2),
           Text(
             value,
-            style: AppTextStyles.heading3.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.heading3.copyWith(
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -299,8 +343,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildAccountSection() {
     return _buildSection(context.tr('account'), [
-      _buildMenuItem(CupertinoIcons.person, context.tr('personal_info'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInformationPage()))),
-      _buildMenuItem(CupertinoIcons.time, context.tr('order_history'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _refreshOrderCount())),
+      _buildMenuItem(
+        CupertinoIcons.person,
+        context.tr('personal_info'),
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PersonalInformationPage(),
+          ),
+        ),
+      ),
+      _buildMenuItem(
+        CupertinoIcons.time,
+        context.tr('order_history'),
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OrdersPage()),
+        ).then((_) => _refreshOrderCount()),
+      ),
     ]);
   }
 
@@ -321,13 +381,41 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return _buildSection(s('settings'), [
-      _buildSwitchItem(CupertinoIcons.bell, s('notifications'), _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
-      _buildSwitchItem(CupertinoIcons.moon, s('dark_mode'), themeProvider.isDarkMode, (val) {
-        context.read<ThemeProvider>().toggleTheme(val);
-      }),
-      _buildMenuItem(CupertinoIcons.globe, s('language'), _showLanguageSheet, trailing: settings.languageName),
-      _buildMenuItem(CupertinoIcons.textformat_size, s('font_size'), _showFontSheet, trailing: fontLabel()),
-      _buildMenuItem(CupertinoIcons.info_circle, s('about'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())), trailing: 'v1.0.0'),
+      _buildSwitchItem(
+        CupertinoIcons.bell,
+        s('notifications'),
+        _notificationsEnabled,
+        (val) => setState(() => _notificationsEnabled = val),
+      ),
+      _buildSwitchItem(
+        CupertinoIcons.moon,
+        s('dark_mode'),
+        themeProvider.isDarkMode,
+        (val) {
+          context.read<ThemeProvider>().toggleTheme(val);
+        },
+      ),
+      _buildMenuItem(
+        CupertinoIcons.globe,
+        s('language'),
+        _showLanguageSheet,
+        trailing: settings.languageName,
+      ),
+      _buildMenuItem(
+        CupertinoIcons.textformat_size,
+        s('font_size'),
+        _showFontSheet,
+        trailing: fontLabel(),
+      ),
+      _buildMenuItem(
+        CupertinoIcons.info_circle,
+        s('about'),
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AboutPage()),
+        ),
+        trailing: 'v1.0.0',
+      ),
     ]);
   }
 
@@ -335,28 +423,33 @@ class _ProfilePageState extends State<ProfilePage> {
     final settings = context.read<SettingsProvider>();
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(AppStrings.of(context, 'choose_language'), style: AppTextStyles.heading3),
+      builder:
+          (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    AppStrings.of(context, 'choose_language'),
+                    style: AppTextStyles.heading3,
+                  ),
+                ),
+                for (final entry in SettingsProvider.languages.entries)
+                  ListTile(
+                    title: Text(entry.value),
+                    trailing:
+                        settings.locale.languageCode == entry.key
+                            ? const Icon(Icons.check, color: AppColors.primary)
+                            : null,
+                    onTap: () {
+                      settings.setLocale(Locale(entry.key));
+                      Navigator.pop(ctx);
+                    },
+                  ),
+              ],
             ),
-            for (final entry in SettingsProvider.languages.entries)
-              ListTile(
-                title: Text(entry.value),
-                trailing: settings.locale.languageCode == entry.key
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  settings.setLocale(Locale(entry.key));
-                  Navigator.pop(ctx);
-                },
-              ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -376,15 +469,18 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(AppStrings.of(ctx, 'choose_font_size'),
-                    style: AppTextStyles.heading3),
+                child: Text(
+                  AppStrings.of(ctx, 'choose_font_size'),
+                  style: AppTextStyles.heading3,
+                ),
               ),
               for (final entry in options.entries)
                 ListTile(
                   title: Text(entry.value),
-                  trailing: settings.fontSize == entry.key
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
+                  trailing:
+                      settings.fontSize == entry.key
+                          ? const Icon(Icons.check, color: AppColors.primary)
+                          : null,
                   onTap: () {
                     settings.setFontSize(entry.key);
                     Navigator.pop(ctx);
@@ -401,7 +497,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return AppSection(title: title, children: children);
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, {String? trailing}) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    String? trailing,
+  }) {
     return InkWell(
       onTap: () {
         Haptics.tap();
@@ -418,17 +519,31 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(width: AppTheme.spaceSm + 4),
             Expanded(child: Text(title, style: AppTextStyles.bodyMedium)),
             if (trailing != null) ...[
-              Text(trailing, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+              Text(
+                trailing,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
               const SizedBox(width: AppTheme.spaceSm),
             ],
-            Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.iconSecondary),
+            Icon(
+              CupertinoIcons.chevron_right,
+              size: 16,
+              color: AppColors.iconSecondary,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSwitchItem(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildSwitchItem(
+    IconData icon,
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceMd,
@@ -487,21 +602,37 @@ class _ProfilePageState extends State<ProfilePage> {
     Haptics.tap();
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.trRead('logout'), style: AppTextStyles.heading3),
-        content: Text(context.trRead('logout_confirm'), style: AppTextStyles.bodyMedium),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.trRead('cancel'), style: TextStyle(color: AppColors.textSecondary))),
-          TextButton(
-            onPressed: () async {
-              Haptics.warning();
-              Navigator.pop(dialogContext);
-              await context.read<auth.AuthProvider>().logout();
-            },
-            child: Text(context.trRead('logout'), style: TextStyle(color: AppColors.error)),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text(
+              context.trRead('logout'),
+              style: AppTextStyles.heading3,
+            ),
+            content: Text(
+              context.trRead('logout_confirm'),
+              style: AppTextStyles.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  context.trRead('cancel'),
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Haptics.warning();
+                  Navigator.pop(dialogContext);
+                  await context.read<auth.AuthProvider>().logout();
+                },
+                child: Text(
+                  context.trRead('logout'),
+                  style: TextStyle(color: AppColors.error),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
