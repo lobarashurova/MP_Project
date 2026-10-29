@@ -12,6 +12,7 @@ import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/theme/theme_provider.dart';
 
 import 'package:xurmo/core/session/install_guard.dart';
+import 'package:xurmo/core/translation/menu_translator.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/pages/login_page.dart';
@@ -56,6 +57,10 @@ void main() async {
   // The cart reads its box synchronously, so it must be open before runApp.
   // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
+
+  // Opens the cache of translated menu text (dish names, categories...), so
+  // saved translations show at once. Does nothing without a translation key.
+  await MenuTranslator.warmUp();
 
   // Load the saved language and font size so they apply from the first frame.
   final settings = SettingsProvider();

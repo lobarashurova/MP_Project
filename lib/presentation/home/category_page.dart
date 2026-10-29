@@ -7,6 +7,7 @@ import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/home/widgets/category_bar.dart';
 import 'package:xurmo/presentation/home/widgets/meal_card.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 enum _Sort { none, priceLow, priceHigh }
 
@@ -86,7 +87,7 @@ class _CategoryPageState extends State<CategoryPage> {
         backgroundColor: AppColors.surface,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
-        title: Text(_category == 'All' ? 'All dishes' : _category),
+        title: TranslatedText(_category == 'All' ? 'All dishes' : _category),
       ),
       body: Consumer<HomeProvider>(
         builder: (context, provider, _) {

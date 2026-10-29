@@ -10,6 +10,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_pricing.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;
@@ -380,7 +381,7 @@ class OrderItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,

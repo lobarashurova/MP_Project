@@ -5,6 +5,7 @@ import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class CartItemCard extends StatelessWidget {
   final CartItem cartItem;
@@ -34,7 +35,7 @@ class CartItemCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      TranslatedText(
                         cartItem.product.name,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,

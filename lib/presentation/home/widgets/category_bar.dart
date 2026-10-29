@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class CategoryBar extends StatelessWidget {
   final List<String> categories;
@@ -56,7 +57,7 @@ class CategoryBar extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text(
+                  child: TranslatedText(
                     category,
                     style: AppTextStyles.categoryChip.copyWith(
                       color: isSelected

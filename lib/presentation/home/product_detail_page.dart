@@ -4,6 +4,7 @@ import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final MealModel meal;
@@ -67,7 +68,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     widget.meal.name,
                     style: const TextStyle(
                       fontSize: 28,
@@ -96,7 +97,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  TranslatedText(
                     _product.description.isNotEmpty
                         ? 'A delicious ${_product.category} dish from the ${_product.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.'
                         : 'A delicious ${widget.meal.category} dish from the ${widget.meal.area} region, prepared with a fine selection of fresh ingredients to bring you an authentic culinary experience.',
@@ -126,7 +127,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           children: _product.ingredients
                               .map(
                                 (ingredient) => Chip(
-                                  label: Text(ingredient),
+                                  label: TranslatedText(ingredient),
                                   backgroundColor:
                                       AppColors.primary.withOpacity(0.1),
                                   labelStyle: const TextStyle(
@@ -151,7 +152,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
+                            TranslatedText(
                               widget.meal.category,
                               style: const TextStyle(
                                 fontSize: 16,
@@ -173,7 +174,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
+                            TranslatedText(
                               widget.meal.area,
                               style: const TextStyle(
                                 fontSize: 16,

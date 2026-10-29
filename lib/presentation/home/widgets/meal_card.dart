@@ -11,6 +11,7 @@ import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/product_detail_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class MealCard extends StatefulWidget {
   final MealModel meal;
@@ -198,7 +199,7 @@ class _MealCardState extends State<MealCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TranslatedText(
                         widget.meal.name,
                         style: AppTextStyles.productName,
                         maxLines: 2,
@@ -213,7 +214,7 @@ class _MealCardState extends State<MealCard> {
                               color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(
+                            child: TranslatedText(
                               widget.meal.category,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.primary,
@@ -223,7 +224,7 @@ class _MealCardState extends State<MealCard> {
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: Text(
+                            child: TranslatedText(
                               widget.meal.area,
                               style: AppTextStyles.bodySmall,
                               overflow: TextOverflow.ellipsis,

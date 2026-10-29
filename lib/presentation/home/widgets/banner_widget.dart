@@ -3,6 +3,7 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
+import 'package:xurmo/core/translation/translated_text.dart';
 
 class BannerWidget extends StatelessWidget {
   /// A meal from the menu, or null while the menu is loading.
@@ -100,7 +101,7 @@ class BannerWidget extends StatelessWidget {
                       ),
                       if (meal != null) ...[
                         const SizedBox(height: 4),
-                        Text(
+                        TranslatedText(
                           'Try: ${meal.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
