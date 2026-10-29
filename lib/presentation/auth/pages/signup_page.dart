@@ -5,8 +5,8 @@ import 'package:xurmo/data/models/auth_method.dart';
 import 'package:xurmo/data/repositories/auth_repository.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_notice.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
-import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 
 class SignupPage extends StatefulWidget {
@@ -25,7 +25,6 @@ class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
@@ -46,31 +45,6 @@ class _SignupPageState extends State<SignupPage> {
       _method = method;
       _errorMessage = null;
     });
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isGoogleLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final signedIn = await context.read<AuthProvider>().signInWithGoogle();
-      if (!signedIn) return; // The account picker was closed.
-
-      if (mounted) {
-        final navigator = Navigator.of(context);
-        if (navigator.canPop()) {
-          navigator.popUntil((route) => route.isFirst);
-        } else {
-          navigator.pushReplacementNamed('/home');
-        }
-      }
-    } on AuthFailure catch (e) {
-      if (mounted) setState(() => _errorMessage = e.message);
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
-    }
   }
 
   Future<void> _signup() async {
@@ -108,11 +82,6 @@ class _SignupPageState extends State<SignupPage> {
             phone: _phoneController.text,
             password: _passwordController.text,
           );
-        case AuthMethod.google:
-          // The Email / Phone switch never selects Google, which has its own
-          // button. Handled here only so every method is covered.
-          await _signInWithGoogle();
-          return;
       }
 
       if (mounted) {
@@ -162,23 +131,13 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                    ),
+                if (_errorMessage != null) ...[
+                  AuthNotice(
+                    message: _errorMessage!,
+                    tone: AuthNoticeTone.error,
                   ),
-                if (_errorMessage != null) const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
                 AuthMethodToggle(
                   value: _method,
                   onChanged: _switchMethod,
@@ -317,7 +276,7 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading || _isGoogleLoading ? null : _signup,
+                    onPressed: _isLoading ? null : _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       disabledBackgroundColor:
@@ -349,11 +308,6 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                GoogleSignInSection(
-                  onPressed: _isLoading || _isGoogleLoading ? null : _signInWithGoogle,
-                  isLoading: _isGoogleLoading,
-                ),
-                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
