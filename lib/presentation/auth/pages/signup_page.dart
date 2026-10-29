@@ -328,7 +328,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.divider,
+                          Colors.white,
                         ),
                       ),
                     )
@@ -337,7 +337,7 @@ class _SignupPageState extends State<SignupPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.divider,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -351,7 +351,7 @@ class _SignupPageState extends State<SignupPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Already have an account? ',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),

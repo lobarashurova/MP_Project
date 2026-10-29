@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,6 +19,7 @@ import 'package:xurmo/presentation/auth/pages/signup_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/dashbboard/main_page.dart';
+import 'package:xurmo/presentation/profile/settings_provider.dart';
 import 'package:xurmo/firebase_options.dart';
 
 void main() async {
@@ -55,33 +57,66 @@ void main() async {
   // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
 
+  // Load the saved language and font size so they apply from the first frame.
+  final settings = SettingsProvider();
+  await settings.load();
+
   final isDarkMode = prefs.getBool('is_dark_mode') ?? false;
 
-  runApp(MyApp(initialIsDarkMode: isDarkMode));
+  runApp(MyApp(settings: settings, initialIsDarkMode: isDarkMode));
 }
 
 class MyApp extends StatelessWidget {
+  final SettingsProvider settings;
   final bool initialIsDarkMode;
 
-  const MyApp({super.key, this.initialIsDarkMode = false});
+  const MyApp({
+    super.key,
+    required this.settings,
+    this.initialIsDarkMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider(initialIsDarkMode: initialIsDarkMode)),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(initialIsDarkMode: initialIsDarkMode),
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settings),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+      // Theme and settings both repaint the whole app, so the two listen
+      // together rather than nesting one Consumer inside the other.
+      child: Consumer2<ThemeProvider, SettingsProvider>(
+        builder: (context, themeProvider, settings, _) {
           return MaterialApp(
             title: 'Xurmo App',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
+            locale: settings.locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ru'),
+              Locale('uz'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(settings.textScale),
+                ),
+                child: child!,
+              );
+            },
             home: const MainPage(),
             routes: {
               '/login': (context) => const LoginPage(),

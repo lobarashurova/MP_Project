@@ -288,7 +288,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.divider,
+                          Colors.white,
                         ),
                       ),
                     )
@@ -297,7 +297,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.divider
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -311,7 +311,7 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Don't have an account? ",
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
@@ -384,7 +384,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Reset your password',
               style: TextStyle(
                 fontSize: 20,
@@ -393,7 +393,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               "Enter your email and we'll send you a link to set a new password.",
               style: TextStyle(color: AppColors.textSecondary),
             ),
@@ -437,7 +437,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.divider,
+                    color: Colors.white,
                   ),
                 ),
               ),
