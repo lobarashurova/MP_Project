@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -16,6 +17,7 @@ import 'package:xurmo/presentation/auth/pages/signup_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/dashbboard/main_page.dart';
+import 'package:xurmo/presentation/profile/settings_provider.dart';
 import 'package:xurmo/firebase_options.dart';
 
 void main() async {
@@ -51,11 +53,17 @@ void main() async {
   // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
 
-  runApp(const MyApp());
+  // Load the saved language and font size so they apply from the first frame.
+  final settings = SettingsProvider();
+  await settings.load();
+
+  runApp(MyApp(settings: settings));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final SettingsProvider settings;
+
+  const MyApp({super.key, required this.settings});
 
   @override
   Widget build(BuildContext context) {
@@ -64,19 +72,43 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settings),
       ],
-      child: MaterialApp(
-        title: 'Xurmo App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.orange,
-          useMaterial3: true,
-        ),
-        home: const MainPage(),
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/signup': (context) => const SignupPage(),
-          '/home': (context) => const MainPage(),
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Xurmo App',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              primarySwatch: Colors.orange,
+              useMaterial3: true,
+            ),
+            locale: settings.locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ru'),
+              Locale('uz'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(settings.textScale),
+                ),
+                child: child!,
+              );
+            },
+            home: const MainPage(),
+            routes: {
+              '/login': (context) => const LoginPage(),
+              '/signup': (context) => const SignupPage(),
+              '/home': (context) => const MainPage(),
+            },
+          );
         },
       ),
     );

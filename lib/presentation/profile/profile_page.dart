@@ -13,6 +13,8 @@ import 'package:xurmo/presentation/orders/order_page.dart';
 import 'package:xurmo/presentation/profile/about_page.dart';
 import 'package:xurmo/presentation/auth/pages/login_page.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart' as auth;
+import 'package:xurmo/core/localization/app_strings.dart';
+import 'package:xurmo/presentation/profile/settings_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -171,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => Navigator.push(context, MaterialPageRoute(
                         builder: (context) => const PersonalInformationPage(),
                       )),
-                      child: Text('Edit Profile', style: AppTextStyles.bodySmall.copyWith(
+                      child: Text(context.tr('edit_profile'), style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.primary, fontWeight: FontWeight.w600,
                       )),
                     ),
@@ -191,11 +193,11 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), 'Favorites', AppColors.error)),
+          Expanded(child: _buildStatCard(CupertinoIcons.heart_fill, favoriteCount.toString(), context.tr('favorites'), AppColors.error)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), 'In Cart', AppColors.primary)),
+          Expanded(child: _buildStatCard(CupertinoIcons.cart_fill, Cart.instance.totalItems.toString(), context.tr('in_cart'), AppColors.primary)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), 'Orders', AppColors.success)),
+          Expanded(child: _buildStatCard(CupertinoIcons.cube_box_fill, _orderCount.toString(), context.tr('orders'), AppColors.success)),
         ],
       ),
     );
@@ -222,24 +224,105 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAccountSection() {
-    return _buildSection('Account', [
-      _buildMenuItem(CupertinoIcons.person, 'Personal Information', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInformationPage()))),
-      _buildMenuItem(CupertinoIcons.time, 'Order History', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _refreshOrderCount())),
+    return _buildSection(context.tr('account'), [
+      _buildMenuItem(CupertinoIcons.person, context.tr('personal_info'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInformationPage()))),
+      _buildMenuItem(CupertinoIcons.time, context.tr('order_history'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage())).then((_) => _refreshOrderCount())),
     ]);
   }
 
   Widget _buildSettingsSection() {
-    return _buildSection('Settings', [
-      _buildSwitchItem(CupertinoIcons.bell, 'Notifications', _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
-      _buildSwitchItem(CupertinoIcons.moon, 'Dark Mode', _darkModeEnabled, (val) {
+    final settings = context.watch<SettingsProvider>();
+    final s = (String k) => AppStrings.of(context, k);
+
+    String fontLabel() {
+      switch (settings.fontSize) {
+        case AppFontSize.small:
+          return s('small');
+        case AppFontSize.medium:
+          return s('medium');
+        case AppFontSize.large:
+          return s('large');
+      }
+    }
+
+    return _buildSection(s('settings'), [
+      _buildSwitchItem(CupertinoIcons.bell, s('notifications'), _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
+      _buildSwitchItem(CupertinoIcons.moon, s('dark_mode'), _darkModeEnabled, (val) {
         setState(() => _darkModeEnabled = val);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Dark mode coming soon!', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
         );
       }),
-      _buildMenuItem(CupertinoIcons.globe, 'Language', () => _showComingSoon('Language'), trailing: 'English'),
-      _buildMenuItem(CupertinoIcons.info_circle, 'About', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())), trailing: 'v1.0.0'),
+      _buildMenuItem(CupertinoIcons.globe, s('language'), _showLanguageSheet, trailing: settings.languageName),
+      _buildMenuItem(CupertinoIcons.textformat_size, s('font_size'), _showFontSheet, trailing: fontLabel()),
+      _buildMenuItem(CupertinoIcons.info_circle, s('about'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())), trailing: 'v1.0.0'),
     ]);
+  }
+
+  void _showLanguageSheet() {
+    final settings = context.read<SettingsProvider>();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(AppStrings.of(context, 'choose_language'), style: AppTextStyles.heading3),
+            ),
+            for (final entry in SettingsProvider.languages.entries)
+              ListTile(
+                title: Text(entry.value),
+                trailing: settings.locale.languageCode == entry.key
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  settings.setLocale(Locale(entry.key));
+                  Navigator.pop(ctx);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFontSheet() {
+    final settings = context.read<SettingsProvider>();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        final options = {
+          AppFontSize.small: AppStrings.of(ctx, 'small'),
+          AppFontSize.medium: AppStrings.of(ctx, 'medium'),
+          AppFontSize.large: AppStrings.of(ctx, 'large'),
+        };
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(AppStrings.of(ctx, 'choose_font_size'),
+                    style: AppTextStyles.heading3),
+              ),
+              for (final entry in options.entries)
+                ListTile(
+                  title: Text(entry.value),
+                  trailing: settings.fontSize == entry.key
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    settings.setFontSize(entry.key);
+                    Navigator.pop(ctx);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildSection(String title, List<Widget> children) {
@@ -337,17 +420,17 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Logout', style: AppTextStyles.heading3),
-        content: Text('Are you sure you want to logout?', style: AppTextStyles.bodyMedium),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.trRead('logout'), style: AppTextStyles.heading3),
+        content: Text(context.trRead('logout_confirm'), style: AppTextStyles.bodyMedium),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.trRead('cancel'), style: TextStyle(color: AppColors.textSecondary))),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              await this.context.read<auth.AuthProvider>().logout();
+              Navigator.pop(dialogContext);
+              await context.read<auth.AuthProvider>().logout();
             },
-            child: Text('Logout', style: TextStyle(color: AppColors.error)),
+            child: Text(context.trRead('logout'), style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
