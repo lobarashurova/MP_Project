@@ -29,7 +29,7 @@ void main() {
     id: '52772',
     name: 'Teriyaki Chicken Casserole',
     category: 'Chicken',
-    price: 45.0,
+    price: 45000.0,
     imageUrl: 'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
     rating: 4.5,
     description: 'A delicious Japanese dish.',
@@ -41,7 +41,7 @@ void main() {
     id: '52873',
     name: 'Beef Stroganoff',
     category: 'Beef',
-    price: 35.0,
+    price: 35000.0,
     imageUrl: 'https://www.themealdb.com/images/media/meals/svprys1511876957.jpg',
     rating: 4.3,
     description: 'A creamy Russian classic.',
@@ -69,15 +69,18 @@ void main() {
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
 
-      // Subtotal is the item price; total adds the delivery fee on top.
-      final expectedTotal = 45.0 + AppPricing.deliveryFee;
-      expect(find.text('\$45.00'), findsWidgets);
+      // Subtotal is item price; discount is 30%; total adds delivery fee on top.
+      final expectedSubtotal = 45000.0;
+      final discount = expectedSubtotal * AppPricing.promoDiscountPercent / 100;
+      final expectedTotal = expectedSubtotal - discount + AppPricing.deliveryFee;
+
+      expect(find.text(formatSum(45000.0)), findsWidgets);
       expect(find.text(formatSum(AppPricing.deliveryFee)), findsOneWidget);
 
       final totalFinder = find.byWidgetPredicate(
         (Widget widget) =>
             widget is Text &&
-                widget.data == formatSum(expectedTotal) &&
+            widget.data == formatSum(expectedTotal) &&
             widget.style?.fontSize == 20.0,
         description: 'Total text with a font size of 20.0',
       );
@@ -97,8 +100,11 @@ void main() {
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('Beef Stroganoff'), findsOneWidget);
 
-      final expectedTotal = 80.0 + AppPricing.deliveryFee;
-      expect(find.text('\$80.00'), findsOneWidget);
+      final expectedSubtotal = 80000.0;
+      final discount = expectedSubtotal * AppPricing.promoDiscountPercent / 100;
+      final expectedTotal = expectedSubtotal - discount + AppPricing.deliveryFee;
+
+      expect(find.text(formatSum(80000.0)), findsOneWidget);
 
       final totalFinder = find.byWidgetPredicate(
         (Widget widget) =>
@@ -117,9 +123,13 @@ void main() {
       expect(Cart.instance.totalPrice, 0);
 
       Cart.instance.add(testMeal1);
-      expect(Cart.instance.subtotal, 45.0);
+      final expectedSubtotal = 45000.0;
+      final discount = expectedSubtotal * AppPricing.promoDiscountPercent / 100;
+      final expectedTotal = expectedSubtotal - discount + AppPricing.deliveryFee;
+
+      expect(Cart.instance.subtotal, 45000.0);
       expect(Cart.instance.deliveryFee, AppPricing.deliveryFee);
-      expect(Cart.instance.totalPrice, 45.0 + AppPricing.deliveryFee);
+      expect(Cart.instance.totalPrice, expectedTotal);
     });
 
     testWidgets('should display Order Now button', (WidgetTester tester) async {
