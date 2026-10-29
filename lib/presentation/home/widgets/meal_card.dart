@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/product_detail_page.dart';
@@ -67,25 +69,17 @@ class _MealCardState extends State<MealCard> {
   }
 
   void _addToCart() {
+    Haptics.success();
     Cart.instance.add(_product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${widget.meal.name} added to basket!',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(milliseconds: 700),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _increaseQuantity() {
+    Haptics.change();
     Cart.instance.increaseQuantity(_product);
   }
 
   void _decreaseQuantity() {
+    Haptics.change();
     Cart.instance.decreaseQuantity(_product);
   }
 
@@ -110,17 +104,18 @@ class _MealCardState extends State<MealCard> {
     }
 
     final isFavorite = favProvider.isFavorite(_product.id);
+    // The heart fills in immediately, so a confirmation toast would only
+    // repeat what the icon already shows. Failures still need to be told.
+    Haptics.tap();
 
     try {
       if (isFavorite) {
         await favProvider.removeFavorite(_product.id);
-        _showMessage('${widget.meal.name} removed from favorites');
       } else {
         await favProvider.addFavorite(_product);
-        _showMessage('${widget.meal.name} added to favorites');
       }
     } catch (e) {
-      _showMessage('Failed to update favorites', color: Colors.red);
+      _showMessage('Failed to update favorites', color: AppColors.error);
     }
   }
 
@@ -142,14 +137,8 @@ class _MealCardState extends State<MealCard> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              boxShadow: AppTheme.cardShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +146,9 @@ class _MealCardState extends State<MealCard> {
                 Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppTheme.radiusLarge),
+                      ),
                       child: Image.network(
                         widget.meal.imageUrl,
                         height: 140,
@@ -184,8 +175,9 @@ class _MealCardState extends State<MealCard> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: AppColors.surface.withValues(alpha: 0.9),
+                            color: AppColors.surface.withValues(alpha: 0.92),
                             shape: BoxShape.circle,
+                            boxShadow: AppTheme.cardShadow,
                           ),
                           child: Icon(
                             isFavorite
@@ -266,14 +258,15 @@ class _MealCardState extends State<MealCard> {
                             GestureDetector(
                               onTap: _addToCart,
                               child: Container(
-                                padding: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusSmall),
                                 ),
                                 child: Icon(
                                   CupertinoIcons.add,
-                                  size: 16,
+                                  size: 18,
                                   color: AppColors.surface,
                                 ),
                               ),
@@ -291,11 +284,12 @@ class _MealCardState extends State<MealCard> {
                                   GestureDetector(
                                     onTap: _decreaseQuantity,
                                     child: Container(
-                                      width: 24,
-                                      height: 24,
+                                      width: 28,
+                                      height: 28,
                                       decoration: BoxDecoration(
                                         color: AppColors.surface,
                                         shape: BoxShape.circle,
+                                        boxShadow: AppTheme.cardShadow,
                                       ),
                                       child: Icon(
                                         CupertinoIcons.minus,
@@ -316,16 +310,17 @@ class _MealCardState extends State<MealCard> {
                                   GestureDetector(
                                     onTap: _increaseQuantity,
                                     child: Container(
-                                      width: 24,
-                                      height: 24,
+                                      width: 28,
+                                      height: 28,
                                       decoration: BoxDecoration(
                                         color: AppColors.surface,
                                         shape: BoxShape.circle,
+                                        boxShadow: AppTheme.cardShadow,
                                       ),
                                       child: Icon(
                                         CupertinoIcons.plus,
                                         size: 14,
-                                        color: AppColors.textSecondary,
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ),

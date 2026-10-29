@@ -11,6 +11,7 @@ import 'package:xurmo/data/models/delivery_location.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -51,7 +52,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Future<void> _placeOrder() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      Haptics.warning();
+      return;
+    }
+    Haptics.tap();
 
     setState(() => _isLoading = true);
 

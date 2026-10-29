@@ -42,7 +42,7 @@ This project utilizes a multi-layered testing strategy, which is a professional 
 
 #### `product_detail_page_test.dart`
 -   **Purpose:** Tests the product detail screen.
--   **What it covers:** Verifies that all UI elements for a given meal (name, price, description) are displayed correctly and that user interactions, like tapping the "Add to Basket" button, trigger the appropriate response (e.g., a SnackBar).
+-   **What it covers:** Verifies that all UI elements for a given meal (name, price, description) are displayed correctly and that user interactions, like tapping the "Add to Basket" button, trigger the appropriate response (the item lands in the cart, with no confirmation SnackBar).
 
 #### `cart_item_card_test.dart`
 -   **Purpose:** Tests the reusable `CartItemCard` widget.

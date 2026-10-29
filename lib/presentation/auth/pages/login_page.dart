@@ -7,6 +7,7 @@ import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
 import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class LoginPage extends StatefulWidget {
   /// When true (the default) a successful login replaces this page with the
@@ -48,7 +49,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      Haptics.warning();
+      return;
+    }
+    Haptics.tap();
 
     setState(() {
       _isLoading = true;

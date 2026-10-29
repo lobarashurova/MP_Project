@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
 class CartItemCard extends StatelessWidget {
@@ -66,7 +67,10 @@ class CartItemCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: () => Cart.instance.decreaseQuantity(cartItem.product),
+                  onTap: () {
+                    Haptics.change();
+                    Cart.instance.decreaseQuantity(cartItem.product);
+                  },
                   child: Container(
                     width: 26,
                     height: 26,
@@ -94,7 +98,10 @@ class CartItemCard extends StatelessWidget {
                 ),
                 
                 GestureDetector(
-                  onTap: () => Cart.instance.increaseQuantity(cartItem.product),
+                  onTap: () {
+                    Haptics.change();
+                    Cart.instance.increaseQuantity(cartItem.product);
+                  },
                   child: Container(
                     width: 26,
                     height: 26,

@@ -6,6 +6,7 @@ import '../../core/errors/app_exception.dart';
 import '../../core/widgets/state_view.dart';
 import '../../presentation/favorites/provider/favorites_provider.dart';
 import '../../presentation/home/widgets/meal_card.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -132,6 +133,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void _showClearDialog(BuildContext context) {
+    Haptics.tap();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -147,6 +149,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
           TextButton(
             onPressed: () async {
+              Haptics.warning();
               final provider = context.read<FavoritesProvider>();
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(dialogContext);

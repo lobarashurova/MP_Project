@@ -7,6 +7,7 @@ import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
 import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -73,9 +74,14 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      Haptics.warning();
+      return;
+    }
+    Haptics.tap();
 
     if (_passwordController.text != _confirmPasswordController.text) {
+      Haptics.warning();
       setState(() {
         _errorMessage = 'Passwords do not match';
       });

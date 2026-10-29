@@ -7,6 +7,7 @@ import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/utils/money.dart';
 
 class BasketPage extends StatefulWidget {
@@ -273,6 +274,7 @@ class _BasketPageState extends State<BasketPage> {
                         elevation: 0,
                       ),
                       onPressed: () {
+                        Haptics.tap();
                         Navigator.push(
                           context,
                           MaterialPageRoute(

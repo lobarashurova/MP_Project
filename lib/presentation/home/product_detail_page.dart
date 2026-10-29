@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/core/utils/money.dart';
@@ -22,18 +23,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   void _addToCart() {
+    // Feedback is the haptic plus the basket badge incrementing, so there is
+    // no toast to dismiss when adding several items in a row.
+    Haptics.success();
     Cart.instance.add(_product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${_product.name} added to basket!',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(milliseconds: 700),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   @override

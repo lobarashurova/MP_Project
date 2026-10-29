@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:xurmo/presentation/favorites/favorites_page.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../home/home_page.dart';
+
 import '../basket/basket_page.dart';
+import '../favorites/favorites_page.dart';
+import '../home/home_page.dart';
 import '../profile/profile_page.dart';
+import 'widgets/app_bottom_nav.dart';
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -16,106 +17,52 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const FavoritesPage(),
-    const BasketPage(),
-    const ProfilePage(),
+  static const List<NavDestination> _destinations = <NavDestination>[
+    NavDestination(
+      icon: CupertinoIcons.house,
+      activeIcon: CupertinoIcons.house_fill,
+      label: 'Home',
+    ),
+    NavDestination(
+      icon: CupertinoIcons.heart,
+      activeIcon: CupertinoIcons.heart_fill,
+      label: 'Favorites',
+    ),
+    NavDestination(
+      icon: CupertinoIcons.cart,
+      activeIcon: CupertinoIcons.cart_fill,
+      label: 'Basket',
+      showsCartBadge: true,
+    ),
+    NavDestination(
+      icon: CupertinoIcons.person,
+      activeIcon: CupertinoIcons.person_fill,
+      label: 'Profile',
+    ),
+  ];
+
+  final List<Widget> _pages = const [
+    HomePage(),
+    FavoritesPage(),
+    BasketPage(),
+    ProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 12,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  icon: CupertinoIcons.house,
-                  activeIcon: CupertinoIcons.house_fill,
-                  label: 'Home',
-                  index: 0,
-                ),
-                _buildNavItem(
-                  icon: CupertinoIcons.heart,
-                  activeIcon: CupertinoIcons.heart_fill,
-                  label: 'Favorites',
-                  index: 1,
-                ),
-                _buildNavItem(
-                  icon: CupertinoIcons.cart,
-                  activeIcon: CupertinoIcons.cart_fill,
-                  label: 'Basket',
-                  index: 2,
-                ),
-                _buildNavItem(
-                  icon: CupertinoIcons.person,
-                  activeIcon: CupertinoIcons.person_fill,
-                  label: 'Profile',
-                  index: 3,
-                ),
-              ],
-            ),
-          ),
-        ),
+      // IndexedStack keeps each tab alive, so scroll position and in-progress
+      // input survive switching tabs instead of rebuilding from scratch.
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
       ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required int index,
-  }) {
-    final isSelected = _selectedIndex == index;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.primary : AppColors.iconSecondary,
-              size: 24,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: AppTextStyles.navLabel,
-              ),
-            ],
-          ],
-        ),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: _selectedIndex,
+        destinations: _destinations,
+        onDestinationSelected: (index) {
+          setState(() => _selectedIndex = index);
+        },
       ),
     );
   }
