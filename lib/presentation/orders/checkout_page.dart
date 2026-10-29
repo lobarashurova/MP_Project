@@ -12,6 +12,7 @@ import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
 import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -79,6 +80,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final subtotal = cart.subtotal;
       final deliveryFee = cart.deliveryFee;
       final total = cart.totalPrice;
+      final discount = cart.discount;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -96,6 +98,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'subtotal': subtotal,
         'deliveryFee': deliveryFee,
         'total': total,
+        'discount': discount,
         'address': _addressController.text,
         if (_location != null)
           'location': GeoPoint(_location!.latitude, _location!.longitude),
@@ -178,7 +181,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${cart.items.length} items', style: const TextStyle(fontSize: 16)),
-                    Text('\$${total.toStringAsFixed(2)}',
+                    Text(formatSum(total),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
@@ -188,7 +191,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const Text('Delivery Details', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
 
-              const Text('Delivery Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Delivery Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               if (MapConfig.isMapAvailable) SizedBox(
                 width: double.infinity,
@@ -209,17 +212,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 controller: _addressController,
                 decoration: InputDecoration(
                   hintText: 'Or type your address, apartment, entrance',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.location_solid),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -240,24 +243,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Phone Number', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Phone Number', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   hintText: 'Enter your phone number',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.phone_fill),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -277,23 +280,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Delivery Notes (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Delivery Notes (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 decoration: InputDecoration(
                   hintText: 'e.g., Ring doorbell, leave at door',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.doc_text),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -315,16 +318,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text('\$${subtotal.toStringAsFixed(2)}')]),
+                        children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Delivery Fee'), Text('\$${deliveryFee.toStringAsFixed(2)}')]),
+                        children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('\$${total.toStringAsFixed(2)}',
+                        Text(formatSum(total),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
                     ),

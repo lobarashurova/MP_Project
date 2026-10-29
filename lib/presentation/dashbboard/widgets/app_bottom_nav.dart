@@ -235,7 +235,7 @@ class _CartBadge extends StatelessWidget {
                   count > 99 ? '99+' : '$count',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AppColors.surface,
+                    color: AppColors.onPrimary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     height: 1.4,

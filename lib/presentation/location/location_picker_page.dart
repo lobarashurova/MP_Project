@@ -260,12 +260,12 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(24),
                         onTap: _openSearch,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           child: Row(
                             children: [
                               Icon(Icons.search, color: AppColors.textSecondary),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text('Search street or place',
                                   style: TextStyle(color: AppColors.textSecondary)),
                             ],
@@ -362,10 +362,10 @@ class _AddressCard extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 12)],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
           ),
           child: SafeArea(
             top: false,
@@ -373,7 +373,7 @@ class _AddressCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Delivery address',
+                Text('Delivery address',
                     style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                 const SizedBox(height: 6),
                 Row(
@@ -383,7 +383,7 @@ class _AddressCard extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
                           color: AppColors.iconPrimary,
@@ -421,7 +421,7 @@ class _AddressCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Confirm address',
                       style: TextStyle(
                         fontSize: 16,
@@ -432,7 +432,7 @@ class _AddressCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Center(
+                Center(
                   child: Text(
                     MapConfig.geocodingAttribution,
                     style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
@@ -547,7 +547,7 @@ class _SearchHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Text(text, style: const TextStyle(color: AppColors.textSecondary)),
+      child: Text(text, style: TextStyle(color: AppColors.textSecondary)),
     );
   }
 }

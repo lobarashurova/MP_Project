@@ -4,10 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:xurmo/data/models/order_status.dart';
+import 'package:xurmo/core/utils/money.dart';
 import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_pricing.dart';
 import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;
@@ -30,9 +32,6 @@ class OrderDetailsPage extends StatefulWidget {
 
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   late final Stream<DocumentSnapshot<Map<String, dynamic>>> _orderStream;
-
-  /// The status follows the clock, so redraw regularly while the screen is
-  /// open even when the order document itself does not change.
   Timer? _ticker;
 
   @override
@@ -58,8 +57,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: _orderStream,
       builder: (context, snapshot) {
-        // Fall back to the copy from the list while loading, or if the live
-        // read fails, so the screen never goes blank.
         final order = snapshot.data?.data() ?? widget.order;
         return _buildForOrder(context, order);
       },
@@ -76,7 +73,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     // 'total', so treat that as the subtotal and add the fee on top.
     final subtotal = storedSubtotal ?? storedTotal;
     final total =
-        storedSubtotal != null ? storedTotal : storedTotal + deliveryFee;
+    storedSubtotal != null ? storedTotal : storedTotal + deliveryFee;
     final items = (order['items'] as List?) ?? [];
     final address = order['address'] ?? 'No address';
     final phone = order['phone'] ?? 'No phone';
@@ -98,25 +95,25 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Order Details'),
+        title: const Text('Order Details'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Card(
-                color: Colors.white, // Add this line
+                color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -127,15 +124,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         '#$orderNumber',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         dateString,
                         style: TextStyle(
@@ -143,25 +140,26 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       OrderStatusBadge(status: status),
                     ],
                   ),
                 ),
               ),
 
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'Order Status',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Card(
                 color: Colors.white,
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: OrderProgress(
                     status: status,
                     placedAt: createdAt,
@@ -170,72 +168,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 ),
               ),
 
-              SizedBox(height: 20),
-//delivery info
-              Text(
+              const SizedBox(height: 20),
+              // delivery info
+              const Text(
                 'Delivery Information',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              SizedBox(height: 12),
-              Card(
-                color: Colors.white, // Add this line
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, color: AppColors.primary),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              address,
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Divider(),
-                      SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, color: AppColors.primary),
-                          SizedBox(width: 12),
-                          Text(
-                            phone,
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 20),
-
-              Text(
-                'Order Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              SizedBox(height: 12),
-
-              ...items.map((item) => OrderItemCard(item: item)).toList(),
-
-              SizedBox(height: 20),
-//price summary
+              const SizedBox(height: 12),
               Card(
                 color: Colors.white,
                 elevation: 2,
@@ -243,36 +182,86 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on,
+                              color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              address,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Text(phone, style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Order Items',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+
+              ...items.map((item) => OrderItemCard(item: item)),
+
+              const SizedBox(height: 20),
+              // price summary
+              Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Subtotal', style: TextStyle(fontSize: 14)),
-                          Text(
-                            '\$${subtotal.toStringAsFixed(2)}',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      //delivery fee
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Delivery Fee', style: TextStyle(fontSize: 14)),
-                          Text('\$${deliveryFee.toStringAsFixed(2)}',
+                          const Text('Subtotal',
                               style: TextStyle(fontSize: 14)),
+                          Text(formatSum(subtotal),
+                              style: const TextStyle(fontSize: 14)),
                         ],
                       ),
-                      SizedBox(height: 12),
-                      Divider(),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text('Delivery Fee',
+                              style: TextStyle(fontSize: 14)),
+                          Text(formatSum(deliveryFee),
+                              style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
                             'Total',
                             style: TextStyle(
                               fontSize: 18,
@@ -280,8 +269,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             ),
                           ),
                           Text(
-                            '\$${total.toStringAsFixed(2)}',
-                            style: TextStyle(
+                            formatSum(total),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
@@ -294,7 +283,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               if (!status.isFinal)
                 SizedBox(
@@ -305,22 +294,25 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('Need Help?'),
-                          content: Text('Contact customer support at support@xurmo.com'),
+                          title: const Text('Need Help?'),
+                          content: const Text(
+                              'Contact customer support at support@xurmo.com'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('OK'),
+                              child: const Text('OK'),
                             ),
                           ],
                         ),
                       );
                     },
-                    icon: Icon(Icons.help_outline, color: AppColors.primary), // Add color
-                    label: Text('Need Help?', style: TextStyle(color: AppColors.primary)), // Add color
+                    icon: const Icon(Icons.help_outline,
+                        color: AppColors.primary),
+                    label: const Text('Need Help?',
+                        style: TextStyle(color: AppColors.primary)),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: AppColors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -339,25 +331,25 @@ class OrderItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
 
   const OrderItemCard({super.key, required this.item});
+
   @override
   Widget build(BuildContext context) {
     final name = item['name'] ?? 'Unknown';
-    final price = item['price'] ?? 0.0;
-    final quantity = item['quantity'] ?? 1;
+    final price = (item['price'] as num?) ?? 0;
+    final quantity = (item['quantity'] as num?) ?? 1;
     final image = item['image'] ?? '';
 
     return Card(
-      color: Colors.white, // Add this line
-      margin: EdgeInsets.only(bottom: 12),
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            //img
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: image.isNotEmpty
@@ -371,7 +363,8 @@ class OrderItemCard extends StatelessWidget {
                     width: 60,
                     height: 60,
                     color: Colors.grey.shade200,
-                    child: Icon(Icons.fastfood, color: Colors.grey),
+                    child:
+                    const Icon(Icons.fastfood, color: Colors.grey),
                   );
                 },
               )
@@ -379,27 +372,24 @@ class OrderItemCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 color: Colors.grey.shade200,
-                child: Icon(Icons.fastfood, color: Colors.grey),
+                child: const Icon(Icons.fastfood, color: Colors.grey),
               ),
             ),
-
-            SizedBox(width: 12),
-
-            //details
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Qty: $quantity',
                     style: TextStyle(
@@ -410,11 +400,9 @@ class OrderItemCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            //price
             Text(
-              '\$${(price * quantity).toStringAsFixed(2)}',
-              style: TextStyle(
+              formatSum(price * quantity),
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
                 color: AppColors.primary,

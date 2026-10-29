@@ -164,7 +164,7 @@ class OfflineNotice extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             CupertinoIcons.wifi_slash,
             size: 18,
             color: AppColors.textPrimary,

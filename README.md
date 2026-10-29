@@ -7,7 +7,8 @@ A modern, feature-rich food delivery mobile application built with Flutter and F
 ### Core Features
 - **Browse Menu**: Explore a wide variety of meals with beautiful UI and smooth scrolling
 - **Category Filtering**: Smart category-based filtering with auto-scrolling navigation
-- **Search Functionality**: Real-time search across meals by name, category, or description
+- **Search Functionality**: Instantly filter the loaded meal list by name, ingredient, category, description, and cuisine/area without a network request per query
+- **Uzbek Som Pricing**: Display meal, basket, checkout, and order prices in soʻm
 - **Shopping Cart**: Add, remove, and manage items with quantity controls
 - **Favorites**: Save your favorite meals for quick access
 - **Order Management**: Complete checkout process with order history tracking

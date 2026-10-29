@@ -4,6 +4,7 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class CartItemCard extends StatelessWidget {
   final CartItem cartItem;
@@ -44,7 +45,7 @@ class CartItemCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '\$${cartItem.product.price.toStringAsFixed(2)}',
+                        formatSum(cartItem.product.price),
                         style: AppTextStyles.productPrice.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

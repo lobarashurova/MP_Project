@@ -3,6 +3,7 @@ import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final MealModel meal;
@@ -77,7 +78,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Row(
                     children: [
                       Text(
-                        '${_product.price.toStringAsFixed(0)}',
+                      formatSum(_product.price),
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,

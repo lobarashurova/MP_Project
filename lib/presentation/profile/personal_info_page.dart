@@ -161,7 +161,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('Email cannot be changed', style: TextStyle(
+              // Not const: AppColors.textSecondary became a theme-dependent
+              // getter when dark mode landed, so it is no longer a constant.
+              Text('Email cannot be changed', style: TextStyle(
                   fontSize: 12, color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               TextFormField(
