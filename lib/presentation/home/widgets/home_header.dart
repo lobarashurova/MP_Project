@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 
 class HomeHeader extends StatefulWidget {
   const HomeHeader({super.key});
@@ -45,18 +47,51 @@ class _HomeHeaderState extends State<HomeHeader> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spaceLg,
+        AppTheme.spaceMd,
+        AppTheme.spaceLg,
+        AppTheme.spaceSm,
+      ),
+      child: Row(
         children: [
-          Text(
-            'Hello, $_userName',
-            style: AppTextStyles.heading1,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hello, $_userName',
+                  style: AppTextStyles.heading1,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppTheme.spaceXs),
+                Text(
+                  'What would you like to eat today?',
+                  style: AppTextStyles.subtitle,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'What would you like to eat today?',
-            style: AppTextStyles.subtitle,
+          const SizedBox(width: AppTheme.spaceSm),
+          // A small brand mark balances the long greeting and gives the row
+          // something to end on.
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: AppColors.primaryGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              CupertinoIcons.bag_fill,
+              color: AppColors.onPrimary,
+              size: 20,
+            ),
           ),
         ],
       ),

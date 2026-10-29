@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 import 'package:xurmo/core/translation/translated_text.dart';
 
@@ -40,29 +41,27 @@ class CategoryBar extends StatelessWidget {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(right: 12),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.only(right: AppTheme.spaceSm + 2),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
+                  horizontal: AppTheme.spaceMd + 2,
+                  vertical: AppTheme.spaceSm + 4,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadow,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  // Unselected chips sit on the alt surface with no shadow:
+                  // only the selected one is raised, so the row has a single
+                  // focal point instead of a wall of floating cards.
+                  color: isSelected ? AppColors.primary : AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+                  boxShadow: isSelected ? AppTheme.cardShadow : null,
                 ),
                 child: Center(
                   child: TranslatedText(
                     category,
                     style: AppTextStyles.categoryChip.copyWith(
                       color: isSelected
-                          ? AppColors.surface
-                          : AppColors.textPrimary,
+                          ? AppColors.onPrimary
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),

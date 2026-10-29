@@ -1,12 +1,14 @@
 /// How an account identifies itself at sign-in. Stored on the user document
 /// as `authMethod` so the profile can show the right contact detail.
 ///
-/// Email and phone use a password and appear on the Email / Phone switch.
-/// Google signs in through the Google account picker and has its own button.
+/// Both methods use a password and appear on the Email / Phone switch.
+///
+/// Accounts created through the removed Google sign-in may still carry
+/// `authMethod: "google"` on their user document; [fromStorage] reads those
+/// as [email], which is what the profile screen should show for them.
 enum AuthMethod {
   email,
-  phone,
-  google;
+  phone;
 
   String get storageValue => name;
 

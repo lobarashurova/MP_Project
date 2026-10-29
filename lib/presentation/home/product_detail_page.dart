@@ -129,7 +129,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 (ingredient) => Chip(
                                   label: TranslatedText(ingredient),
                                   backgroundColor:
-                                      AppColors.primary.withOpacity(0.1),
+                                      AppColors.primarySoft,
                                   labelStyle: const TextStyle(
                                     color: AppColors.primary,
                                   ),
@@ -198,7 +198,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withOpacity(0.1),
+              color: AppColors.shadow,
               spreadRadius: 1,
               blurRadius: 10,
             )

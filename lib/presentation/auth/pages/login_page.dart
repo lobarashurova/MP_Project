@@ -5,8 +5,8 @@ import 'package:xurmo/data/models/auth_method.dart';
 import 'package:xurmo/data/repositories/auth_repository.dart';
 import 'package:xurmo/presentation/auth/provider/auth_provider.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_fields.dart';
+import 'package:xurmo/presentation/auth/widgets/auth_notice.dart';
 import 'package:xurmo/presentation/auth/widgets/auth_method_toggle.dart';
-import 'package:xurmo/presentation/auth/widgets/google_sign_in_button.dart';
 import 'package:xurmo/core/utils/haptics.dart';
 
 class LoginPage extends StatefulWidget {
@@ -28,9 +28,12 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   AuthMethod _method = AuthMethod.email;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+
+  /// Confirmation for an action that otherwise leaves no trace on screen,
+  /// currently only the password reset email.
+  String? _noticeMessage;
 
   @override
   void dispose() {
@@ -45,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _method = method;
       _errorMessage = null;
+      _noticeMessage = null;
     });
   }
 
@@ -58,6 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _noticeMessage = null;
     });
 
     try {
@@ -73,11 +78,6 @@ class _LoginPageState extends State<LoginPage> {
             phone: _phoneController.text,
             password: _passwordController.text,
           );
-        case AuthMethod.google:
-          // The Email / Phone switch never selects Google, which has its own
-          // button. Handled here only so every method is covered.
-          await _signInWithGoogle();
-          return;
       }
 
       if (mounted && widget.navigateOnSuccess) {
@@ -96,40 +96,9 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isGoogleLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final signedIn = await context.read<AuthProvider>().signInWithGoogle();
-      if (!signedIn) return; // The account picker was closed.
-
-      if (mounted && widget.navigateOnSuccess) {
-        final navigator = Navigator.of(context);
-        if (navigator.canPop()) {
-          navigator.popUntil((route) => route.isFirst);
-        } else {
-          navigator.pushReplacementNamed('/home');
-        }
-      }
-    } on AuthFailure catch (e) {
-      if (mounted) setState(() => _errorMessage = e.message);
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
-    }
-  }
-
   Future<void> _forgotPassword() async {
-    if (_method == AuthMethod.phone) {
-      setState(() {
-        _errorMessage =
-            'Password reset is not available for phone accounts yet. '
-            'If you also registered an email, switch to Email and reset there.';
-      });
-      return;
-    }
+    // The link is hidden on the Phone tab; this only catches a stray call.
+    if (_method == AuthMethod.phone) return;
 
     final email = await showModalBottomSheet<String>(
       context: context,
@@ -141,16 +110,20 @@ class _LoginPageState extends State<LoginPage> {
     );
     if (email == null || !mounted) return;
 
+    setState(() {
+      _errorMessage = null;
+      _noticeMessage = null;
+    });
+
     try {
       await context.read<AuthProvider>().sendPasswordReset(email: email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password reset link sent to $email. Check your inbox.'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _noticeMessage =
+              'Reset link sent to $email. Check your inbox, and your spam '
+              'folder if it is not there.';
+        });
+      }
     } on AuthFailure catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
     }
@@ -186,23 +159,20 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                    ),
+                if (_errorMessage != null) ...[
+                  AuthNotice(
+                    message: _errorMessage!,
+                    tone: AuthNoticeTone.error,
                   ),
-                if (_errorMessage != null) const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
+                if (_noticeMessage != null) ...[
+                  AuthNotice(
+                    message: _noticeMessage!,
+                    tone: AuthNoticeTone.success,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 AuthMethodToggle(
                   value: _method,
                   onChanged: _switchMethod,
@@ -262,22 +232,24 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _isLoading ? null : _forgotPassword,
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: AppColors.primary),
+                // Phone accounts sign in through a synthetic address with no
+                // inbox behind it, so there is nothing to send a reset to.
+                if (_method == AuthMethod.email) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isLoading ? null : _forgotPassword,
+                      child: const Text('Forgot Password?'),
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 20),
+                ] else
+                  const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading || _isGoogleLoading ? null : _login,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
@@ -308,11 +280,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                GoogleSignInSection(
-                  onPressed: _isLoading || _isGoogleLoading ? null : _signInWithGoogle,
-                  isLoading: _isGoogleLoading,
-                ),
-                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

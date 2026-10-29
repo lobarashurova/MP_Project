@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
-import 'package:xurmo/presentation/basket/cart.dart';
-import 'package:xurmo/core/utils/haptics.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
 import 'package:xurmo/core/utils/money.dart';
+import 'package:xurmo/core/widgets/app_card.dart';
+import 'package:xurmo/core/widgets/quantity_stepper.dart';
+import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/core/translation/translated_text.dart';
 
 class CartItemCard extends StatelessWidget {
@@ -14,113 +15,92 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 0.5,
-        ),
+    final product = cartItem.product;
+
+    return AppCard(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceXs + 1,
       ),
+      padding: const EdgeInsets.all(AppTheme.spaceSm + 2),
+      radius: AppTheme.radiusMedium,
       child: Row(
         children: [
+          _Thumbnail(url: product.imageUrl),
+          const SizedBox(width: AppTheme.spaceSm + 4),
           Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TranslatedText(
-                        cartItem.product.name,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        formatSum(cartItem.product.price),
-                        style: AppTextStyles.productPrice.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Haptics.change();
-                    Cart.instance.decreaseQuantity(cartItem.product);
-                  },
-                  child: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      CupertinoIcons.minus,
-                      size: 14,
-                      color: AppColors.textPrimary,
-                    ),
+                TranslatedText(
+                  product.name,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    cartItem.quantity.toString(),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                
-                GestureDetector(
-                  onTap: () {
-                    Haptics.change();
-                    Cart.instance.increaseQuantity(cartItem.product);
-                  },
-                  child: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      CupertinoIcons.plus,
-                      size: 14,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
+                const SizedBox(height: AppTheme.spaceXs),
+                Text(
+                  formatSum(product.price),
+                  style: AppTextStyles.productPrice.copyWith(fontSize: 14),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: AppTheme.spaceSm),
+          QuantityStepper(
+            quantity: cartItem.quantity,
+            compact: true,
+            onDecrease: () => Cart.instance.decreaseQuantity(product),
+            onIncrease: () => Cart.instance.increaseQuantity(product),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _Thumbnail extends StatelessWidget {
+  const _Thumbnail({required this.url});
+
+  final String url;
+
+  static const double _size = 52;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+      child: SizedBox(
+        width: _size,
+        height: _size,
+        // An empty URL is checked up front: Image.network would throw on it
+        // before errorBuilder ever runs.
+        child: url.isEmpty
+            ? const _ThumbnailPlaceholder()
+            : Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const _ThumbnailPlaceholder(),
+              ),
+      ),
+    );
+  }
+}
+
+class _ThumbnailPlaceholder extends StatelessWidget {
+  const _ThumbnailPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.surfaceAlt,
+      child: Icon(
+        CupertinoIcons.photo,
+        size: 20,
+        color: AppColors.iconSecondary,
       ),
     );
   }

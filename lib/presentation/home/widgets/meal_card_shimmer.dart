@@ -20,7 +20,7 @@ class MealCardShimmer extends StatelessWidget {
         ],
       ),
       child: Shimmer.fromColors(
-        baseColor: AppColors.shadow.withOpacity(0.3),
+        baseColor: AppColors.surfaceAlt,
         highlightColor: AppColors.surface,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

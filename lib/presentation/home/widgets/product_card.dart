@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/theme/app_theme.dart';
@@ -18,7 +17,7 @@ class ProductCard extends StatelessWidget {
       child: Icon(
         CupertinoIcons.cube_box_fill,
         size: 48,
-        color: AppColors.primary.withOpacity(0.7),
+        color: AppColors.primary.withValues(alpha: 0.7),
       ),
     );
   }
@@ -33,7 +32,7 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.2),
+            color: AppColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -47,7 +46,7 @@ class ProductCard extends StatelessWidget {
             height: 120,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primarySoft,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -102,12 +101,21 @@ class ProductCard extends StatelessWidget {
 
                 // Price + Add button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      formatSum(product.price),
-                      style: AppTextStyles.productPrice,
+                    // Same flex as the meal card: the price carries a
+                    // currency suffix and must not shove the add button out.
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          formatSum(product.price),
+                          style: AppTextStyles.productPrice,
+                          maxLines: 1,
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     GestureDetector(
                       onTap: () {
                         Haptics.success();
@@ -120,10 +128,10 @@ class ProductCard extends StatelessWidget {
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSmall),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           CupertinoIcons.add,
                           size: 18,
-                          color: AppColors.surface,
+                          color: AppColors.onPrimary,
                         ),
                       ),
                     ),
