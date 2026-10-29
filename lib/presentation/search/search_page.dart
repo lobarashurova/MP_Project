@@ -92,7 +92,7 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: AppColors.iconPrimary),
+          icon: Icon(CupertinoIcons.back, color: AppColors.iconPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Container(
@@ -108,13 +108,13 @@ class _SearchPageState extends State<SearchPage> {
             decoration: InputDecoration(
               hintText: 'Search for food...',
               hintStyle: AppTextStyles.hint,
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 CupertinoIcons.search,
                 color: AppColors.iconSecondary,
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         CupertinoIcons.clear_circled_solid,
                         color: AppColors.iconSecondary,
                       ),

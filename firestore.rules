@@ -1,0 +1,104 @@
+rules_version = '2';
+
+// Xurmo Firestore security rules.
+//
+// Principles:
+//   - Every read and write requires a signed-in user.
+//   - A user can only see and change their own profile, favorites, and orders.
+//   - Accounts are created with role "user" and a user can never change their
+//     own role. Other roles (courier, restaurant, admin) are assigned by an
+//     admin through the console or a future admin tool.
+//   - Admins can read everything and update orders. Courier and restaurant
+//     access will be added when those sides of the app are built.
+//
+// Deploy with: firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function callerRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && callerRole() == 'admin';
+    }
+
+    // The role field on an incoming write, or null when it is absent.
+    function incomingRole() {
+      return request.resource.data.get('role', null);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // A user creates their own profile and it must start as a plain user.
+      allow create: if isOwner(uid) && incomingRole() == 'user';
+
+      // A user may edit their profile but not promote themselves.
+      allow update: if (isOwner(uid) && incomingRole() == resource.data.get('role', null))
+                    || isAdmin();
+
+      allow delete: if isAdmin();
+
+      match /favorites/{mealId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // Delivery fee charged on every order. Must match AppPricing.deliveryFee
+    // in lib/core/constants/app_pricing.dart; change both together.
+    function deliveryFee() {
+      return 2.99;
+    }
+
+    // A new order must be internally consistent and start as "pending".
+    //
+    // What these rules cannot check: that each item's price is the real menu
+    // price. The menu is loaded from an outside recipe service, not from this
+    // database, so there is nothing here to compare against, and rules cannot
+    // loop over the items to add them up. Real price checking needs the menu
+    // stored in Firestore or a server function that calculates the total.
+    function isValidNewOrder() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['userId', 'userEmail', 'items', 'subtotal', 'deliveryFee',
+                               'total', 'address', 'location', 'phone', 'notes',
+                               'status', 'createdAt'])
+          && d.keys().hasAll(['userId', 'items', 'subtotal', 'deliveryFee', 'total',
+                              'address', 'status', 'createdAt'])
+          // The order belongs to the person placing it.
+          && d.userId == request.auth.uid
+          // Customers cannot create an order that is already preparing,
+          // delivered or cancelled.
+          && d.status == 'pending'
+          // The time comes from the server, not from the phone's clock.
+          && d.createdAt == request.time
+          // At least one item, and a sane upper limit.
+          && d.items is list && d.items.size() > 0 && d.items.size() <= 50
+          // Money adds up: the fee is the real one and total = subtotal + fee.
+          && d.subtotal is number && d.subtotal > 0
+          && d.deliveryFee == deliveryFee()
+          && d.total is number && math.abs(d.total - (d.subtotal + d.deliveryFee)) < 0.01
+          // Text fields have the right type and a reasonable length.
+          && d.address is string && d.address.size() > 0 && d.address.size() <= 500
+          && (!('userEmail' in d) || (d.userEmail is string && d.userEmail.size() <= 320))
+          && (!('phone' in d) || (d.phone is string && d.phone.size() <= 30))
+          && (!('notes' in d) || (d.notes is string && d.notes.size() <= 1000))
+          && (!('location' in d) || d.location is latlng);
+    }
+
+    match /orders/{orderId} {
+      allow create: if signedIn() && isValidNewOrder();
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+  }
+}

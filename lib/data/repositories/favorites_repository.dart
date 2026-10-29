@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
 
 class FavoritesRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Resolved on use rather than in the constructor: widget tests build a
+  // FavoritesProvider without a Firebase app, and touching these eagerly
+  // threw [core/no-app] before the first frame.
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   bool get isSignedIn => _auth.currentUser != null;
 

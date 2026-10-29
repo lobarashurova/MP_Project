@@ -36,7 +36,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Favorites',
           style: TextStyle(
             fontSize: 24,
@@ -99,17 +99,31 @@ class _FavoritesPageState extends State<FavoritesPage> {
             onRetry: provider.retry,
           ),
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(20),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.63,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: provider.favorites.length,
-            itemBuilder: (context, index) {
-              return MealCard(meal: provider.favorites[index]);
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            itemCount: (provider.favorites.length / 2).ceil(),
+            itemBuilder: (context, row) {
+              final favorites = provider.favorites;
+              final left = favorites[row * 2];
+              final right =
+              row * 2 + 1 < favorites.length ? favorites[row * 2 + 1] : null;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: MealCard(key: ValueKey(left.id), meal: left),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: right != null
+                          ? MealCard(key: ValueKey(right.id), meal: right)
+                          : const SizedBox(),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ),
@@ -126,7 +140,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),

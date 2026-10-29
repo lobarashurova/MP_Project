@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
-import 'package:xurmo/core/utils/currency_formatter.dart';
+import 'package:xurmo/core/utils/money.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/data/repositories/favorites_repository.dart';
 
@@ -12,13 +12,26 @@ class FavoritesProvider extends ChangeNotifier {
   List<MealModel> _favorites = [];
   Set<String> _favoriteIds = {};
   bool _isLoading = false;
-  bool _isSignedIn = false;
   bool _hasLoadedOnce = false;
   AppException? _failure;
   StreamSubscription? _favoritesSubscription;
+  StreamSubscription<User?>? _authSubscription;
 
-  FavoritesProvider({FavoritesRepository? repository})
-      : _repository = repository ?? FavoritesRepository();
+  /// [authStateChanges] exists so tests can pass an inert stream; production
+  /// code leaves it null and gets the real FirebaseAuth stream.
+  FavoritesProvider({
+    FavoritesRepository? repository,
+    Stream<User?>? authStateChanges,
+  }) : _repository = repository ?? FavoritesRepository() {
+    // Favorites are stored per user, so reload whenever the signed-in user
+    // changes. This keeps the list correct after a login from any tab and
+    // clears it on logout.
+    _authSubscription = (authStateChanges ??
+            FirebaseAuth.instance.authStateChanges())
+        .listen((_) => loadFavorites());
+  }
+
+  bool get _isSignedIn => FirebaseAuth.instance.currentUser != null;
 
   List<MealModel> get favorites => _favorites;
   Set<String> get favoriteIds => _favoriteIds;
@@ -47,9 +60,10 @@ class FavoritesProvider extends ChangeNotifier {
     _favoritesSubscription?.cancel();
 
     if (userId == null) {
+      _favoritesSubscription?.cancel();
+      _favoritesSubscription = null;
       _favorites = [];
       _favoriteIds = {};
-      _isSignedIn = false;
       _isLoading = false;
       _hasLoadedOnce = true;
       _failure = null;
@@ -57,7 +71,6 @@ class FavoritesProvider extends ChangeNotifier {
       return;
     }
 
-    _isSignedIn = true;
     _isLoading = !_hasLoadedOnce;
     _failure = null;
     notifyListeners();
@@ -97,7 +110,7 @@ class FavoritesProvider extends ChangeNotifier {
       id: data['id'] ?? '',
       name: data['name'] ?? 'Unknown Meal',
       category: data['category'] ?? 'General',
-      price: normalizeLegacySomAmount(data['price'] as num? ?? 0),
+      price: normalizeLegacySum(data['price'] as num? ?? 0),
       imageUrl: data['imageUrl'] ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       description: data['description'] ?? 'No description available',
@@ -107,6 +120,9 @@ class FavoritesProvider extends ChangeNotifier {
   }
 
   Future<void> addFavorite(MealModel meal) async {
+    if (!_isSignedIn) {
+      throw StateError('Please log in to save favorites');
+    }
     try {
       _isLoading = true;
       notifyListeners();
@@ -132,6 +148,9 @@ class FavoritesProvider extends ChangeNotifier {
   }
 
   Future<void> removeFavorite(String mealId) async {
+    if (!_isSignedIn) {
+      throw StateError('Please log in to manage favorites');
+    }
     try {
       _isLoading = true;
       notifyListeners();
@@ -165,6 +184,7 @@ class FavoritesProvider extends ChangeNotifier {
   @override
   void dispose() {
     _favoritesSubscription?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 }

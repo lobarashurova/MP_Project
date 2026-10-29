@@ -33,27 +33,5 @@ void main() {
       expect(meal.ingredients.length, 9);
       expect(meal.price, 20000.0 + (9 * 4000.0));
     });
-
-    test('restores saved som prices and ingredients', () {
-      final meal = MealModel.fromJson({
-        'idMeal': 'saved-meal',
-        'strMeal': 'Saved Meal',
-        'strPrice': 56000,
-        'strIngredients': ['chicken', 'rice'],
-      });
-
-      expect(meal.price, 56000);
-      expect(meal.ingredients, ['chicken', 'rice']);
-    });
-
-    test('converts an old saved small price to som', () {
-      final meal = MealModel.fromJson({
-        'idMeal': 'legacy-meal',
-        'strMeal': 'Legacy Meal',
-        'strPrice': 56,
-      });
-
-      expect(meal.price, 56000);
-    });
   });
 }

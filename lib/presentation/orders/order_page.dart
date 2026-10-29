@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/pricing.dart';
-import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/state_view.dart';
+import 'package:xurmo/data/models/order_status.dart';
 import 'order_detail_page.dart';
+import 'widgets/order_status_widgets.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -19,6 +22,24 @@ class OrdersPage extends StatefulWidget {
 class _OrdersPageState extends State<OrdersPage> {
   /// Bumped to rebuild the StreamBuilder with a fresh subscription on retry.
   int _streamAttempt = 0;
+
+  /// Order statuses follow the clock, so redraw regularly while the list is
+  /// open even when Firestore sends no new data.
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -55,7 +76,6 @@ class _OrdersPageState extends State<OrdersPage> {
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('userId', isEqualTo: userId)
-            //.orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -81,7 +101,19 @@ class _OrdersPageState extends State<OrdersPage> {
             );
           }
 
-          final orders = snapshot.data!.docs;
+          // Sort client-side so no composite Firestore index is required for
+          // the combined userId filter and createdAt ordering. An order whose
+          // server timestamp has not resolved yet is the newest, so it sorts
+          // first.
+          final orders = snapshot.data!.docs.toList()
+            ..sort((a, b) {
+              final aTime = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+              final bTime = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+              if (aTime == null && bTime == null) return 0;
+              if (aTime == null) return -1;
+              if (bTime == null) return 1;
+              return bTime.compareTo(aTime);
+            });
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -106,7 +138,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
 class OrderCard extends StatelessWidget {
   final String orderId;
-  final int orderNumber; // Add this
+  final int orderNumber;
   final Map<String, dynamic> order;
 
   const OrderCard({
@@ -118,35 +150,21 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = order['status'] ?? 'pending';
-    final storedTotal = order['total'] as num? ?? 0;
-    final total = order['currency'] == 'UZS'
-        ? storedTotal
-        : normalizeLegacySomAmount(storedTotal) + legacyDeliveryFeeSom;
+    final total = (order['total'] as num?) ?? 0;
     final itemCount = (order['items'] as List?)?.length ?? 0;
     final createdAt = (order['createdAt'] as Timestamp?)?.toDate();
+    final status = OrderStatus.resolve(
+      stored: order['status'],
+      placedAt: createdAt,
+      now: DateTime.now(),
+    );
 
     final dateString = createdAt != null
         ? DateFormat('MMM dd, yyyy').format(createdAt)
         : 'Unknown date';
-
-    Color statusColor;
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        statusColor = Colors.green;
-        break;
-      case 'cancelled':
-        statusColor = Colors.red;
-        break;
-      case 'processing':
-        statusColor = Colors.blue;
-        break;
-      default:
-        statusColor = Colors.orange;
-    }
     return Card(
       color: Colors.white,
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -166,7 +184,7 @@ class OrderCard extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -175,7 +193,7 @@ class OrderCard extends StatelessWidget {
                 children: [
                   Text(
                     'Order #$orderNumber',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -189,27 +207,9 @@ class OrderCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              SizedBox(height: 12),
-
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  status.toUpperCase(),
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 12),
-
+              const SizedBox(height: 12),
+              OrderStatusBadge(status: status),
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -221,8 +221,8 @@ class OrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    formatSom(total),
-                    style: TextStyle(
+                    formatSum(total),
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                       color: AppColors.primary,

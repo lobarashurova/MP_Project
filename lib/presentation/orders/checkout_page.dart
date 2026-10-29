@@ -3,12 +3,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
-import 'package:xurmo/core/constants/pricing.dart';
-import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
+import 'package:xurmo/core/constants/map_config.dart';
+import 'package:xurmo/core/utils/phone_number.dart';
+import 'package:xurmo/data/models/delivery_location.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
+import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -23,6 +26,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
   bool _isLoading = false;
+
+  /// The point chosen on the map, if any. The address text stays editable so
+  /// the customer can add an apartment or entrance number.
+  DeliveryLocation? _location;
+
+  Future<void> _pickOnMap() async {
+    final picked = await Navigator.of(context).push<DeliveryLocation>(
+      MaterialPageRoute(builder: (_) => LocationPickerPage(initial: _location)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _location = picked;
+      _addressController.text = picked.address;
+    });
+  }
 
   @override
   void dispose() {
@@ -54,8 +72,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         );
       }
 
-      final subtotal = cart.totalPrice;
-      final total = subtotal + deliveryFeeSom;
+      final subtotal = cart.subtotal;
+      final deliveryFee = cart.deliveryFee;
+      final total = cart.totalPrice;
+      final discount = cart.discount;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -66,13 +86,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'userId': user.uid,
-        'userEmail': user.email ?? '',
+        // Phone accounts sign in with a synthetic email that is not a real
+        // address, so don't store it as the customer's email.
+        'userEmail': isSyntheticEmail(user.email) ? '' : (user.email ?? ''),
         'items': orderItems,
         'subtotal': subtotal,
-        'deliveryFee': deliveryFeeSom,
+        'deliveryFee': deliveryFee,
         'total': total,
-        'currency': 'UZS',
+        'discount': discount,
         'address': _addressController.text,
+        if (_location != null)
+          'location': GeoPoint(_location!.latitude, _location!.longitude),
         'phone': _phoneController.text,
         'notes': _notesController.text,
         'status': 'pending',
@@ -112,8 +136,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final cart = Cart.instance;
-    final subtotal = cart.totalPrice;
-    final total = subtotal + deliveryFeeSom;
+    final subtotal = cart.subtotal;
+    final deliveryFee = cart.deliveryFee;
+    final total = cart.totalPrice;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -151,7 +176,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${cart.items.length} items', style: const TextStyle(fontSize: 16)),
-                    Text(formatSom(subtotal),
+                    Text(formatSum(total),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
@@ -161,23 +186,38 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const Text('Delivery Details', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
 
-              const Text('Delivery Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Delivery Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              const SizedBox(height: 8),
+              if (MapConfig.isMapAvailable) SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _pickOnMap,
+                  icon: Icon(_location == null ? CupertinoIcons.map : CupertinoIcons.checkmark_alt_circle_fill),
+                  label: Text(_location == null ? 'Choose on map' : 'Pinned on map · Change'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your delivery address',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintText: 'Or type your address, apartment, entrance',
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.location_solid),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -198,24 +238,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Phone Number', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Phone Number', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   hintText: 'Enter your phone number',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.phone_fill),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -235,23 +275,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Delivery Notes (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Text('Delivery Notes (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 decoration: InputDecoration(
                   hintText: 'e.g., Ring doorbell, leave at door',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                   prefixIcon: const Icon(CupertinoIcons.doc_text),
                   filled: true,
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                    borderSide: BorderSide(color: AppColors.border, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -273,16 +313,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text(formatSom(subtotal))]),
+                        children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Delivery Fee'), Text(formatSom(deliveryFeeSom))]),
+                        children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(formatSom(total),
+                        Text(formatSum(total),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
                     ),

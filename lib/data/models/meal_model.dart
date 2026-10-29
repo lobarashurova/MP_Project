@@ -102,6 +102,7 @@ class MealModel {
   }
 
   static double _calculatePrice(int ingredientCount) {
+    // Prices are in sums: base 20 000, +4 000 per ingredient, max 100 000.
     const basePrice = 20000.0;
     const pricePerIngredient = 4000.0;
     const maxPrice = 100000.0;

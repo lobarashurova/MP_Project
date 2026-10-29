@@ -1,15 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
-import 'package:xurmo/core/constants/pricing.dart';
+import 'package:xurmo/core/constants/app_pricing.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
-import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
 import '../orders/checkout_page.dart';
-
-const String DELIVERY_TIME = "25-30 min";
+import 'package:xurmo/core/utils/money.dart';
 
 class BasketPage extends StatefulWidget {
   const BasketPage({super.key});
@@ -40,8 +38,7 @@ class _BasketPageState extends State<BasketPage> {
   @override
   Widget build(BuildContext context) {
     final items = Cart.instance.items;
-    final subtotal = Cart.instance.totalPrice;
-    final total = subtotal + deliveryFeeSom;
+    final subtotal = Cart.instance.subtotal;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -112,7 +109,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      DELIVERY_TIME,
+                                      AppPricing.deliveryTime,
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -150,7 +147,7 @@ class _BasketPageState extends State<BasketPage> {
                                       style: AppTextStyles.subtitleSmall,
                                     ),
                                     Text(
-                                      formatSom(freeItemThresholdSom),
+                                        formatSum(AppPricing.promoThreshold),
                                       style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
@@ -206,7 +203,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        formatSom(subtotal),
+                        formatSum(subtotal),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -226,7 +223,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        formatSom(deliveryFeeSom),
+                        formatSum(Cart.instance.deliveryFee),
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -253,7 +250,7 @@ class _BasketPageState extends State<BasketPage> {
                         ),
                       ),
                       Text(
-                        formatSom(total),
+                        formatSum(Cart.instance.totalPrice),
                         style: AppTextStyles.heading3.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,

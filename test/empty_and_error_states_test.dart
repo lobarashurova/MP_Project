@@ -1,11 +1,17 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
 import 'package:xurmo/core/widgets/state_view.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/data/repositories/product_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:xurmo/data/repositories/favorites_repository.dart';
+import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/home/providers/home_provider.dart';
 import 'package:xurmo/presentation/search/search_page.dart';
 
@@ -41,8 +47,18 @@ MealModel buildMeal({String id = '1', String name = 'Teriyaki Chicken'}) {
 }
 
 Widget wrapWithProvider(Widget child, HomeProvider provider) {
-  return ChangeNotifierProvider<HomeProvider>.value(
-    value: provider,
+  // Search results are MealCards, which read FavoritesProvider, so the
+  // wrapper has to supply it alongside the HomeProvider under test.
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<HomeProvider>.value(value: provider),
+      ChangeNotifierProvider<FavoritesProvider>(
+        create: (_) => FavoritesProvider(
+          repository: FavoritesRepository(),
+          authStateChanges: const Stream<User?>.empty(),
+        ),
+      ),
+    ],
     child: MaterialApp(home: child),
   );
 }
@@ -289,6 +305,19 @@ void main() {
   });
 
   group('SearchPage states', () {
+    // Search results are MealCards, and MealCard reads Cart.instance in
+    // initState, which needs the cart box open before the first pump.
+    setUpAll(() async {
+      final tempDir = await Directory.systemTemp.createTemp('hive_test_search');
+      Hive.init(tempDir.path);
+
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(MealModelAdapter());
+      }
+
+      await Hive.openBox('shopping_cart');
+    });
+
     testWidgets('shows an offline error instead of "no results" when the menu '
         'failed to load', (tester) async {
       final provider = HomeProvider(

@@ -1,7 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
 import 'package:xurmo/core/network/network_module.dart';
-import 'package:xurmo/core/utils/currency_formatter.dart';
+import 'package:xurmo/core/utils/money.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 
 /// Outcome of a product load.
@@ -133,7 +133,7 @@ class ProductRepository {
       final meal = box.get(key);
       if (meal == null) continue;
 
-      final normalizedPrice = normalizeLegacySomAmount(meal.price);
+      final normalizedPrice = normalizeLegacySum(meal.price);
       final normalizedMeal = normalizedPrice == meal.price
           ? meal
           : meal.copyWith(price: normalizedPrice);

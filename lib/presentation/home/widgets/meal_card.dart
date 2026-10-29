@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
-import 'package:xurmo/core/utils/currency_formatter.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/product_detail_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class MealCard extends StatefulWidget {
   final MealModel meal;
@@ -31,6 +32,13 @@ class _MealCardState extends State<MealCard> {
     _product = widget.meal;
     _updateQuantity();
     Cart.instance.notifier.addListener(_updateQuantity);
+  }
+  @override
+  void didUpdateWidget(covariant MealCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.meal.id != widget.meal.id) {
+      _product = widget.meal;
+    }
   }
 
   @override
@@ -81,40 +89,38 @@ class _MealCardState extends State<MealCard> {
     Cart.instance.decreaseQuantity(_product);
   }
 
-  void _toggleFavorite(FavoritesProvider favProvider) async {
+  void _showMessage(String message, {Color? color}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color ?? AppColors.primary,
+        duration: const Duration(milliseconds: 500),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(FavoritesProvider favProvider) async {
+    // Favorites are stored per user, so tell a signed-out user what to do
+    // instead of failing with a generic error.
+    if (FirebaseAuth.instance.currentUser == null) {
+      _showMessage('Please log in to save favorites', color: Colors.red);
+      return;
+    }
+
     final isFavorite = favProvider.isFavorite(_product.id);
 
     try {
       if (isFavorite) {
         await favProvider.removeFavorite(_product.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${widget.meal.name} removed from favorites'),
-            backgroundColor: AppColors.primary,
-            duration: const Duration(milliseconds: 500),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showMessage('${widget.meal.name} removed from favorites');
       } else {
         await favProvider.addFavorite(_product);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${widget.meal.name} added to favorites'),
-            backgroundColor: AppColors.primary,
-            duration: const Duration(milliseconds: 500),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showMessage('${widget.meal.name} added to favorites');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Failed to update favorites'),
-          backgroundColor: Colors.red,
-          duration: const Duration(milliseconds: 500),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showMessage('Failed to update favorites', color: Colors.red);
     }
   }
 
@@ -253,7 +259,7 @@ class _MealCardState extends State<MealCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            formatSom(_product.price),
+                            formatSum(_product.price),
                             style: AppTextStyles.productPrice,
                           ),
                           if (_quantity == 0)

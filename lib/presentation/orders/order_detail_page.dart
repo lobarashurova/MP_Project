@@ -1,11 +1,20 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:xurmo/data/models/order_status.dart';
+import 'package:xurmo/core/utils/money.dart';
+import 'widgets/order_status_widgets.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/pricing.dart';
-import '../../core/utils/currency_formatter.dart';
+import '../../core/constants/app_pricing.dart';
+import 'package:xurmo/core/utils/money.dart';
 
-class OrderDetailsPage extends StatelessWidget {
+class OrderDetailsPage extends StatefulWidget {
   final String orderId;
+
+  /// The order as it was when the list was shown. Used until the live copy
+  /// arrives from Firestore.
   final Map<String, dynamic> order;
   final int orderNumber;
 
@@ -17,63 +26,93 @@ class OrderDetailsPage extends StatelessWidget {
   });
 
   @override
+  State<OrderDetailsPage> createState() => _OrderDetailsPageState();
+}
+
+class _OrderDetailsPageState extends State<OrderDetailsPage> {
+  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _orderStream;
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _orderStream = FirebaseFirestore.instance
+        .collection('orders')
+        .doc(widget.orderId)
+        .snapshots();
+    _ticker = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final status = order['status'] ?? 'pending';
-    final storedTotal = order['total'] as num? ?? 0;
-    final isSomOrder = order['currency'] == 'UZS';
-    final subtotal = isSomOrder
-        ? (order['subtotal'] as num? ?? storedTotal - deliveryFeeSom)
-        : normalizeLegacySomAmount(storedTotal);
-    final deliveryFee = isSomOrder
-        ? (order['deliveryFee'] as num? ?? deliveryFeeSom)
-        : legacyDeliveryFeeSom;
-    final total = isSomOrder ? storedTotal : subtotal + deliveryFee;
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _orderStream,
+      builder: (context, snapshot) {
+        final order = snapshot.data?.data() ?? widget.order;
+        return _buildForOrder(context, order);
+      },
+    );
+  }
+
+  Widget _buildForOrder(BuildContext context, Map<String, dynamic> order) {
+    final orderNumber = widget.orderNumber;
+    final storedTotal = (order['total'] as num?)?.toDouble() ?? 0.0;
+    final storedSubtotal = (order['subtotal'] as num?)?.toDouble();
+    final deliveryFee =
+        (order['deliveryFee'] as num?)?.toDouble() ?? AppPricing.deliveryFee;
+    // Orders placed before fees were stored kept an items-only amount in
+    // 'total', so treat that as the subtotal and add the fee on top.
+    final subtotal = storedSubtotal ?? storedTotal;
+    final total =
+    storedSubtotal != null ? storedTotal : storedTotal + deliveryFee;
     final items = (order['items'] as List?) ?? [];
     final address = order['address'] ?? 'No address';
     final phone = order['phone'] ?? 'No phone';
-    final createdAt = order['createdAt']?.toDate();
+    final createdAt = (order['createdAt'] as Timestamp?)?.toDate();
+    final status = OrderStatus.resolve(
+      stored: order['status'],
+      placedAt: createdAt,
+      now: DateTime.now(),
+    );
+    final estimatedDelivery = OrderStatus.estimatedDelivery(
+      stored: order['status'],
+      placedAt: createdAt,
+    );
 
     final dateString = createdAt != null
         ? DateFormat('MMMM dd, yyyy - HH:mm').format(createdAt)
         : 'Unknown date';
 
-    Color statusColor;
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        statusColor = Colors.green;
-        break;
-      case 'cancelled':
-        statusColor = Colors.red;
-        break;
-      case 'processing':
-        statusColor = Colors.blue;
-        break;
-      default:
-        statusColor = Colors.orange;
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Order Details'),
+        title: const Text('Order Details'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Card(
-                color: Colors.white, // Add this line
+                color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -84,15 +123,15 @@ class OrderDetailsPage extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         '#$orderNumber',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         dateString,
                         style: TextStyle(
@@ -100,93 +139,41 @@ class OrderDetailsPage extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: 12),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          status.toUpperCase(),
-                          style: TextStyle(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 12),
+                      OrderStatusBadge(status: status),
                     ],
                   ),
                 ),
               ),
 
-              SizedBox(height: 20),
-//delivery info
-              Text(
-                'Delivery Information',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+              const SizedBox(height: 20),
+              const Text(
+                'Order Status',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Card(
-                color: Colors.white, // Add this line
+                color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, color: AppColors.primary),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              address,
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Divider(),
-                      SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, color: AppColors.primary),
-                          SizedBox(width: 12),
-                          Text(
-                            phone,
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ],
+                  padding: const EdgeInsets.all(16),
+                  child: OrderProgress(
+                    status: status,
+                    placedAt: createdAt,
+                    estimatedDelivery: estimatedDelivery,
                   ),
                 ),
               ),
 
-              SizedBox(height: 20),
-
-              Text(
-                'Order Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+              const SizedBox(height: 20),
+              // delivery info
+              const Text(
+                'Delivery Information',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              SizedBox(height: 12),
-
-              ...items.map((item) => OrderItemCard(item: item)).toList(),
-
-              SizedBox(height: 20),
-//price summary
+              const SizedBox(height: 12),
               Card(
                 color: Colors.white,
                 elevation: 2,
@@ -194,35 +181,86 @@ class OrderDetailsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on,
+                              color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              address,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, color: AppColors.primary),
+                          const SizedBox(width: 12),
+                          Text(phone, style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Order Items',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+
+              ...items.map((item) => OrderItemCard(item: item)),
+
+              const SizedBox(height: 20),
+              // price summary
+              Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Subtotal', style: TextStyle(fontSize: 14)),
-                          Text(
-                            formatSom(subtotal),
-                            style: TextStyle(fontSize: 14),
-                          ),
+                          const Text('Subtotal',
+                              style: TextStyle(fontSize: 14)),
+                          Text(formatSum(subtotal),
+                              style: const TextStyle(fontSize: 14)),
                         ],
                       ),
-                      SizedBox(height: 8),
-                      //delivery fee
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Delivery Fee', style: TextStyle(fontSize: 14)),
-                          Text(formatSom(deliveryFee), style: TextStyle(fontSize: 14)),
+                          const Text('Delivery Fee',
+                              style: TextStyle(fontSize: 14)),
+                          Text(formatSum(deliveryFee),
+                              style: const TextStyle(fontSize: 14)),
                         ],
                       ),
-                      SizedBox(height: 12),
-                      Divider(),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Total',
                             style: TextStyle(
                               fontSize: 18,
@@ -230,8 +268,8 @@ class OrderDetailsPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            formatSom(total),
-                            style: TextStyle(
+                            formatSum(total),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
@@ -244,9 +282,9 @@ class OrderDetailsPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-              if (status != 'delivered' && status != 'cancelled')
+              if (!status.isFinal)
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -254,22 +292,25 @@ class OrderDetailsPage extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('Need Help?'),
-                          content: Text('Contact customer support at support@xurmo.com'),
+                          title: const Text('Need Help?'),
+                          content: const Text(
+                              'Contact customer support at support@xurmo.com'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('OK'),
+                              child: const Text('OK'),
                             ),
                           ],
                         ),
                       );
                     },
-                    icon: Icon(Icons.help_outline, color: AppColors.primary), // Add color
-                    label: Text('Need Help?', style: TextStyle(color: AppColors.primary)), // Add color
+                    icon: const Icon(Icons.help_outline,
+                        color: AppColors.primary),
+                    label: const Text('Need Help?',
+                        style: TextStyle(color: AppColors.primary)),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: AppColors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -288,25 +329,25 @@ class OrderItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
 
   const OrderItemCard({super.key, required this.item});
+
   @override
   Widget build(BuildContext context) {
     final name = item['name'] ?? 'Unknown';
-    final price = item['price'] ?? 0.0;
-    final quantity = item['quantity'] ?? 1;
+    final price = (item['price'] as num?) ?? 0;
+    final quantity = (item['quantity'] as num?) ?? 1;
     final image = item['image'] ?? '';
 
     return Card(
-      color: Colors.white, // Add this line
-      margin: EdgeInsets.only(bottom: 12),
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            //img
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: image.isNotEmpty
@@ -320,7 +361,8 @@ class OrderItemCard extends StatelessWidget {
                     width: 60,
                     height: 60,
                     color: Colors.grey.shade200,
-                    child: Icon(Icons.fastfood, color: Colors.grey),
+                    child:
+                    const Icon(Icons.fastfood, color: Colors.grey),
                   );
                 },
               )
@@ -328,27 +370,24 @@ class OrderItemCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 color: Colors.grey.shade200,
-                child: Icon(Icons.fastfood, color: Colors.grey),
+                child: const Icon(Icons.fastfood, color: Colors.grey),
               ),
             ),
-
-            SizedBox(width: 12),
-
-            //details
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Qty: $quantity',
                     style: TextStyle(
@@ -359,11 +398,9 @@ class OrderItemCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            //price
             Text(
-              formatSom(normalizeLegacySomAmount(price) * quantity),
-              style: TextStyle(
+              formatSum(price * quantity),
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
                 color: AppColors.primary,

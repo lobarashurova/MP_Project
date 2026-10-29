@@ -310,7 +310,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Project Link: [https://github.com/yourusername/xurmo](https://github.com/yourusername/xurmo)
+Project Link: [https://github.com/lobarashurova/MP_Project](https://github.com/lobarashurova/MP_Project)
 
 ## Acknowledgments
 
