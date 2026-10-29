@@ -143,14 +143,6 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       await context.read<AuthProvider>().sendPasswordReset(email: email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password reset link sent to $email. Check your inbox.'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     } on AuthFailure catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
     }

@@ -83,29 +83,14 @@ class _MealCardState extends State<MealCard> {
     Cart.instance.decreaseQuantity(_product);
   }
 
-  void _showMessage(String message, {Color? color}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color ?? AppColors.primary,
-        duration: const Duration(milliseconds: 500),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   Future<void> _toggleFavorite(FavoritesProvider favProvider) async {
-    // Favorites are stored per user, so tell a signed-out user what to do
-    // instead of failing with a generic error.
-    if (FirebaseAuth.instance.currentUser == null) {
-      _showMessage('Please log in to save favorites', color: Colors.red);
-      return;
-    }
+    // Favorites are stored per user, so a signed-out tap is a no-op rather
+    // than an error. The heart simply stays unfilled.
+    if (FirebaseAuth.instance.currentUser == null) return;
 
     final isFavorite = favProvider.isFavorite(_product.id);
-    // The heart fills in immediately, so a confirmation toast would only
-    // repeat what the icon already shows. Failures still need to be told.
+    // The heart reflects provider state, so it reverts by itself if the write
+    // fails; the tap haptic is the only feedback either way.
     Haptics.tap();
 
     try {
@@ -115,7 +100,7 @@ class _MealCardState extends State<MealCard> {
         await favProvider.addFavorite(_product);
       }
     } catch (e) {
-      _showMessage('Failed to update favorites', color: AppColors.error);
+      debugPrint('Failed to update favorites: $e');
     }
   }
 

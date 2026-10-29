@@ -54,9 +54,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
       // address, so leave the field blank for them.
       _emailController.text = isSyntheticEmail(user.email) ? '' : (user.email ?? '');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-      );
+      debugPrint('Failed to load profile: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -82,16 +80,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
             'updatedAt': FieldValue.serverTimestamp(),
           });
 
+      // Leaving edit mode is itself the confirmation: the fields go read-only
+      // and show the saved values.
       setState(() => _isEditing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
-            'Profile updated!', style: TextStyle(color: Colors.white)),
-            backgroundColor: AppColors.success),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-      );
+      debugPrint('Failed to save profile: $e');
     } finally {
       setState(() => _isLoading = false);
     }

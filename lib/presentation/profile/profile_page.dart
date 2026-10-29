@@ -410,12 +410,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature feature coming soon!', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
-    );
-  }
-
   void _showLogoutDialog() {
     Haptics.tap();
     showDialog(

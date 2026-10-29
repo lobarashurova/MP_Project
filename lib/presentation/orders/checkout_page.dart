@@ -116,22 +116,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ));
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppException.from(e).message,
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Retry',
-            textColor: Colors.white,
-            onPressed: _placeOrder,
-          ),
-        ),
-      );
+      debugPrint('Order failed: ${AppException.from(e).message}');
     } finally {
       // The success path navigates away, so guard before touching state.
       if (mounted) setState(() => _isLoading = false);

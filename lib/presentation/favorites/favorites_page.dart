@@ -151,23 +151,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
             onPressed: () async {
               Haptics.warning();
               final provider = context.read<FavoritesProvider>();
-              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(dialogContext);
 
               try {
                 await provider.clearFavorites();
               } catch (e) {
-                if (!mounted) return;
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AppException.from(e).message,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                debugPrint('Failed to clear favorites: ${AppException.from(e).message}');
               }
             },
             child: const Text(
