@@ -36,7 +36,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Favorites',
           style: TextStyle(
             fontSize: 24,
@@ -140,7 +140,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textSecondary),
             ),

@@ -14,7 +14,7 @@ InputDecoration authInputDecoration({
 }) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: AppColors.textSecondary),
+    hintStyle: TextStyle(color: AppColors.textSecondary),
     prefixIcon: Icon(icon),
     prefixText: prefixText,
     suffixIcon: suffixIcon,
@@ -26,7 +26,7 @@ InputDecoration authInputDecoration({
 Widget authFieldLabel(String text) {
   return Text(
     text,
-    style: const TextStyle(
+    style: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w600,
       color: AppColors.iconPrimary,

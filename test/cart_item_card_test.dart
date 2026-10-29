@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:xurmo/core/utils/money.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/widgets/cart_item_card.dart';
@@ -26,7 +27,7 @@ void main() {
     id: '101',
     name: 'Test Meal',
     category: 'Test Category',
-    price: 25.00,
+    price: 25000.0,
     imageUrl: '',
     rating: 5.0,
     description: 'Delicious test meal',
@@ -43,7 +44,7 @@ void main() {
       ));
 
       expect(find.text('Test Meal'), findsOneWidget);
-      expect(find.text('\$25.00'), findsOneWidget);
+      expect(find.text(formatSum(25000.0)), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
     });
 

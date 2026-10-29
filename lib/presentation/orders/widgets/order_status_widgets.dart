@@ -88,7 +88,7 @@ class OrderProgress extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Expected delivery by ${time.format(estimatedDelivery!)}',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],
       ],
@@ -160,7 +160,7 @@ class _StepRow extends StatelessWidget {
                     ),
                   ),
                   if (time != null)
-                    Text(time!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text(time!, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ),

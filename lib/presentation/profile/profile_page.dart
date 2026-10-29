@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
+import 'package:xurmo/core/theme/theme_provider.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/profile/personal_info_page.dart';
@@ -29,7 +30,6 @@ class _ProfilePageState extends State<ProfilePage> {
   User? _currentUser;
 
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   int _orderCount = 0;
 
   /// Which user the order count was last fetched for, so a login or a change
@@ -232,6 +232,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildSettingsSection() {
     final settings = context.watch<SettingsProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
     final s = (String k) => AppStrings.of(context, k);
 
     String fontLabel() {
@@ -247,11 +248,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return _buildSection(s('settings'), [
       _buildSwitchItem(CupertinoIcons.bell, s('notifications'), _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
-      _buildSwitchItem(CupertinoIcons.moon, s('dark_mode'), _darkModeEnabled, (val) {
-        setState(() => _darkModeEnabled = val);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dark mode coming soon!', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
-        );
+      _buildSwitchItem(CupertinoIcons.moon, s('dark_mode'), themeProvider.isDarkMode, (val) {
+        context.read<ThemeProvider>().toggleTheme(val);
       }),
       _buildMenuItem(CupertinoIcons.globe, s('language'), _showLanguageSheet, trailing: settings.languageName),
       _buildMenuItem(CupertinoIcons.textformat_size, s('font_size'), _showFontSheet, trailing: fontLabel()),

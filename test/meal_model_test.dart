@@ -31,7 +31,7 @@ void main() {
       expect(meal.description, 'Instructions for Teriyaki Chicken Casserole');
       expect(meal.area, 'Japanese');
       expect(meal.ingredients.length, 9);
-      expect(meal.price, 20.0 + (9 * 4.0));
+      expect(meal.price, 20000.0 + (9 * 4000.0));
     });
   });
 }

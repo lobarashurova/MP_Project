@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yandex_maps_mapkit_lite/init.dart';
 
 import 'package:xurmo/core/constants/map_config.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/theme/theme_provider.dart';
 
 import 'package:xurmo/core/session/install_guard.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -27,11 +29,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  final prefs = await SharedPreferences.getInstance();
+
   // A reinstalled app must start signed out (issue #11). This runs before
   // AuthProvider reads the current user, so no screen sees the old session.
   try {
     await InstallGuard(
-      prefs: await SharedPreferences.getInstance(),
+      prefs: prefs,
       signOut: FirebaseAuth.instance.signOut,
     ).run();
   } catch (e) {
@@ -57,32 +61,43 @@ void main() async {
   final settings = SettingsProvider();
   await settings.load();
 
-  runApp(MyApp(settings: settings));
+  final isDarkMode = prefs.getBool('is_dark_mode') ?? false;
+
+  runApp(MyApp(settings: settings, initialIsDarkMode: isDarkMode));
 }
 
 class MyApp extends StatelessWidget {
   final SettingsProvider settings;
+  final bool initialIsDarkMode;
 
-  const MyApp({super.key, required this.settings});
+  const MyApp({
+    super.key,
+    required this.settings,
+    this.initialIsDarkMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(initialIsDarkMode: initialIsDarkMode),
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider<SettingsProvider>.value(value: settings),
       ],
-      child: Consumer<SettingsProvider>(
-        builder: (context, settings, _) {
+      // Theme and settings both repaint the whole app, so the two listen
+      // together rather than nesting one Consumer inside the other.
+      child: Consumer2<ThemeProvider, SettingsProvider>(
+        builder: (context, themeProvider, settings, _) {
           return MaterialApp(
             title: 'Xurmo App',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              primarySwatch: Colors.orange,
-              useMaterial3: true,
-            ),
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
             locale: settings.locale,
             supportedLocales: const [
               Locale('en'),

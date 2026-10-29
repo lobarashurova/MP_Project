@@ -164,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                const Text(
+                Text(
                   'Welcome Back',
                   style: TextStyle(
                     fontSize: 32,
@@ -173,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Sign in to your account to continue',
                   style: TextStyle(
                     fontSize: 16,
@@ -211,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                 else
                   PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 14,
@@ -225,7 +225,7 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -288,7 +288,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.divider,
+                          Colors.white,
                         ),
                       ),
                     )
@@ -297,7 +297,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.divider
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -311,7 +311,7 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Don't have an account? ",
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
@@ -384,7 +384,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Reset your password',
               style: TextStyle(
                 fontSize: 20,
@@ -393,7 +393,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               "Enter your email and we'll send you a link to set a new password.",
               style: TextStyle(color: AppColors.textSecondary),
             ),
@@ -406,7 +406,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
               onFieldSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 hintText: 'Enter your email',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                hintStyle: TextStyle(color: AppColors.textSecondary),
                 prefixIcon: const Icon(Icons.email_outlined),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -437,7 +437,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.divider,
+                    color: Colors.white,
                   ),
                 ),
               ),
