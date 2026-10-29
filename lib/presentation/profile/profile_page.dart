@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:xurmo/core/constants/app_colors.dart';
 import 'package:xurmo/core/constants/app_text_styles.dart';
 import 'package:xurmo/core/utils/phone_number.dart';
+import 'package:xurmo/core/theme/theme_provider.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
 import 'package:xurmo/presentation/profile/personal_info_page.dart';
@@ -27,7 +28,6 @@ class _ProfilePageState extends State<ProfilePage> {
   User? _currentUser;
 
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   int _orderCount = 0;
 
   /// Which user the order count was last fetched for, so a login or a change
@@ -229,13 +229,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSettingsSection() {
+    final themeProvider = context.watch<ThemeProvider>();
     return _buildSection('Settings', [
       _buildSwitchItem(CupertinoIcons.bell, 'Notifications', _notificationsEnabled, (val) => setState(() => _notificationsEnabled = val)),
-      _buildSwitchItem(CupertinoIcons.moon, 'Dark Mode', _darkModeEnabled, (val) {
-        setState(() => _darkModeEnabled = val);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dark mode coming soon!', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
-        );
+      _buildSwitchItem(CupertinoIcons.moon, 'Dark Mode', themeProvider.isDarkMode, (val) {
+        context.read<ThemeProvider>().toggleTheme(val);
       }),
       _buildMenuItem(CupertinoIcons.globe, 'Language', () => _showComingSoon('Language'), trailing: 'English'),
       _buildMenuItem(CupertinoIcons.info_circle, 'About', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())), trailing: 'v1.0.0'),

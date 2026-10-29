@@ -42,7 +42,7 @@ class AboutPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text('Xurmo', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   const SizedBox(height: 8),
-                  const Text('Version 1.0.0', style: TextStyle(color: AppColors.textSecondary)),
+                  Text('Version 1.0.0', style: TextStyle(color: AppColors.textSecondary)),
                 ],
               ),
             ),
@@ -71,9 +71,9 @@ class AboutPage extends StatelessWidget {
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(CupertinoIcons.heart_fill, color: AppColors.error, size: 20),
@@ -81,7 +81,7 @@ class AboutPage extends StatelessWidget {
                       Text('Made in Tashkent', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text('© 2025 Xurmo. All rights reserved.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 ],
               ),
@@ -111,7 +111,7 @@ class AboutPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(content, style: const TextStyle(color: AppColors.textSecondary, height: 1.6)),
+          Text(content, style: TextStyle(color: AppColors.textSecondary, height: 1.6)),
         ],
       ),
     );

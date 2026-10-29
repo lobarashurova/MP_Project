@@ -164,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                const Text(
+                Text(
                   'Welcome Back',
                   style: TextStyle(
                     fontSize: 32,
@@ -173,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Sign in to your account to continue',
                   style: TextStyle(
                     fontSize: 16,
@@ -211,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                 else
                   PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 14,
@@ -225,7 +225,7 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -406,7 +406,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
               onFieldSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 hintText: 'Enter your email',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                hintStyle: TextStyle(color: AppColors.textSecondary),
                 prefixIcon: const Icon(Icons.email_outlined),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),

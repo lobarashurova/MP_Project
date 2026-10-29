@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yandex_maps_mapkit_lite/init.dart';
 
 import 'package:xurmo/core/constants/map_config.dart';
+import 'package:xurmo/core/theme/app_theme.dart';
+import 'package:xurmo/core/theme/theme_provider.dart';
 
 import 'package:xurmo/core/session/install_guard.dart';
 import 'package:xurmo/data/models/meal_model.dart';
@@ -25,11 +27,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  final prefs = await SharedPreferences.getInstance();
+
   // A reinstalled app must start signed out (issue #11). This runs before
   // AuthProvider reads the current user, so no screen sees the old session.
   try {
     await InstallGuard(
-      prefs: await SharedPreferences.getInstance(),
+      prefs: prefs,
       signOut: FirebaseAuth.instance.signOut,
     ).run();
   } catch (e) {
@@ -51,32 +55,40 @@ void main() async {
   // The product cache box is opened lazily by ProductRepository.
   await Hive.openBox('shopping_cart');
 
-  runApp(const MyApp());
+  final isDarkMode = prefs.getBool('is_dark_mode') ?? false;
+
+  runApp(MyApp(initialIsDarkMode: isDarkMode));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool initialIsDarkMode;
+
+  const MyApp({super.key, this.initialIsDarkMode = false});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider(initialIsDarkMode: initialIsDarkMode)),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
-      child: MaterialApp(
-        title: 'Xurmo App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.orange,
-          useMaterial3: true,
-        ),
-        home: const MainPage(),
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/signup': (context) => const SignupPage(),
-          '/home': (context) => const MainPage(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Xurmo App',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: const MainPage(),
+            routes: {
+              '/login': (context) => const LoginPage(),
+              '/signup': (context) => const SignupPage(),
+              '/home': (context) => const MainPage(),
+            },
+          );
         },
       ),
     );

@@ -139,7 +139,7 @@ class _SignupPageState extends State<SignupPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 30),
-                const Text(
+                Text(
                   'Create Account',
                   style: TextStyle(
                     fontSize: 32,
@@ -148,7 +148,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Sign up to get started with delicious meals',
                   style: TextStyle(
                     fontSize: 16,
@@ -179,7 +179,7 @@ class _SignupPageState extends State<SignupPage> {
                   enabled: !_isLoading,
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Full Name',
                   style: TextStyle(
                     fontSize: 14,
@@ -192,7 +192,7 @@ class _SignupPageState extends State<SignupPage> {
                   controller: _nameController,
                   decoration: InputDecoration(
                     hintText: 'Enter your full name',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.person_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -217,7 +217,7 @@ class _SignupPageState extends State<SignupPage> {
                 else
                   PhoneField(controller: _phoneController, enabled: !_isLoading),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 14,
@@ -231,7 +231,7 @@ class _SignupPageState extends State<SignupPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -264,7 +264,7 @@ class _SignupPageState extends State<SignupPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Confirm Password',
                   style: TextStyle(
                     fontSize: 14,
@@ -278,7 +278,7 @@ class _SignupPageState extends State<SignupPage> {
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
                     hintText: 'Confirm your password',
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
