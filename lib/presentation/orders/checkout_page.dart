@@ -11,6 +11,7 @@ import 'package:xurmo/data/models/delivery_location.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/location/location_picker_page.dart';
 import 'package:xurmo/presentation/orders/order_confirm_page.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -74,6 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final subtotal = cart.subtotal;
       final deliveryFee = cart.deliveryFee;
       final total = cart.totalPrice;
+      final discount = cart.discount;
       List<Map<String, dynamic>> orderItems = cart.items.map((item) => {
         'id': item.product.id,
         'name': item.product.name,
@@ -91,6 +93,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'subtotal': subtotal,
         'deliveryFee': deliveryFee,
         'total': total,
+        'discount': discount,
         'address': _addressController.text,
         if (_location != null)
           'location': GeoPoint(_location!.latitude, _location!.longitude),
@@ -173,7 +176,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${cart.items.length} items', style: const TextStyle(fontSize: 16)),
-                    Text('\$${total.toStringAsFixed(2)}',
+                    Text(formatSum(total),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
@@ -310,16 +313,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Subtotal'), Text('\$${subtotal.toStringAsFixed(2)}')]),
+                        children: [const Text('Subtotal'), Text(formatSum(subtotal))]),
                     const SizedBox(height: 8),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [const Text('Delivery Fee'), Text('\$${deliveryFee.toStringAsFixed(2)}')]),
+                        children: [const Text('Delivery Fee'), Text(formatSum(deliveryFee))]),
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('\$${total.toStringAsFixed(2)}',
+                        Text(formatSum(total),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       ],
                     ),

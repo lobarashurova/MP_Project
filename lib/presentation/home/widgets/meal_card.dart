@@ -8,6 +8,7 @@ import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/presentation/basket/cart.dart';
 import 'package:xurmo/presentation/home/product_detail_page.dart';
 import 'package:xurmo/presentation/favorites/provider/favorites_provider.dart';
+import 'package:xurmo/core/utils/money.dart';
 
 class MealCard extends StatefulWidget {
   final MealModel meal;
@@ -31,6 +32,13 @@ class _MealCardState extends State<MealCard> {
     _product = widget.meal;
     _updateQuantity();
     Cart.instance.notifier.addListener(_updateQuantity);
+  }
+  @override
+  void didUpdateWidget(covariant MealCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.meal.id != widget.meal.id) {
+      _product = widget.meal;
+    }
   }
 
   @override
@@ -251,7 +259,7 @@ class _MealCardState extends State<MealCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${_product.price.toStringAsFixed(0)}k',
+                            formatSum(_product.price),
                             style: AppTextStyles.productPrice,
                           ),
                           if (_quantity == 0)
