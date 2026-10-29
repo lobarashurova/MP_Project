@@ -44,20 +44,29 @@ class MealModel {
   });
 
   factory MealModel.fromJson(Map<String, dynamic> json) {
+    final ingredients = _parseIngredients(json);
+    final storedPrice = (json['strPrice'] as num?)?.toDouble();
     return MealModel(
       id: json['idMeal'] as String? ?? '',
       name: json['strMeal'] as String? ?? '',
       category: json['strCategory'] as String? ?? 'Uncategorized',
-      price: _calculatePrice(_parseIngredients(json).length),
+      price: storedPrice == null || storedPrice <= 0
+          ? _calculatePrice(ingredients.length)
+          : _normalizeStoredPrice(storedPrice),
       imageUrl: json['strMealThumb'] as String? ?? '',
       rating: (json['strRating'] as num?)?.toDouble() ?? 0.0,
       description: json['strInstructions'] as String? ?? '',
       area: json['strArea'] as String? ?? '',
-      ingredients: _parseIngredients(json),
+      ingredients: ingredients,
     );
   }
 
   static List<String> _parseIngredients(Map<String, dynamic> json) {
+    final storedIngredients = json['strIngredients'];
+    if (storedIngredients is List) {
+      return storedIngredients.whereType<String>().toList();
+    }
+
     final ingredients = <String>[];
     for (int i = 1; i <= 20; i++) {
       final ingredient = json['strIngredient$i'] as String?;
@@ -102,12 +111,17 @@ class MealModel {
     return calculatedPrice.clamp(basePrice, maxPrice);
   }
 
+  static double _normalizeStoredPrice(double price) {
+    return price < 1000 ? price * 1000 : price;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'idMeal': id,
       'strMeal': name,
       'strCategory': category,
       'strPrice': price,
+      'strIngredients': ingredients,
       'strMealThumb': imageUrl,
       'strRating': rating,
       'strInstructions': description,

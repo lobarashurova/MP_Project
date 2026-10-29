@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xurmo/core/errors/app_exception.dart';
+import 'package:xurmo/core/utils/money.dart';
 import 'package:xurmo/data/models/meal_model.dart';
 import 'package:xurmo/data/repositories/favorites_repository.dart';
 
@@ -16,13 +17,18 @@ class FavoritesProvider extends ChangeNotifier {
   StreamSubscription? _favoritesSubscription;
   StreamSubscription<User?>? _authSubscription;
 
-  FavoritesProvider({FavoritesRepository? repository})
-      : _repository = repository ?? FavoritesRepository() {
+  /// [authStateChanges] exists so tests can pass an inert stream; production
+  /// code leaves it null and gets the real FirebaseAuth stream.
+  FavoritesProvider({
+    FavoritesRepository? repository,
+    Stream<User?>? authStateChanges,
+  }) : _repository = repository ?? FavoritesRepository() {
     // Favorites are stored per user, so reload whenever the signed-in user
     // changes. This keeps the list correct after a login from any tab and
     // clears it on logout.
-    _authSubscription =
-        FirebaseAuth.instance.authStateChanges().listen((_) => loadFavorites());
+    _authSubscription = (authStateChanges ??
+            FirebaseAuth.instance.authStateChanges())
+        .listen((_) => loadFavorites());
   }
 
   bool get _isSignedIn => FirebaseAuth.instance.currentUser != null;
@@ -104,7 +110,7 @@ class FavoritesProvider extends ChangeNotifier {
       id: data['id'] ?? '',
       name: data['name'] ?? 'Unknown Meal',
       category: data['category'] ?? 'General',
-      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      price: normalizeLegacySum(data['price'] as num? ?? 0),
       imageUrl: data['imageUrl'] ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       description: data['description'] ?? 'No description available',

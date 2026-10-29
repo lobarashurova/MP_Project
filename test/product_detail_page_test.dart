@@ -26,7 +26,7 @@ void main() {
     id: '52772',
     name: 'Teriyaki Chicken Casserole',
     category: 'Chicken',
-    price: 45.0,
+    price: 45000,
     imageUrl: 'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
     rating: 0.0,
     description: 'A delicious Japanese dish.',
@@ -41,7 +41,7 @@ void main() {
       ));
 
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
-      expect(find.text('45'), findsOneWidget);
+      expect(find.text('45 000 soʻm'), findsOneWidget);
       expect(find.textContaining('A delicious Chicken dish'), findsOneWidget);
       expect(find.widgetWithText(Chip, 'soy sauce'), findsOneWidget);
       expect(find.widgetWithText(ElevatedButton, 'Add to Basket'), findsOneWidget);
