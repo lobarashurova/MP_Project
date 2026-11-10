@@ -51,55 +51,90 @@ A modern, feature-rich food delivery mobile application built with Flutter and F
 
 ```
 lib/
-├── core/
+├── core/                               # Core shared utilities, constants, and design system
 │   ├── constants/
-│   │   ├── app_colors.dart         # Color scheme
-│   │   └── app_text_styles.dart    # Typography
-│   └── ...
-├── data/
+│   │   ├── app_colors.dart             # Color scheme and palette
+│   │   ├── app_pricing.dart            # Delivery pricing and fee constants
+│   │   ├── app_text_styles.dart        # Typography styles
+│   │   └── map_config.dart             # Map API keys and default coordinates
+│   ├── errors/
+│   │   └── app_exception.dart          # Custom error types and exception handling
+│   ├── localization/
+│   │   └── app_strings.dart            # Localized UI text strings
+│   ├── network/
+│   │   └── network_module.dart         # HTTP client & API network configuration
+│   ├── session/
+│   │   └── install_guard.dart          # First-launch setup & session verification
+│   ├── theme/
+│   │   ├── app_theme.dart              # Flutter ThemeData setup
+│   │   └── theme_provider.dart         # Dark/Light mode state management
+│   ├── utils/
+│   │   ├── auth_error_messages.dart    # Firebase/Auth error message mappers
+│   │   ├── haptics.dart                # Tactile/vaptic feedback utilities
+│   │   ├── money.dart                  # Currency formatting helpers
+│   │   └── phone_number.dart           # Phone number formatting & validation
+│   └── widgets/
+│       ├── app_card.dart               # Standardized custom card component
+│       ├── quantity_stepper.dart       # Item count (+/-) control widget
+│       └── state_view.dart             # Universal loading, empty, & error view
+├── data/                               # Data layer (models, repositories, state managers)
+│   ├── manager/
+│   │   └── favorites_manager.dart      # Local favorites sync & state manager
+│   ├── mock/
+│   │   └── mock_products.dart          # Mock product data for testing/offline mode
 │   ├── models/
-│   │   └── meal_model.dart         # Meal data model
-│   ├── repositories/
-│   │   └── product_repository.dart # Data layer
-│   └── manager/
-│       └── favorites_manager.dart  # Favorites management
-├── presentation/
-│   ├── auth/
-│   │   ├── pages/
-│   │   │   ├── login_page.dart     # Login screen
-│   │   │   └── signup_page.dart    # Registration screen
-│   │   └── provider/
-│   │       └── auth_provider.dart  # Auth state management
-│   ├── home/
-│   │   ├── home_page.dart          # Main home screen
-│   │   ├── product_detail_page.dart # Product details
-│   │   ├── providers/
-│   │   │   └── home_provider.dart  # Home state
-│   │   └── widgets/
-│   │       ├── banner_widget.dart
-│   │       ├── category_bar.dart
-│   │       ├── meal_card.dart
-│   │       └── search_bar_widget.dart
-│   ├── search/
-│   │   └── search_page.dart        # Search functionality
-│   ├── favorites/
-│   │   ├── favorites_page.dart     # Favorites list
-│   │   └── provider/
-│   │       └── favorites_provider.dart
-│   ├── basket/
-│   │   ├── basket_page.dart        # Shopping cart
-│   │   └── cart.dart               # Cart singleton
-│   ├── orders/
-│   │   ├── order_page.dart         # Order history
-│   │   ├── order_detail_page.dart  # Order details
-│   │   └── checkout_page.dart      # Checkout flow
-│   ├── profile/
-│   │   ├── profile_page.dart       # User profile
-│   │   ├── personal_info_page.dart # Edit profile
-│   │   └── about_page.dart         # About app
-│   └── dashbboard/
-│       └── main_page.dart          # Bottom navigation
-└── main.dart                        # App entry point
+│   │   ├── auth_method.dart            # Auth provider enum/model
+│   │   ├── delivery_location.dart      # Address & location coordinates model
+│   │   ├── meal_model.dart             # Meal item schema & data model
+│   │   ├── order_status.dart           # Order lifecycle state enum
+│   │   └── user_role.dart              # User roles and permissions model
+│   └── repositories/
+│       ├── auth_repository.dart        # Authentication data source handler
+│       ├── favorites_repository.dart   # Favorites persistence repository
+│       ├── geocoding_repository.dart   # Location search & reverse-geocoding API
+│       ├── local_storage_repo.dart     # SharedPreferences / local storage wrapper
+│       ├── meal_repository.dart        # Meal catalog data fetching
+│       ├── order_repository.dart       # Order creation & history management
+│       └── product_repository.dart     # General product retrieval repository
+├── presentation/                       # Presentation layer (UI screens & feature modules)
+│   ├── auth/                           # Authentication feature module
+│   │   ├── pages/                      # Login & signup screens
+│   │   ├── provider/                   # Auth state management
+│   │   └── widgets/                    # Custom input fields & auth buttons
+│   ├── basket/                         # Cart feature module
+│   │   ├── basket_page.dart            # Shopping cart overview screen
+│   │   └── cart.dart                   # Cart item state & singleton manager
+│   ├── categories/                     # Category browsing feature
+│   │   └── categories_page.dart        # Categories grid view
+│   ├── dashbboard/                     # Shell navigation feature
+│   │   ├── main_page.dart              # Bottom navigation host page
+│   │   └── widgets/                    # Navigation bar components
+│   ├── favorites/                      # Saved items feature module
+│   │   ├── favorites_page.dart         # Bookmarked items list screen
+│   │   └── provider/                   # Favorites state provider
+│   ├── home/                           # Main catalog feature module
+│   │   ├── category_page.dart          # Filtered category items page
+│   │   ├── home_page.dart              # Main home screen & feed
+│   │   ├── product_detail_page.dart    # Detailed product view & add-to-cart
+│   │   ├── providers/                  # Home feed state management
+│   │   └── widgets/                    # Banners, search bar, & item cards
+│   ├── location/                       # Location selection feature
+│   │   └── location_picker_page.dart   # Map picker & delivery location selector
+│   ├── orders/                         # Checkout & Order management
+│   │   ├── checkout_page.dart          # Order placement & checkout screen
+│   │   ├── order_confirm_page.dart     # Order confirmation screen
+│   │   ├── order_detail_page.dart      # Detailed order summary & tracking
+│   │   ├── order_page.dart             # User order history list
+│   │   └── widgets/                    # Order status badges & list tiles
+│   ├── profile/                        # Account management feature
+│   │   ├── about_page.dart             # App details & version info screen
+│   │   ├── personal_info_page.dart     # User profile editor screen
+│   │   ├── profile_page.dart           # User profile & settings dashboard
+│   │   └── settings_provider.dart      # Preferences & app settings state
+│   └── search/                         # Search feature module
+│       └── search_page.dart            # Product & meal search page
+├── firebase_options.dart               # Generated Firebase initialization setup
+└── main.dart                           # Flutter app entry point
 ```
 
 ## Getting Started
