@@ -1,51 +1,92 @@
+
 # Xurmo - Food Delivery App
 
-A modern, feature-rich food delivery mobile application built with Flutter and Firebase. Xurmo provides a seamless experience for browsing meals, managing favorites, shopping cart, and order tracking.
+A modern, feature-rich food delivery mobile application built with Flutter and Firebase. Xurmo provides a seamless experience for browsing meals, managing favorites, interactive location selection, shopping cart management, and order tracking.
+
+---
+
+## Team Handover & Closure Documentation
+
+This project contains all necessary deliverables, decision logs, and metrics required for team handover and project closure.
+
+### 1. Final Source Files and Deliverables
+* **Source Repository**: Complete production-ready Flutter codebase (`lib/`, `test/`, `pubspec.yaml`, `firestore.rules`).
+* **Platform Support**: Configuration and build metadata for Android (`android/`), iOS (`ios/`), Web (`web/`), macOS (`macos/`), Linux (`linux/`), and Windows (`windows/`).
+* **Environment Setup Templates**: `firebase_options.dart` and placeholder setup instructions for `google-services.json` / `GoogleService-Info.plist`.
+
+### 2. Decision Logs (ADRs)
+* **ADR-01: Feature-First Clean Architecture**: Organized into `core/`, `data/`, and `presentation/` to isolate business logic, UI components, and API/persistence integration.
+* **ADR-02: State Management with Provider**: Selected `Provider` for low boilerplate, clean separation of UI and state (`AuthProvider`, `HomeProvider`, `FavoritesProvider`, `ThemeProvider`), and direct integration with Flutter widget trees.
+* **ADR-03: Offline Caching & Local Storage**: Utilized **Hive** for fast object persistence (meals and cart items) and **SharedPreferences** (`local_storage_repo.dart`) for simple user key-value preferences.
+* **ADR-04: Network Client**: Chose **Dio** over `http` to leverage request interceptors, standard error wrapping, and timeout handling in `network_module.dart`.
+* **ADR-05: Location & Geocoding**: Integrated geocoding capabilities (`geocoding_repository.dart`) and interactive map picker (`location_picker_page.dart`) to capture delivery locations.
+* **ADR-06: Currency System**: Standardized on Uzbek Som (`soʻm`) using a dedicated `money.dart` utility across all prices, cart totals, and checkout summaries.
+
+### 3. Documentation & Reports
+* **Database Schema**: Firestore structure (`users/`, `orders/`, `products/`) detailed in this README.
+* **Testing Report**: Unit, widget, and integration coverage across 18 test files in `test/`.
+* **Known Technical Debt**:
+  * Manual Hive adapter generation required when modifying `meal_model.dart`.
+  * External map API keys need to be injected into `map_config.dart` before production deployment.
+
+### 4. User Stories & Demos
+* **User Story 1 (Auth)**: As a customer, I can register and log in via Firebase Auth so that my preferences and order history are persisted.
+* **User Story 2 (Discovery)**: As a customer, I can search, filter by category, and view detailed product info without unexpected network latency.
+* **User Story 3 (Location & Cart)**: As a customer, I can select my delivery location on a map, add items to my cart, adjust quantities, and see total prices in soʻm.
+* **User Story 4 (Theme Preferences)**: As a user, I can toggle between Light and Dark modes (`ThemeProvider`) to suit my viewing preference.
+* **Demo Walkthrough**: See repository `test/` integration files (`add_to_cart_integration_test.dart`, `product_detail_page_test.dart`) for verified UI flows.
+
+### 5. Supporting Data and Metrics
+* **Total Project Scope**: 84 directories, 156 files.
+* **Automated Test Coverage**: 18 comprehensive test suites in `test/` covering authentication, navigation, cart operations, design system components, and geocoding.
+* **Mock Datasets**: Pre-configured mock data in `lib/data/mock/mock_products.dart` for immediate offline testing and UI verification.
+
+---
 
 ## Features
 
 ### Core Features
-- **Browse Menu**: Explore a wide variety of meals with beautiful UI and smooth scrolling
-- **Category Filtering**: Smart category-based filtering with auto-scrolling navigation
-- **Search Functionality**: Instantly filter the loaded meal list by name, ingredient, category, description, and cuisine/area without a network request per query
-- **Uzbek Som Pricing**: Display meal, basket, checkout, and order prices in soʻm
-- **Shopping Cart**: Add, remove, and manage items with quantity controls
-- **Favorites**: Save your favorite meals for quick access
-- **Order Management**: Complete checkout process with order history tracking
-- **User Authentication**: Secure Firebase authentication with email/password
-- **User Profile**: Manage personal information and view account statistics
+- **Browse Menu**: Explore a wide variety of meals with responsive UI and smooth scrolling.
+- **Category Filtering**: Smart category-based filtering with auto-scrolling category navigation.
+- **Search Functionality**: Instantly search loaded meals by name, ingredient, category, or description.
+- **Location Selector**: Interactive map picker and reverse geocoding via `location_picker_page.dart`.
+- **Uzbek Som Pricing**: Standardized currency formatting (`soʻm`) across all products, cart totals, and receipts.
+- **Shopping Cart**: Add, remove, and manage items with custom quantity controls (`quantity_stepper.dart`).
+- **Favorites Management**: Save favorite meals locally with real-time UI state synchronization.
+- **Order Tracking**: Complete checkout flow with order placement, confirmation screens, and historical tracking.
+- **User Authentication**: Email/password authentication managed via Firebase Auth.
+- **User Profile**: Personal info management, account statistics, and session management.
+- **Theme Support**: Seamless Light and Dark mode switching via `ThemeProvider`.
 
 ### Technical Features
-- **Offline Support**: Local caching with Hive for offline data access
-- **State Management**: Provider pattern for efficient state management
-- **Responsive Design**: Optimized UI for different screen sizes
-- **Smooth Animations**: Polished transitions and micro-interactions
-- **Real-time Updates**: Firebase Firestore for real-time data synchronization
+- **Offline Support**: Fast local caching powered by Hive database.
+- **State Management**: Clean Provider pattern for state isolation.
+- **Responsive Design**: Custom widgets adapted for mobile, tablet, and web viewports.
+- **Real-time Sync**: Cloud Firestore for live data synchronization.
+
+---
 
 ## Tech Stack
 
 ### Frontend
-- **Flutter** - Cross-platform mobile framework
-- **Dart** - Programming language
+- **Framework**: Flutter (Dart SDK >=3.7.2)
+- **Design System**: Material Design & Cupertino Components
 
 ### Backend & Services
-- **Firebase Authentication** - User authentication
-- **Cloud Firestore** - NoSQL cloud database
-- **Firebase Core** - Firebase SDK
+- **Firebase Auth**: User identity management
+- **Cloud Firestore**: Real-time NoSQL database
+- **Firebase Core**: Base SDK integration
 
-### State Management & Storage
-- **Provider** - State management solution
-- **Hive** - Fast, lightweight local database
-- **SharedPreferences** - Simple key-value storage
+### State Management & Local Storage
+- **Provider**: App state management
+- **Hive**: High-performance local object database
+- **SharedPreferences**: Key-value settings storage
 
 ### Networking & Data
-- **Dio** - Powerful HTTP client
-- **Scrollable Positioned List** - Advanced list scrolling
+- **Dio**: HTTP client with interceptors and error handling
+- **Scrollable Positioned List**: Synchronized list scrolling
 
-### UI Components
-- **Shimmer** - Loading placeholder animations
-- **Cupertino Icons** - iOS-style icons
-- **Material Design** - Android-style components
+---
 
 ## Project Structure
 
@@ -86,6 +127,7 @@ lib/
 │   │   ├── auth_method.dart            # Auth provider enum/model
 │   │   ├── delivery_location.dart      # Address & location coordinates model
 │   │   ├── meal_model.dart             # Meal item schema & data model
+│   │   ├── meal_model.g.dart           # Hive generated adapter
 │   │   ├── order_status.dart           # Order lifecycle state enum
 │   │   └── user_role.dart              # User roles and permissions model
 │   └── repositories/
@@ -135,209 +177,188 @@ lib/
 │       └── search_page.dart            # Product & meal search page
 ├── firebase_options.dart               # Generated Firebase initialization setup
 └── main.dart                           # Flutter app entry point
+
 ```
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- Flutter SDK (>=3.7.2)
-- Dart SDK (>=3.7.2)
-- Firebase account
-- iOS Simulator / Android Emulator or Physical Device
 
-### Installation
+* **Flutter SDK**: `>=3.7.2`
+* **Dart SDK**: `>=3.7.2`
+* **Firebase Account**
+* iOS Simulator / Android Emulator or Physical Device
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/xurmo.git
-   cd xurmo
-   ```
+### Installation Steps
 
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
+1. **Clone the repository**:
+```bash
+git clone [https://github.com/lobarashurova/MP_Project.git](https://github.com/lobarashurova/MP_Project.git)
+cd MP_Project
 
-3. **Firebase Setup**
-   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Add iOS and/or Android app to your Firebase project
-   - Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-   - Place them in the appropriate directories:
-     - Android: `android/app/google-services.json`
-     - iOS: `ios/Runner/GoogleService-Info.plist`
-   - Enable Authentication (Email/Password) in Firebase Console
-   - Create Firestore database
+```
 
-4. **Generate Hive adapters**
-   ```bash
-   flutter pub run build_runner build
-   ```
 
-5. **Run the app**
-   ```bash
-   flutter run
-   ```
+2. **Install dependencies**:
+```bash
+flutter pub get
+
+```
+
+
+3. **Firebase Setup**:
+* Create a Firebase project at the [Firebase Console](https://console.firebase.google.com/).
+* Register your iOS and Android apps.
+* Place configuration files into their respective directories:
+* Android: `android/app/google-services.json`
+* iOS: `ios/Runner/GoogleService-Info.plist`
+
+
+* Enable Email/Password authentication and initialize Cloud Firestore.
+
+
+4. **Generate Data Model Adapters**:
+```bash
+dart run build_runner build --delete-conflicting-outputs
+
+```
+
+
+5. **Run the Application**:
+```bash
+flutter run
+
+```
+
+
+
+---
 
 ## Firebase Configuration
 
 ### Firestore Collections Structure
 
-**users/**
-```
+#### `users/`
+
+```json
 {
-  name: string,
-  email: string,
-  createdAt: timestamp
+  "name": "string",
+  "email": "string",
+  "createdAt": "timestamp"
 }
+
 ```
 
-**orders/**
-```
+#### `orders/`
+
+```json
 {
-  userId: string,
-  items: array,
-  totalAmount: number,
-  status: string,
-  deliveryAddress: string,
-  createdAt: timestamp
+  "userId": "string",
+  "items": "array",
+  "totalAmount": "number",
+  "status": "string",
+  "deliveryAddress": "string",
+  "createdAt": "timestamp"
 }
+
 ```
 
-**products/** (optional - can use API instead)
-```
+#### `products/`
+
+```json
 {
-  name: string,
-  description: string,
-  price: number,
-  category: string,
-  imageUrl: string,
-  rating: number
+  "name": "string",
+  "description": "string",
+  "price": "number",
+  "category": "string",
+  "imageUrl": "string",
+  "rating": "number"
 }
+
 ```
 
-## App Architecture
-
-### State Management
-The app uses Provider pattern for state management:
-- `AuthProvider` - Manages authentication state
-- `HomeProvider` - Handles product listing and categories
-- `FavoritesProvider` - Manages favorite items
-- `Cart` - Singleton pattern for shopping cart
-
-### Data Flow
-1. **Remote Data**: Firebase Firestore → Repository → Provider → UI
-2. **Local Cache**: Hive boxes for offline-first experience
-3. **Authentication**: Firebase Auth → AuthProvider → UI updates
-
-### Key Design Patterns
-- **Repository Pattern**: Abstracts data sources
-- **Provider Pattern**: State management and dependency injection
-- **Singleton Pattern**: Cart management
-- **Observer Pattern**: Real-time data updates
-
-## Features in Detail
-
-### Authentication Flow
-- App starts with MainPage
-- Profile tab shows login screen if not authenticated
-- After login, profile data loads automatically
-- Logout clears authentication state
-
-### Home Screen
-- Dynamic category filtering
-- Two-column grid layout for products
-- Sticky category bar on scroll
-- Smooth scroll synchronization between categories and products
-- Loading shimmer effects
-
-### Search
-- Real-time search as you type
-- Searches across meal name, category, and description
-- Grid view results
-- Empty state handling
-
-### Shopping Cart
-- Add/remove items
-- Quantity management
-- Price calculation with delivery fee
-- Persistent storage with Hive
-
-### Orders
-- Complete checkout process
-- Order history with status tracking
-- Order details view
-- Address management
+---
 
 ## Building for Production
 
 ### Android
-```bash
-flutter build apk --release
-# or
-flutter build appbundle --release
-```
+Generate a release APK or Android App Bundle for deployment:
 
-### iOS
-```bash
-flutter build ios --release
-```
+
+### Build standalone APK
+flutter build apk --release
+
+### Build App Bundle for Google Play Store upload
+flutter build appbundle --release
+
+## App Architecture
+
+### State Management
+
+The project strictly implements the **Provider** pattern:
+
+* `AuthProvider`: Manages user authentication, sign-up, and session destruction.
+* `HomeProvider`: Controls catalog data retrieval, loading states, and active category filters.
+* `FavoritesProvider`: Syncs saved items with local database storage.
+* `ThemeProvider`: Handles dynamic switching between Light and Dark themes.
+* `Cart`: A singleton state container managing shopping basket state and price totals.
+
+### Data Flow
+
+1. **Remote Tier**: Cloud Firestore / Dio Network Client $\rightarrow$ Repository Layer $\rightarrow$ Provider $\rightarrow$ UI Widgets
+2. **Local Tier**: Hive Cache / SharedPreferences $\rightarrow$ Repository Layer $\rightarrow$ UI State
+
+---
 
 ## Testing
+
+Run the full automated test suite containing unit, widget, and integration test specs:
+
 ```bash
 flutter test
-```
+
+
+### Key Test Suites (`test/`)
+
+* `add_to_cart_integration_test.dart`: Complete cart addition integration test.
+* `product_detail_page_test.dart`: Product detailed rendering and user actions.
+* `geocoding_repository_test.dart`: Location lookup validation.
+* `theme_provider_test.dart`: Theme state verification.
+
+---
 
 ## Troubleshooting
 
-### Common Issues
+1. **Firebase Configuration Errors**:
+Verify that `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) match your Firebase project package name and bundle ID.
+2. **Hive / Model Build Errors**:
+If modifying annotated models, re-run code generation:
+```bash
+dart run build_runner build --delete-conflicting-outputs
 
-1. **Firebase not initialized**
-   - Ensure `google-services.json` / `GoogleService-Info.plist` are in correct locations
-   - Verify Firebase configuration in `firebase_options.dart`
+```
 
-2. **Hive errors**
-   - Run `flutter pub run build_runner build --delete-conflicting-outputs`
 
-3. **Build errors**
-   - Clean build: `flutter clean && flutter pub get`
-   - Update dependencies: `flutter pub upgrade`
+3. **Build Cache Clean**:
+```bash
+flutter clean && flutter pub get
 
-## Contributing
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
-## Code Style
 
-This project follows the official [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style) and uses:
-- `flutter_lints` for linting
-- 2-space indentation
-- CamelCase for classes
-- lowerCamelCase for variables and methods
-
-## Performance Optimizations
-
-- **Lazy Loading**: Products load on demand
-- **Image Caching**: Network images are cached automatically
-- **Local Database**: Hive for fast local data access
-- **Efficient Rebuilds**: Provider with Consumer widgets
-- **List Virtualization**: Efficient rendering of large lists
+---
 
 ## Future Enhancements
 
-- [ ] Push notifications for order updates
-- [ ] Multiple payment methods integration
-- [ ] Live order tracking with maps
-- [ ] Restaurant/vendor management
-- [ ] Multi-language support
-- [ ] Dark mode theme
-- [ ] Social media authentication
-- [ ] Product reviews and ratings
-- [ ] Promocode and discount system
-- [ ] Delivery time slot selection
+* [ ] Push notifications for real-time order status changes
+* [ ] Integration of local Uzbek payment gateways (Click, Payme)
+* [ ] Live courier location tracking via map WebSocket stream
+* [ ] Restaurant and vendor management module
+
+---
 
 ## License
 
@@ -345,12 +366,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Project Link: [https://github.com/lobarashurova/MP_Project](https://github.com/lobarashurova/MP_Project)
+* **Repository**: [https://github.com/lobarashurova/MP_Project](https://github.com/lobarashurova/MP_Project)
 
-## Acknowledgments
-
-- Flutter team for the amazing framework
-- Firebase for backend services
-- All open-source contributors
-
----
+```
