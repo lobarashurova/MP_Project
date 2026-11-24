@@ -1,0 +1,26 @@
+# Config for the `secret-scan` job in .github/workflows/ci.yml.
+title = "xurmo secret scan"
+
+[extend]
+useDefault = true # all built-in gitleaks rules
+
+[allowlist]
+description = """
+Firebase client configuration. These "API keys" identify the project to Google
+rather than authorise it: access is gated by firestore.rules and by API-key
+restrictions in the Google Cloud console, and FlutterFire ships them inside the
+app bundle anyway. They are allowlisted by path, so the same key pattern
+appearing in any other file still fails the build.
+"""
+paths = [
+  '''^lib/firebase_options\.dart$''',
+  '''^android/app/google-services\.json$''',
+  '''^ios/Runner/GoogleService-Info\.plist$''',
+  # Generated, vendored or compiled output — never hand-written source.
+  # (The Firebase key above is compiled into these.)
+  '''^pubspec\.lock$''',
+  '''^ios/Podfile\.lock$''',
+  '''^ios/Pods/''',
+  '''^\.dart_tool/''',
+  '''(^|/)build/''',
+]
