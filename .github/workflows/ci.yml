@@ -1,0 +1,221 @@
+# CI for every branch and PR; CD (release APK) on pushes to main.
+#
+# Jobs:
+#   secret-scan      — blocks commits that carry credentials or key material
+#   static-analysis  — flutter analyze (compile-level + lint gate)
+#   test             — flutter test
+#   build            — debug APK as a compile smoke test on branches/PRs,
+#                      signed release APKs uploaded as artifacts on main
+name: CI/CD
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+# A newer push to a feature branch cancels the older run; release builds on
+# main are left to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # Keep in sync with the Flutter version the team develops on.
+  FLUTTER_VERSION: "3.47.8"
+
+jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: gitleaks scans past commits too
+
+      - name: Block files that must never be committed
+        run: |
+          set -euo pipefail
+          blocked=$(git ls-files \
+            | grep -Ei '(^|/)(keys\.json|key\.properties|secrets?\.(json|ya?ml)|\.env([.-].*)?)$|\.(jks|keystore|p12|pfx|pem|mobileprovision|cer)$' \
+            || true)
+          if [ -n "$blocked" ]; then
+            echo "::error::These files hold local keys or signing material and must not be tracked:"
+            echo "$blocked"
+            exit 1
+          fi
+          echo "No credential files tracked."
+
+      - name: Verify local key files stay ignored
+        run: |
+          set -euo pipefail
+          for f in keys.json android/key.properties; do
+            if ! git check-ignore -q "$f"; then
+              echo "::error::$f is no longer covered by .gitignore"
+              exit 1
+            fi
+          done
+          echo "keys.json and android/key.properties are still ignored."
+
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.18.4
+        run: |
+          set -euo pipefail
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Scan working tree
+        # --redact keeps any finding out of the (public) build log.
+        run: gitleaks detect --no-git --config .gitleaks.toml --redact --verbose --exit-code 1
+
+      - name: Scan commit history
+        run: gitleaks detect --config .gitleaks.toml --redact --verbose --exit-code 1
+
+  static-analysis:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter --version
+      - run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      # Advisory for now: lib/ and test/ are not fully `dart format`-clean yet.
+      # Run `dart format lib test` once, commit it, then drop continue-on-error
+      # to make formatting a hard gate.
+      - name: Check formatting (advisory)
+        continue-on-error: true
+        run: dart format --output=none --set-exit-if-changed lib test
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Run tests
+        run: flutter test --coverage --reporter expanded
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ github.run_number }}
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+          retention-days: 14
+
+  build:
+    name: Build APK
+    needs: [secret-scan, static-analysis, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 21: the Yandex MapKit plugin ships Java 21 bytecode (class file 65),
+      # which javac 17 cannot read. Matches the JBR that Android Studio uses.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: flutter pub get
+
+      - name: Inject build-time keys
+        env:
+          YANDEX_MAPKIT_API_KEY: ${{ secrets.YANDEX_MAPKIT_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${YANDEX_MAPKIT_API_KEY:-}" ]; then
+            # keys.json is gitignored and lives only on this ephemeral runner.
+            jq -n --arg k "$YANDEX_MAPKIT_API_KEY" '{YANDEX_MAPKIT_API_KEY: $k}' > keys.json
+            echo "DART_DEFINES=--dart-define-from-file=keys.json" >> "$GITHUB_ENV"
+            echo "Map key injected."
+          else
+            echo "::warning::Secret YANDEX_MAPKIT_API_KEY is not set — this build ships without maps."
+          fi
+
+      - name: Set up release signing
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — the release APK will be signed with Android debug keys and cannot be published to Play."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/upload-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "Release signing configured."
+
+      - name: Build debug APK (compile check)
+        if: "!(github.event_name == 'push' && github.ref == 'refs/heads/main')"
+        run: flutter build apk --debug --target-platform android-arm64 ${DART_DEFINES:-}
+
+      - name: Build release APKs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          flutter build apk --release --split-per-abi ${DART_DEFINES:-}
+          flutter build apk --release ${DART_DEFINES:-}
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f android/key.properties keys.json "$RUNNER_TEMP/upload-keystore.jks"
+
+      - name: Name the build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: name
+        run: |
+          set -euo pipefail
+          version=$(grep -m1 '^version:' pubspec.yaml | awk '{print $2}')
+          echo "tag=v${version}-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: xurmo-apk-${{ steps.name.outputs.tag }}
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 30

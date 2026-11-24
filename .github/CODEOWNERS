@@ -1,0 +1,15 @@
+
+# Default owner - overall project responsibility
+* @lobarashurova
+
+# Backend
+/backend/ @isakov05
+
+# Frontend and general development support
+/frontend/ @flor4ly
+
+# QA and testing
+/.github/workflows/ @sherzadl
+
+# Documentation
+/docs/ @rbaymanova
