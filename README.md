@@ -287,6 +287,45 @@ flutter build ios --release
 flutter test
 ```
 
+## CI/CD
+
+`.github/workflows/ci.yml` runs on every branch and pull request:
+
+| Job | What it does |
+| --- | --- |
+| `secret-scan` | Fails the build if credential files (`keys.json`, `key.properties`, `*.jks`, `.env`, …) are tracked, if those paths stop being gitignored, or if [gitleaks](https://github.com/gitleaks/gitleaks) finds a secret in the working tree or anywhere in the commit history. Allowlist lives in `.gitleaks.toml`. |
+| `static-analysis` | `flutter analyze --fatal-infos --fatal-warnings`, plus an advisory `dart format` check. |
+| `test` | `flutter test --coverage`; uploads `lcov.info`. |
+| `build` | Debug APK as a compile check on branches/PRs. On a push to `main` (after the three jobs above pass) it builds release APKs — per-ABI and universal — and uploads them as the `xurmo-apk-<version>-<run>-<sha>` artifact. |
+
+Run the secret scan the way CI does:
+
+```bash
+gitleaks detect --no-git --config .gitleaks.toml --redact   # working tree
+gitleaks detect --config .gitleaks.toml --redact            # commit history
+```
+
+### Repository secrets
+
+Set these under *Settings → Secrets and variables → Actions*. All are optional; the
+build degrades instead of failing when one is missing.
+
+| Secret | Effect when missing |
+| --- | --- |
+| `YANDEX_MAPKIT_API_KEY` | Written to `keys.json` on the runner and passed via `--dart-define-from-file`. Without it the APK builds but ships without maps. |
+| `ANDROID_KEYSTORE_BASE64` | `base64` of the upload keystore. Without it the release APK is signed with Android debug keys and cannot be published to Play. |
+| `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | Required alongside the keystore. |
+
+Produce the keystore value with:
+
+```bash
+base64 -i upload-keystore.jks | pbcopy
+```
+
+Local release signing uses the same mechanism: create `android/key.properties`
+(gitignored) with `storeFile`, `storePassword`, `keyAlias`, `keyPassword`. Without
+that file, `flutter build apk --release` falls back to the debug keys as before.
+
 ## Troubleshooting
 
 ### Common Issues
