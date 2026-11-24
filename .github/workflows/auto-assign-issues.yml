@@ -1,0 +1,53 @@
+
+name: Auto Assign Issues
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  assign-owner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign issue based on label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            // Don't overwrite an existing assignee
+            if (issue.assignees.length > 0) {
+              console.log("Issue already has an assignee.");
+              return;
+            }
+
+            // Map issue labels to owners
+            const owners = {
+              "backend": "isakov05",
+              "frontend": "flor4ly",
+              "qa": "sherzadl",
+              "testing": "sherzadl",
+              "documentation": "rbaymanova",
+              "general": "lobarashurova"
+            };
+
+            // Find matching owner
+            const labels = issue.labels.map(label => label.name);
+
+            const owner = labels
+              .map(label => owners[label])
+              .find(Boolean) || "lobarashurova";
+
+            // Assign issue
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              assignees: [owner]
+            });
+
+            console.log(`Assigned issue to ${owner}`);
