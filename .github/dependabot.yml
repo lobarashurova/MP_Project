@@ -1,0 +1,69 @@
+# Dependabot version updates. Every PR it opens runs the CI/CD workflow, so a
+# bump only gets reviewed once analyze, tests and the APK compile check pass.
+version: 2
+updates:
+  # Dart / Flutter packages in pubspec.yaml
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tashkent"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      # One PR a week for routine bumps; majors stay separate so a breaking
+      # change is never mixed in with safe updates.
+      pub-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Android Gradle dependencies.
+  # Note: today every version (AGP, Kotlin, google-services) is declared in
+  # android/settings.gradle.kts pluginManagement, and neither build.gradle.kts
+  # declares a versioned dependency — so this may well open nothing until the
+  # app module gains real dependencies. The Gradle wrapper distribution is not
+  # covered by Dependabot at all and stays a manual bump.
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tashkent"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "android"
+    commit-message:
+      prefix: "deps(android)"
+    groups:
+      gradle-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Actions pinned in .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Tashkent"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "deps(ci)"
+    groups:
+      actions-all:
+        update-types:
+          - "minor"
+          - "patch"
