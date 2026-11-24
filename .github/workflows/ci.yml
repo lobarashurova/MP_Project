@@ -52,7 +52,7 @@ jobs:
 
       - name: Verify local key files stay ignored
         run: |
-          set -euo pipefailwhat 
+          set -euo pipefail
           for f in keys.json android/key.properties; do
             if ! git check-ignore -q "$f"; then
               echo "::error::$f is no longer covered by .gitignore"
