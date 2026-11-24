@@ -255,6 +255,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // Storage is a convenience, so a failure here must never look like a
+      // failed order.
+      try {
+        if (_saveAddress && !_addressAlreadySaved) {
+          await _persistCurrentAddress(_saveLabel ?? _labelSuggestions.first);
+        } else if (_selectedSavedId != null) {
+          await _savedRepo.touch(
+            _selectedSavedId!,
+            usedAt: DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+      } catch (e) {
+        debugPrint('Saving the address failed: ${AppException.from(e).message}');
+      }
+
       cart.clear();
 
       if (mounted) {
@@ -268,6 +283,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
       // The success path navigates away, so guard before touching state.
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Chip names in the current language. Read with trRead so the same list
+  /// also works from the order callback, where watch() is not allowed.
+  List<String> get _labelSuggestions => [
+        context.trRead('label_home'),
+        context.trRead('label_work'),
+        context.trRead('label_other'),
+      ];
+
+  /// One line of the totals block. The label flexes so a long translation or
+  /// a large font-size setting can never push the amount off the card.
+  Widget _totalRow(String label, String value,
+      {Color? valueColor, bool isTotal = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: isTotal
+                ? const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                : null,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spaceSm),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: isTotal
+                ? const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)
+                : (valueColor == null ? null : TextStyle(color: valueColor)),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -310,13 +362,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${cart.items.length} items', style: const TextStyle(fontSize: 16)),
-                    Text(formatSum(total),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                  ],
+                child: _totalRow(
+                  '${cart.items.length} items',
+                  formatSum(total),
+                  isTotal: true,
                 ),
               ),
               const SizedBox(height: 32),
@@ -324,7 +373,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text(context.tr('delivery_details'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
 
-              Text(context.tr('delivery_address'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(context.tr('delivery_address'),
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.iconPrimary)),
+                  ),
+                  if (_saved.isNotEmpty)
+                    Text(
+                      context.tr('saved_count').replaceAll('{n}', '${_saved.length}'),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                ],
+              ),
+              if (_saved.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceSm + 2),
+                SavedAddressPicker(
+                  addresses: _saved,
+                  selectedId: _selectedSavedId,
+                  onSelect: _applySavedAddress,
+                  onDelete: _removeSavedAddress,
+                  enabled: !_isLoading,
+                ),
+              ],
               const SizedBox(height: 8),
               if (MapConfig.isMapAvailable) SizedBox(
                 width: double.infinity,
@@ -372,8 +446,41 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 maxLines: 3,
-                validator: (v) => v?.isEmpty ?? true ? 'Address is required' : null,
+                onChanged: _onAddressChanged,
+                validator: (v) => v?.trim().isEmpty ?? true ? 'Address is required' : null,
               ),
+              if (_selectedSavedId != null) ...[
+                const SizedBox(height: AppTheme.spaceSm),
+                Row(
+                  children: [
+                    const Icon(CupertinoIcons.checkmark_alt_circle_fill,
+                        size: 15, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        context.tr('using_saved_address').replaceAll(
+                          '{label}',
+                          _savedMatching(_addressController.text)?.label ?? '',
+                        ),
+                        style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else if (_addressController.text.trim().isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceSm + 2),
+                SaveAddressBar(
+                  isOn: _saveAddress,
+                  labels: _labelSuggestions,
+                  label: _saveLabel ?? _labelSuggestions.first,
+                  enabled: !_isLoading,
+                  onChanged: (value) => setState(() {
+                    _saveAddress = value;
+                    _saveSwitchTouched = true;
+                  }),
+                  onLabelChanged: (label) => setState(() => _saveLabel = label),
+                ),
+              ],
               const SizedBox(height: 20),
 
               Text(context.tr('phone_number'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.iconPrimary)),
@@ -450,29 +557,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 child: Column(
                   children: [
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text(context.tr('subtotal')), Text(formatSum(subtotal))]),
+                    _totalRow(context.tr('subtotal'), formatSum(subtotal)),
                     if (cart.discount > 0) ...[
                       const SizedBox(height: 8),
-                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${context.tr('discount')} (${AppPricing.promoDiscountPercent}%)'),
-                            Text('-${formatSum(cart.discount)}',
-                                style: const TextStyle(color: AppColors.success)),
-                          ]),
+                      _totalRow(
+                        '${context.tr('discount')} (${AppPricing.promoDiscountPercent}%)',
+                        '-${formatSum(cart.discount)}',
+                        valueColor: AppColors.success,
+                      ),
                     ],
                     const SizedBox(height: 8),
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text(context.tr('delivery_fee')), Text(formatSum(deliveryFee))]),
+                    _totalRow(context.tr('delivery_fee'), formatSum(deliveryFee)),
                     const Divider(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(context.tr('total'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(formatSum(total),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                      ],
-                    ),
+                    _totalRow(context.tr('total'), formatSum(total), isTotal: true),
                   ],
                 ),
               ),
